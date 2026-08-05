@@ -187,20 +187,21 @@ body {
   background: #1e293b !important;
 }
 
-/* 右上のタイプアイコン */
+/* 右上のタイプアイコン（大きさを 13px から 18px に拡大） */
 .monster-type-icon {
   position: absolute;
   top: 3px;
   right: 3px;
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   pointer-events: none;
 }
 
+/* モンスターのサムネイル（大きさを 70% から 76% に拡大） */
 .monster-thumb {
-  width: 70%;
-  height: 70%;
+  width: 76%;
+  height: 76%;
   object-fit: contain;
 }
 .monster-name {
