@@ -361,3 +361,10 @@ body {
   color: #ffffff;
   border-color: #3b82f6;
 }
+.drawer-footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 10px;
+  color: #475569; /* 周りに溶り込む暗めのグレー */
+  letter-spacing: 0.5px;
+}
