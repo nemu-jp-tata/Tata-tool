@@ -23,13 +23,9 @@
     </button>
   </div>
 
-  <!-- 注意書きスペース -->
-  <div class="notice-bar">
-    同じ種類・同じTier（タタ）は、各ステージにつき一体までしか配置できません。
-  </div>
-
-  <!-- 盤面フレーム -->
+  <!-- 盤面フレーム（注意書きを内部に統合） -->
   <div class="board-frame">
+    <div class="board-notice">こちらからゾンビが来ます ▼</div>
     <div id="mainGrid"></div>
   </div>
 
@@ -98,13 +94,12 @@
 <script src="monsters.js"></script>
 
 <script>
-  // 生データからHTML表示用フォーマットを作成し、Species情報も保持する
   const monstersData = rawMonstersData.map(m => ({
     name: m.name,
-    species: m.species, // 種族名（重複チェック用）
+    species: m.species,
     attr: m.type,
-    tier: "T" + m.T, // 表示用
-    tierNum: m.T,      // 数値（重複チェック用）
+    tier: "T" + m.T,
+    tierNum: m.T,
     type: m.role
   }));
 
@@ -115,31 +110,24 @@
 
   const mainGrid = document.getElementById('mainGrid');
 
-  // 盤面を生成する関数
   function buildBoard(size) {
     mainGrid.className = `grid-${size}x${size}`;
-    mainGrid.style.display = 'grid';
     mainGrid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-    mainGrid.style.gap = '6px';
     
     mainGrid.innerHTML = '';
     for (let i = 0; i < size * size; i++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      // --- 重複チェックを含むクリックイベント ---
       cell.addEventListener('click', () => {
-        // クリアモード（選択解除）
         if (!currentSelected) {
           cell.innerHTML = '';
           return;
         }
 
-        // 重複チェックロジック
         const targetSpecies = currentSelected.species;
         const targetTier = currentSelected.tierNum;
         let isAlreadyOnBoard = false;
 
-        // 現在盤面に置かれている全セルをチェック
         document.querySelectorAll('#mainGrid .cell').forEach(c => {
           const img = c.querySelector('img');
           if (img && img.dataset.species === targetSpecies && parseInt(img.dataset.tier) === targetTier) {
@@ -155,14 +143,12 @@
           return;
         }
 
-        // 配置実行 (SpeciesとTierをdata属性として埋め込む)
         cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}" data-species="${targetSpecies}" data-tier="${targetTier}">`;
       });
       mainGrid.appendChild(cell);
     }
   }
 
-  // モンスター一覧描画
   const monsterGrid = document.getElementById('monsterGrid');
   const selectedNameEl = document.getElementById('selectedName');
 
@@ -215,7 +201,6 @@
     });
   }
 
-  // フィルター設定
   function setupFilter(groupId, attrName, callback) {
     const btns = document.querySelectorAll(`#${groupId} .filter-btn`);
     btns.forEach(btn => {
@@ -232,12 +217,10 @@
   setupFilter('tierFilterGroup', 'tier', val => currentTier = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
-  // クリアボタン
   document.getElementById('clearBtn').addEventListener('click', () => {
     document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
   });
 
-  // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const normalStageBtn = document.getElementById('normalStageBtn');
@@ -254,7 +237,6 @@
   });
 
   normalStageBtn.addEventListener('click', () => {
-    currentGridSize = 5;
     buildBoard(5);
     normalStageBtn.classList.add('active');
     zombieStageBtn.classList.remove('active');
@@ -262,14 +244,12 @@
   });
 
   zombieStageBtn.addEventListener('click', () => {
-    currentGridSize = 6;
     buildBoard(6);
     zombieStageBtn.classList.add('active');
     normalStageBtn.classList.remove('active');
     drawerOverlay.classList.remove('open');
   });
 
-  // 初期化（デフォルト：ノーマルステージ 5×5）
   buildBoard(5);
   renderMonsters();
 </script>
