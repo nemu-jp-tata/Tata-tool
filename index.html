@@ -124,14 +124,19 @@
     filtered.forEach(m => {
       const name = m.name;
       const imgUrl = `${name}.webp`;
+      const typeImgUrl = `${m.type}.webp`; // タイプアイコン用のファイル名
+      
       const item = document.createElement('div');
       item.className = 'monster-item';
+      item.dataset.attr = m.attr; // 属性ごとの背景色指定用
+      
       if (currentSelected && currentSelected.name === name) {
         item.classList.add('active');
       }
 
       item.innerHTML = `
-        <img src="${imgUrl}" alt="${name}" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
+        <img class="monster-type-icon" src="${typeImgUrl}" alt="${m.type}" onerror="this.style.display='none'">
+        <img class="monster-thumb" src="${imgUrl}" alt="${name}" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
         <div class="monster-name">${name}</div>
       `;
       
@@ -141,7 +146,7 @@
           currentSelected = null;
           selectedNameEl.textContent = 'なし';
         } else {
-          currentSelected = { name, imgUrl: item.querySelector('img').src };
+          currentSelected = { name, imgUrl: item.querySelector('.monster-thumb').src };
           item.classList.add('active');
           selectedNameEl.textContent = name;
         }
