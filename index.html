@@ -23,7 +23,13 @@
     </button>
   </div>
 
-  <!-- 盤面フレーム（注意書きを内部に統合） -->
+  <!-- ゾンビラッシュ時のみ表示される1P / 2P 切り替えボタン -->
+  <div class="player-switch-container" id="playerSwitchContainer">
+    <button class="player-btn p1 active" id="btn1P">1P 視点</button>
+    <button class="player-btn p2" id="btn2P">2P 視点</button>
+  </div>
+
+  <!-- 盤面フレーム -->
   <div class="board-frame">
     <div class="board-notice">こちらからゾンビが来ます ▼</div>
     <div id="mainGrid"></div>
@@ -107,43 +113,80 @@
   let currentAttr = "all";
   let currentTier = "all";
   let currentType = "all";
+  let currentGridSize = 5; // 5 = ノーマル, 6 = ゾンビラッシュ
+  let currentPlayer = "1P";   // "1P" または "2P"
 
   const mainGrid = document.getElementById('mainGrid');
+  const playerSwitchContainer = document.getElementById('playerSwitchContainer');
+  const btn1P = document.getElementById('btn1P');
+  const btn2P = document.getElementById('btn2P');
 
   function buildBoard(size) {
+    currentGridSize = size;
     mainGrid.className = `grid-${size}x${size}`;
     mainGrid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
     
+    // 6x6（ゾンビラッシュ）の時だけ 1P/2P 切り替えを表示
+    if (size === 6) {
+      playerSwitchContainer.classList.add('show');
+    } else {
+      playerSwitchContainer.classList.remove('show');
+      currentPlayer = "1P"; // 5x5に戻ったら強制的に1P扱い
+    }
+
     mainGrid.innerHTML = '';
     for (let i = 0; i < size * size; i++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
+      
       cell.addEventListener('click', () => {
+        // 選択中モンスターなしの場合はセルをクリア
         if (!currentSelected) {
           cell.innerHTML = '';
+          cell.className = 'cell';
           return;
         }
 
         const targetSpecies = currentSelected.species;
         const targetTier = currentSelected.tierNum;
+        
+        // プレイヤーごとの重複チェック
+        // ※6x6のときは現在選択中のプレイヤー(currentPlayer)内で重複チェック。5x5のときは全体でチェック。
         let isAlreadyOnBoard = false;
-
         document.querySelectorAll('#mainGrid .cell').forEach(c => {
           const img = c.querySelector('img');
-          if (img && img.dataset.species === targetSpecies && parseInt(img.dataset.tier) === targetTier) {
-            isAlreadyOnBoard = true;
+          if (img && parseInt(img.dataset.tier) === targetTier && img.dataset.species === targetSpecies) {
+            if (currentGridSize === 5 || img.dataset.player === currentPlayer) {
+              isAlreadyOnBoard = true;
+            }
           }
         });
 
         const existingImg = cell.querySelector('img');
-        const isReplacingSelf = existingImg && existingImg.dataset.species === targetSpecies && parseInt(existingImg.dataset.tier) === targetTier;
+        const isReplacingSelf = existingImg && 
+                                parseInt(existingImg.dataset.tier) === targetTier && 
+                                existingImg.dataset.species === targetSpecies &&
+                                (currentGridSize === 5 || existingImg.dataset.player === currentPlayer);
 
         if (isAlreadyOnBoard && !isReplacingSelf) {
-          alert(`${currentSelected.name} (T${targetTier}) は既に配置されています。`);
+          const playerText = (currentGridSize === 6) ? `[${currentPlayer}]` : "";
+          alert(`${playerText} ${currentSelected.name} (T${targetTier}) は既に配置されています。`);
           return;
         }
 
-        cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}" data-species="${targetSpecies}" data-tier="${targetTier}">`;
+        // プレイヤースタイル・属性の付与
+        cell.className = 'cell';
+        if (currentGridSize === 6) {
+          cell.classList.add(currentPlayer === '1P' ? 'p1-cell' : 'p2-cell');
+        }
+
+        cell.innerHTML = `
+          <img src="${currentSelected.imgUrl}" 
+               alt="${currentSelected.name}" 
+               data-species="${targetSpecies}" 
+               data-tier="${targetTier}"
+               data-player="${currentGridSize === 6 ? currentPlayer : '1P'}">
+        `;
       });
       mainGrid.appendChild(cell);
     }
@@ -217,10 +260,28 @@
   setupFilter('tierFilterGroup', 'tier', val => currentTier = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
+  // クリアボタン
   document.getElementById('clearBtn').addEventListener('click', () => {
-    document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.innerHTML = '';
+      cell.className = 'cell';
+    });
   });
 
+  // 1P / 2P 切替ボタンの挙動
+  btn1P.addEventListener('click', () => {
+    currentPlayer = "1P";
+    btn1P.classList.add('active');
+    btn2P.classList.remove('active');
+  });
+
+  btn2P.addEventListener('click', () => {
+    currentPlayer = "2P";
+    btn2P.classList.add('active');
+    btn1P.classList.remove('active');
+  });
+
+  // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const normalStageBtn = document.getElementById('normalStageBtn');
@@ -250,6 +311,7 @@
     drawerOverlay.classList.remove('open');
   });
 
+  // 初期化（デフォルト：ノーマルステージ 5×5）
   buildBoard(5);
   renderMonsters();
 </script>
