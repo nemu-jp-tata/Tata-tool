@@ -23,6 +23,11 @@
     </button>
   </div>
 
+  <!-- 注意書きスペース -->
+  <div class="notice-bar">
+    同じ種類・同じTier（タタ）は、各ステージにつき一体までしか配置できません。
+  </div>
+
   <!-- 盤面フレーム -->
   <div class="board-frame">
     <div id="mainGrid"></div>
@@ -93,11 +98,13 @@
 <script src="monsters.js"></script>
 
 <script>
-  // 自動でHTML表示用フォーマットに変換
+  // 生データからHTML表示用フォーマットを作成し、Species情報も保持する
   const monstersData = rawMonstersData.map(m => ({
     name: m.name,
+    species: m.species, // 種族名（重複チェック用）
     attr: m.type,
-    tier: "T" + m.T,
+    tier: "T" + m.T, // 表示用
+    tierNum: m.T,      // 数値（重複チェック用）
     type: m.role
   }));
 
@@ -105,11 +112,10 @@
   let currentAttr = "all";
   let currentTier = "all";
   let currentType = "all";
-  let currentGridSize = 5; // 初期値はノーマルステージ（5×5）
 
   const mainGrid = document.getElementById('mainGrid');
 
-  // 盤面を動的に生成する関数
+  // 盤面を生成する関数
   function buildBoard(size) {
     mainGrid.className = `grid-${size}x${size}`;
     mainGrid.style.display = 'grid';
@@ -120,12 +126,37 @@
     for (let i = 0; i < size * size; i++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
+      // --- 重複チェックを含むクリックイベント ---
       cell.addEventListener('click', () => {
-        if (currentSelected) {
-          cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}">`;
-        } else {
+        // クリアモード（選択解除）
+        if (!currentSelected) {
           cell.innerHTML = '';
+          return;
         }
+
+        // 重複チェックロジック
+        const targetSpecies = currentSelected.species;
+        const targetTier = currentSelected.tierNum;
+        let isAlreadyOnBoard = false;
+
+        // 現在盤面に置かれている全セルをチェック
+        document.querySelectorAll('#mainGrid .cell').forEach(c => {
+          const img = c.querySelector('img');
+          if (img && img.dataset.species === targetSpecies && parseInt(img.dataset.tier) === targetTier) {
+            isAlreadyOnBoard = true;
+          }
+        });
+
+        const existingImg = cell.querySelector('img');
+        const isReplacingSelf = existingImg && existingImg.dataset.species === targetSpecies && parseInt(existingImg.dataset.tier) === targetTier;
+
+        if (isAlreadyOnBoard && !isReplacingSelf) {
+          alert(`${currentSelected.name} (T${targetTier}) は既に配置されています。`);
+          return;
+        }
+
+        // 配置実行 (SpeciesとTierをdata属性として埋め込む)
+        cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}" data-species="${targetSpecies}" data-tier="${targetTier}">`;
       });
       mainGrid.appendChild(cell);
     }
@@ -170,7 +201,12 @@
           currentSelected = null;
           selectedNameEl.textContent = 'なし';
         } else {
-          currentSelected = { name, imgUrl: item.querySelector('.monster-thumb').src };
+          currentSelected = { 
+            name, 
+            species: m.species,
+            tierNum: m.tierNum,
+            imgUrl: item.querySelector('.monster-thumb').src 
+          };
           item.classList.add('active');
           selectedNameEl.textContent = name;
         }
@@ -179,7 +215,7 @@
     });
   }
 
-  // フィルターボタンイベント登録
+  // フィルター設定
   function setupFilter(groupId, attrName, callback) {
     const btns = document.querySelectorAll(`#${groupId} .filter-btn`);
     btns.forEach(btn => {
@@ -201,7 +237,7 @@
     document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
   });
 
-  // --- ドロワーメニューの開閉＆ステージ切り替えロジック ---
+  // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const normalStageBtn = document.getElementById('normalStageBtn');
