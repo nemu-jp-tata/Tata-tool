@@ -90,25 +90,31 @@ body {
   letter-spacing: 0.5px;
 }
 
-.grid-5x5, .grid-6x6 {
+/* 縦横比が絶対に崩れないよう明示的なグリッド定義 */
+.grid-5x5 {
   display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 6px;
+}
+.grid-6x6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
   gap: 6px;
 }
 
-/* html2canvasでも絶対に潰れない正方形セル構造 */
 .cell {
   background: #0f111a;
   border: 1px dashed #282d45;
   border-radius: 6px;
-  width: 100%;
+  aspect-ratio: 1 / 1;
   position: relative;
   cursor: pointer;
   overflow: hidden;
-}
-.cell::before {
-  content: "";
-  display: block;
-  padding-top: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 1P・2Pごとの盤面セル枠デザイン */
@@ -117,16 +123,13 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 .cell.p2-cell {
-  border: 2px solid #3b82f6;
+  border: 2px solid #3b4261; /* 枠線を少し見やすく調整 */
   background: rgba(59, 130, 246, 0.1);
 }
 
 .cell img {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
+  width: 90%;
+  height: 90%;
   object-fit: contain;
 }
 
