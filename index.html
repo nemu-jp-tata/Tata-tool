@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -9,12 +9,13 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none;
     }
     body {
       background-color: #121420;
       color: #94a3b8;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 16px;
+      padding: 16px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -23,12 +24,30 @@
       width: 100%;
       max-width: 420px;
     }
+    .header-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .btn {
+      background: #282d42;
+      color: #e2e8f0;
+      border: 1px solid #3b4261;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn:active {
+      background: #3b4261;
+    }
     /* 6x6 グリッド */
     .board-frame {
       background: #181a29;
       border: 1px solid #282d42;
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
       margin-bottom: 16px;
     }
     .grid-6x6 {
@@ -42,25 +61,33 @@
       border-radius: 6px;
       aspect-ratio: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       overflow: hidden;
+      padding: 2px;
+      position: relative;
     }
-    .cell img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+    .cell.selected {
+      border: 2px solid #60a5fa;
+    }
+    .cell-name {
+      font-size: 8px;
+      color: #38bdf8;
+      text-align: center;
+      word-break: break-all;
+      line-height: 1.1;
     }
     /* モンスター一覧 */
     .monster-frame {
       background: #181a29;
       border: 1px solid #282d42;
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
     }
     .monster-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       color: #e2e8f0;
       margin-bottom: 8px;
@@ -69,10 +96,10 @@
     .monster-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      max-height: 320px;
+      gap: 6px;
+      max-height: 360px;
       overflow-y: auto;
-      padding-right: 4px;
+      padding-right: 2px;
     }
     .monster-item {
       background: #0f111a;
@@ -86,65 +113,127 @@
       padding: 4px;
       cursor: pointer;
     }
-    .monster-item img {
-      width: 80%;
-      height: 80%;
-      object-fit: contain;
+    .monster-item.active {
+      border: 2px solid #4ade80;
+      background: #1e293b;
+    }
+    .monster-badge {
+      width: 24px;
+      height: 24px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      margin-bottom: 4px;
     }
     .monster-name {
       font-size: 9px;
-      color: #94a3b8;
+      color: #cbd5e1;
       text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
+      line-height: 1.1;
+      word-break: break-all;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
+  <div class="header-tools">
+    <span style="font-size: 12px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
+    <button class="btn" id="clearBtn">盤面クリア</button>
+  </div>
+
   <!-- 6x6 マス目 -->
   <div class="board-frame">
     <div class="grid-6x6" id="mainGrid"></div>
   </div>
 
-  <!-- 横4体ずつ表示されるモンスター選択リスト -->
+  <!-- 横4列のモンスター選択リスト -->
   <div class="monster-frame">
-    <div class="monster-title">モンスター一覧</div>
+    <div class="monster-title">モンスター選択</div>
     <div class="monster-grid" id="monsterGrid"></div>
   </div>
 </div>
 
 <script>
-  // モンスターデータ
-  const monsters = [
-    { name: "チーシェル", icon: "https://via.placeholder.com/60?text=チーシェル" },
-    { name: "ダイシェル", icon: "https://via.placeholder.com/60?text=ダイシェル" },
-    { name: "カピラス", icon: "https://via.placeholder.com/60?text=カピラス" },
-    { name: "カピバルリー", icon: "https://via.placeholder.com/60?text=カピバルリー" },
-    { name: "ネコオリ", icon: "https://via.placeholder.com/60?text=ネコオリ" },
-    { name: "チルネコ", icon: "https://via.placeholder.com/60?text=チルネコ" },
-    { name: "チルレオ", icon: "https://via.placeholder.com/60?text=チルレオ" },
-    { name: "ブリズレオ", icon: "https://via.placeholder.com/60?text=ブリズレオ" }
+  const monsterNames = [
+    "チーシェル", "ダイシェル", "カピラス", "カピバルリー", "ネコオリ", "チルネコ", "チルレオ", "ブリズレオ",
+    "ナミアシカ", "ボルザラシ", "ダブザラシ", "ダイドウオウ", "ウミミ", "ウミピョン", "ウミロップ", "アクアリーナ",
+    "トコペンギン", "タフペンギン", "フブペンギン", "ペンペラー", "ツヨカニ", "ケンカニ", "クラブロー", "チョキング",
+    "ポタカゲ", "ピチャカゲ", "アクアガマ", "イガマスター", "ネムクラゲ", "スヤクラゲ", "ルナドール", "オロラクイン",
+    "シズクジ", "シズクチョウ", "ミストリア", "スケダコ", "ウオダコ", "オクドーム", "ホネギョ", "トゲギョ",
+    "ガイセーン", "アビスカル", "トスリス", "バタリス", "スズメラ", "カエンジャク", "ヒバイヌ", "マッチバ",
+    "フレベロス", "ヘルベロス", "ヒモリ", "ツノイモリ", "ボルケザード", "インフェルドラ", "コロコン", "ニコン",
+    "ヨウエンビ", "キツネビア", "ワンブー", "ハンバーブー", "ブヒナベブー", "カロリキング", "ヒノムシ", "フレイムシ",
+    "バタフレア", "バタブレイズ", "ヒエビ", "フレービ", "バーニフィス", "ボルケイセ", "トラーニー", "ハーミットラ",
+    "ゼンガー", "マスタイガー", "ププンク", "クサンク", "マグマスク", "ボンバスカー", "ヒニャオ", "マネビネコ",
+    "ネコマダラ", "フグマル", "ニギリマル", "フナモリマル", "タイショウマル", "アタタマ", "ヒガマ", "メラガマ",
+    "ダルマグマ", "フタバード", "ヨツバード", "ナンモナイシ", "ハナレナイシ", "フルッグ", "フルルッグ", "ドラフルッグ",
+    "フルグロウン", "コマキリ", "ハナキリ", "ヴァルキリ", "サクランティス", "グリンビィ", "チョイワルブーン", "チョーワルブーン",
+    "ブーンマント", "コパンダ", "タケパンダ", "パンドウラク", "バンブオウ", "ヒマワリン", "キラワー", "サーフワリン",
+    "サンフワリン", "フクログモ", "ボトルグモ", "チュラリウム", "シンラリウム", "サボール", "サボケン", "サボディビル",
+    "マルッシュ", "マボロッシュ", "マダムッシュ", "イルミラージュ", "ベロパカ", "ツバルカ", "ビチャルパカ", "フリコー",
+    "リーフロ", "ツリーフロ", "クロノウル", "ヤミノメ", "ヤミハナ", "ヤミマンドラ", "ダークラウン", "マドブヒ",
+    "ロクブヒ", "ハリネム", "グウホッグ", "コロジュー", "ロクジュー", "ジオジュラ", "ジュラゴン", "コロカメ",
+    "ガントル", "ガンタス", "ガンバンタス", "ヤンザル", "ワルキー", "イビルザル", "サルタイセイ", "モグリン",
+    "モグテント", "モグトリデ", "モグパレス", "コワガルー", "ボコガルー", "ガルッキー", "ガルチャンプ", "ツブツムリ",
+    "ジェムツムリ", "クォーツムリ", "アメジスネイル", "コロタマ", "コロロック", "スカラーべ", "スカリギオ", "ボウズヘビ",
+    "ネンブツヘビ", "ボンノオロチ", "ホルリン", "ドリルー", "ボーランバ", "ムムカバ", "マリリンバ", "モンローバ",
+    "ヒポディーバ", "ビパピー", "ビビドッグ", "ノロナマズ", "ビリナマズ", "ガオデン", "ガルルデン", "キングデン",
+    "エンペラデン", "ビリジカ", "デンジカ", "ジバシカ", "マグネクス", "パチルフ", "デンロウ", "ジンロウ",
+    "ジンライロウ", "モエミン", "エレコーン", "エレキリン", "ボルキリン", "ビリピヨ", "エレクトリ", "ビリビバシ",
+    "ライオウム", "プラビ", "スタピョン", "ステラビット", "アストラビット", "ライメー", "シーパルス", "アラシープ",
+    "アマルテラ", "エレキネコ", "デンニャン", "スピニャット", "ビリモ", "ビリモリ", "パルバット", "ヴァンパルス",
+    "ピカル", "ボルタル", "ルシフェル", "ルミナリオン", "トジコモル"
   ];
 
-  // 6x6 グリッド生成
+  let currentSelected = null;
+
+  // 6x6盤面生成
   const mainGrid = document.getElementById('mainGrid');
   for (let i = 0; i < 36; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
+    cell.addEventListener('click', () => {
+      if (currentSelected) {
+        cell.innerHTML = `<div class="monster-badge">${currentSelected.name[0]}</div><div class="cell-name">${currentSelected.name}</div>`;
+      } else {
+        cell.innerHTML = '';
+      }
+    });
     mainGrid.appendChild(cell);
   }
 
-  // モンスター一覧生成（横4列）
+  // モンスター一覧生成
   const monsterGrid = document.getElementById('monsterGrid');
-  monsters.forEach(m => {
+  const selectedNameEl = document.getElementById('selectedName');
+
+  monsterNames.forEach(name => {
     const item = document.createElement('div');
     item.className = 'monster-item';
-    item.innerHTML = `<img src="${m.icon}" alt="${m.name}"><div class="monster-name">${m.name}</div>`;
+    item.innerHTML = `<div class="monster-badge">${name[0]}</div><div class="monster-name">${name}</div>`;
+    
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.monster-item').forEach(el => el.classList.remove('active'));
+      if (currentSelected && currentSelected.name === name) {
+        currentSelected = null;
+        selectedNameEl.textContent = 'なし';
+      } else {
+        currentSelected = { name };
+        item.classList.add('active');
+        selectedNameEl.textContent = name;
+      }
+    });
     monsterGrid.appendChild(item);
+  });
+
+  // クリアボタン
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
   });
 </script>
 
