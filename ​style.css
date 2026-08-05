@@ -1,0 +1,192 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+body {
+  background-color: #121420;
+  color: #94a3b8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.container {
+  width: 100%;
+  max-width: 420px;
+}
+.header-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.btn {
+  background: #282d42;
+  color: #e2e8f0;
+  border: 1px solid #3b4261;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn:active {
+  background: #3b4261;
+}
+
+/* 6x6 グリッド */
+.board-frame {
+  background: #181a29;
+  border: 1px solid #282d42;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+.grid-6x6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.cell {
+  background: #0f111a;
+  border: 1px dashed #282d45;
+  border-radius: 6px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 2px;
+}
+.cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* モンスター選択エリア */
+.monster-frame {
+  background: #181a29;
+  border: 1px solid #282d42;
+  border-radius: 12px;
+  padding: 10px;
+}
+.monster-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* アコーディオン（フィルター部分） */
+.filter-details {
+  background: #0f111a;
+  border: 1px solid #282d45;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.filter-summary {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.filter-summary::-webkit-details-marker {
+  display: none;
+}
+.filter-details[open] .summary-arrow {
+  transform: rotate(180deg);
+}
+.summary-arrow {
+  transition: transform 0.2s;
+}
+
+/* フィルターエリア */
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid #282d45;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+.filter-label {
+  font-size: 10px;
+  color: #64748b;
+  margin-right: 2px;
+}
+.filter-btn {
+  background: #181a29;
+  color: #94a3b8;
+  border: 1px solid #282d45;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.filter-btn img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.filter-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* モンスター一覧 */
+.monster-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.monster-item {
+  background: #0f111a;
+  border: 1px solid #282d45;
+  border-radius: 8px;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: pointer;
+}
+.monster-item.active {
+  border: 2px solid #4ade80;
+  background: #1e293b;
+}
+.monster-item img {
+  width: 75%;
+  height: 75%;
+  object-fit: contain;
+}
+.monster-name {
+  font-size: 9px;
+  color: #cbd5e1;
+  text-align: center;
+  line-height: 1.1;
+  word-break: break-all;
+  margin-top: 2px;
+}
