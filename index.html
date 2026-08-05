@@ -1,4 +1,4 @@
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -61,23 +61,16 @@
       border-radius: 6px;
       aspect-ratio: 1;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       overflow: hidden;
       padding: 2px;
-      position: relative;
     }
-    .cell.selected {
-      border: 2px solid #60a5fa;
-    }
-    .cell-name {
-      font-size: 8px;
-      color: #38bdf8;
-      text-align: center;
-      word-break: break-all;
-      line-height: 1.1;
+    .cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     /* モンスター一覧 */
     .monster-frame {
@@ -117,18 +110,10 @@
       border: 2px solid #4ade80;
       background: #1e293b;
     }
-    .monster-badge {
-      width: 24px;
-      height: 24px;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-      margin-bottom: 4px;
+    .monster-item img {
+      width: 75%;
+      height: 75%;
+      object-fit: contain;
     }
     .monster-name {
       font-size: 9px;
@@ -136,6 +121,7 @@
       text-align: center;
       line-height: 1.1;
       word-break: break-all;
+      margin-top: 2px;
     }
   </style>
 </head>
@@ -200,7 +186,7 @@
     cell.className = 'cell';
     cell.addEventListener('click', () => {
       if (currentSelected) {
-        cell.innerHTML = `<div class="monster-badge">${currentSelected.name[0]}</div><div class="cell-name">${currentSelected.name}</div>`;
+        cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}">`;
       } else {
         cell.innerHTML = '';
       }
@@ -208,14 +194,16 @@
     mainGrid.appendChild(cell);
   }
 
-  // モンスター一覧生成
+  // モンスター一覧生成（.webp / .png / .jpg 自動対応）
   const monsterGrid = document.getElementById('monsterGrid');
   const selectedNameEl = document.getElementById('selectedName');
 
   monsterNames.forEach(name => {
+    // まず .webp で読み込みを試し、失敗したら .png / .jpg にフォールバック
+    const imgUrl = `${name}.webp`;
     const item = document.createElement('div');
     item.className = 'monster-item';
-    item.innerHTML = `<div class="monster-badge">${name[0]}</div><div class="monster-name">${name}</div>`;
+    item.innerHTML = `<img src="${imgUrl}" alt="${name}" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}"><div class="monster-name">${name}</div>`;
     
     item.addEventListener('click', () => {
       document.querySelectorAll('.monster-item').forEach(el => el.classList.remove('active'));
@@ -223,7 +211,7 @@
         currentSelected = null;
         selectedNameEl.textContent = 'なし';
       } else {
-        currentSelected = { name };
+        currentSelected = { name, imgUrl: item.querySelector('img').src };
         item.classList.add('active');
         selectedNameEl.textContent = name;
       }
