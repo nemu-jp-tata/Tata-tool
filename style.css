@@ -90,7 +90,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* 縦横比が絶対に崩れないよう明示的なグリッド定義 */
+/* 縦横比が絶対に崩れないグリッド定義 */
 .grid-5x5 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -123,7 +123,7 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 .cell.p2-cell {
-  border: 2px solid #3b4261; /* 枠線を少し見やすく調整 */
+  border: 2px solid #3b4261;
   background: rgba(59, 130, 246, 0.1);
 }
 
