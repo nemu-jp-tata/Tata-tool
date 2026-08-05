@@ -36,6 +36,38 @@ body {
   background: #3b4261;
 }
 
+/* 1P / 2P 切り替えコントロール（ゾンビラッシュ時のみ表示） */
+.player-switch-container {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.player-switch-container.show {
+  display: flex;
+}
+.player-btn {
+  background: #181a29;
+  color: #94a3b8;
+  border: 1px solid #282d45;
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.player-btn.p1.active {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border-color: #ef4444;
+}
+.player-btn.p2.active {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
 /* 6x6・5x5 盤面フレーム */
 .board-frame {
   background: #181a29;
@@ -45,7 +77,6 @@ body {
   margin-bottom: 12px;
 }
 
-/* 盤面と一体化した注意書きスペース */
 .board-notice {
   background: #0f111a;
   color: #f87171;
@@ -74,7 +105,19 @@ body {
   cursor: pointer;
   overflow: hidden;
   padding: 2px;
+  position: relative;
 }
+
+/* 1P・2Pごとの盤面セル枠デザイン */
+.cell.p1-cell {
+  border: 2px solid #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+.cell.p2-cell {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
 .cell img {
   width: 100%;
   height: 100%;
@@ -123,7 +166,6 @@ body {
   transition: transform 0.2s;
 }
 
-/* フィルターエリア */
 .filter-section {
   display: flex;
   flex-direction: column;
@@ -189,7 +231,6 @@ body {
   position: relative;
 }
 
-/* 属性ごとのうっすらとした背景色 */
 .monster-item[data-attr="水"] { background: rgba(37, 99, 235, 0.15); }
 .monster-item[data-attr="炎"] { background: rgba(239, 68, 68, 0.15); }
 .monster-item[data-attr="草"] { background: rgba(34, 197, 94, 0.15); }
@@ -201,7 +242,6 @@ body {
   background: #1e293b !important;
 }
 
-/* 右上のタイプアイコン */
 .monster-type-icon {
   position: absolute;
   top: 3px;
@@ -226,7 +266,7 @@ body {
   margin-top: 2px;
 }
 
-/* --- ハンバーガーメニュー・ドロワー関連 --- */
+/* ハンバーガーメニュー・ドロワー関連 */
 .menu-btn {
   background: #282d42;
   color: #e2e8f0;
