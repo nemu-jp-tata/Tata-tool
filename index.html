@@ -315,19 +315,32 @@
     localStorage.removeItem('monsterBoard_cells');
   });
 
-  // 画像保存ボタン（要素の実際の幅・高さを明示的に指定して比率を固定）
+  // 画像保存ボタン
   document.getElementById('saveBtn').addEventListener('click', () => {
     const boardFrame = document.getElementById('boardFrame');
+    const cells = document.querySelectorAll('.cell');
+    
+    // 【縦伸び防止】html2canvasのバグ対策として、撮影直前にセルの高さをpxで強制的に正方形に固定する
+    cells.forEach(cell => {
+      const cellWidth = cell.getBoundingClientRect().width;
+      cell.style.height = `${cellWidth}px`;
+    });
+
     const rect = boardFrame.getBoundingClientRect();
     
     html2canvas(boardFrame, {
       backgroundColor: '#181a29',
-      scale: 2,
+      scale: 1, // 【サイズ調整】2から1に変更し、大きすぎる問題（約800px→約400px）を解決
       width: rect.width,
       height: rect.height,
       windowWidth: document.documentElement.clientWidth,
       useCORS: true
     }).then(canvas => {
+      // 撮影完了後、スタイルの強制固定を解除
+      cells.forEach(cell => {
+        cell.style.height = '';
+      });
+
       const imageURL = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
       downloadLink.href = imageURL;
@@ -338,6 +351,11 @@
     }).catch(err => {
       console.error('画像保存エラー:', err);
       alert('画像の保存に失敗しました。');
+      
+      // エラー時も解除
+      cells.forEach(cell => {
+        cell.style.height = '';
+      });
     });
   });
 
