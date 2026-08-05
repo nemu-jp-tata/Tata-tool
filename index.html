@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -89,16 +89,40 @@
       text-align: center;
     }
 
+    /* アコーディオン（フィルター部分） */
+    .filter-details {
+      background: #0f111a;
+      border: 1px solid #282d45;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .filter-summary {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .filter-summary::-webkit-details-marker {
+      display: none;
+    }
+    .filter-details[open] .summary-arrow {
+      transform: rotate(180deg);
+    }
+    .summary-arrow {
+      transition: transform 0.2s;
+    }
+
     /* フィルターエリア */
     .filter-section {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: 10px;
-      background: #0f111a;
       padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #282d45;
+      border-top: 1px solid #282d45;
     }
     .filter-row {
       display: flex;
@@ -192,41 +216,48 @@
   <div class="monster-frame">
     <div class="monster-title">モンスター選択</div>
 
-    <!-- 絞り込みフィルターグループ -->
-    <div class="filter-section">
-      <!-- 1. 属性フィルター -->
-      <div class="filter-row" id="attrFilterGroup">
-        <span class="filter-label">属性:</span>
-        <button class="filter-btn active" data-attr="all">すべて</button>
-        <button class="filter-btn" data-attr="水"><img src="水属性.webp" alt="水" onerror="this.style.display='none'">水</button>
-        <button class="filter-btn" data-attr="炎"><img src="炎属性.webp" alt="炎" onerror="this.style.display='none'">炎</button>
-        <button class="filter-btn" data-attr="草"><img src="草属性.webp" alt="草" onerror="this.style.display='none'">草</button>
-        <button class="filter-btn" data-attr="岩"><img src="岩属性.webp" alt="岩" onerror="this.style.display='none'">岩</button>
-        <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
-      </div>
+    <!-- アコーディオン（絞り込みフィルター） -->
+    <details class="filter-details">
+      <summary class="filter-summary">
+        <span>絞り込みフィルターを開く</span>
+        <span class="summary-arrow">▼</span>
+      </summary>
+      
+      <div class="filter-section">
+        <!-- 1. 属性フィルター -->
+        <div class="filter-row" id="attrFilterGroup">
+          <span class="filter-label">属性:</span>
+          <button class="filter-btn active" data-attr="all">すべて</button>
+          <button class="filter-btn" data-attr="水"><img src="水属性.webp" alt="水" onerror="this.style.display='none'">水</button>
+          <button class="filter-btn" data-attr="炎"><img src="炎属性.webp" alt="炎" onerror="this.style.display='none'">炎</button>
+          <button class="filter-btn" data-attr="草"><img src="草属性.webp" alt="草" onerror="this.style.display='none'">草</button>
+          <button class="filter-btn" data-attr="岩"><img src="岩属性.webp" alt="岩" onerror="this.style.display='none'">岩</button>
+          <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
+        </div>
 
-      <!-- 2. Tier フィルター -->
-      <div class="filter-row" id="tierFilterGroup">
-        <span class="filter-label">Tier:</span>
-        <button class="filter-btn active" data-tier="all">すべて</button>
-        <button class="filter-btn" data-tier="T1">T1</button>
-        <button class="filter-btn" data-tier="T2">T2</button>
-        <button class="filter-btn" data-tier="T3">T3</button>
-        <button class="filter-btn" data-tier="T4">T4</button>
-      </div>
+        <!-- 2. Tier フィルター -->
+        <div class="filter-row" id="tierFilterGroup">
+          <span class="filter-label">Tier:</span>
+          <button class="filter-btn active" data-tier="all">すべて</button>
+          <button class="filter-btn" data-tier="T1">T1</button>
+          <button class="filter-btn" data-tier="T2">T2</button>
+          <button class="filter-btn" data-tier="T3">T3</button>
+          <button class="filter-btn" data-tier="T4">T4</button>
+        </div>
 
-      <!-- 3. タイプ フィルター -->
-      <div class="filter-row" id="typeFilterGroup">
-        <span class="filter-label">タイプ:</span>
-        <button class="filter-btn active" data-type="all">すべて</button>
-        <button class="filter-btn" data-type="タンク"><img src="タンク.webp" alt="タンク" onerror="this.style.display='none'">タンク</button>
-        <button class="filter-btn" data-type="ファイター"><img src="ファイター.webp" alt="ファイター" onerror="this.style.display='none'">ファイター</button>
-        <button class="filter-btn" data-type="ダメージ"><img src="ダメージ.webp" alt="ダメージ" onerror="this.style.display='none'">ダメージ</button>
-        <button class="filter-btn" data-type="ヒール"><img src="ヒール.webp" alt="ヒール" onerror="this.style.display='none'">ヒール</button>
-        <button class="filter-btn" data-type="サポート"><img src="サポート.webp" alt="サポート" onerror="this.style.display='none'">サポート</button>
-        <button class="filter-btn" data-type="スペシャル"><img src="スペシャル.webp" alt="スペシャル" onerror="this.style.display='none'">スペシャル</button>
+        <!-- 3. タイプ フィルター -->
+        <div class="filter-row" id="typeFilterGroup">
+          <span class="filter-label">タイプ:</span>
+          <button class="filter-btn active" data-type="all">すべて</button>
+          <button class="filter-btn" data-type="タンク"><img src="タンク.webp" alt="タンク" onerror="this.style.display='none'">タンク</button>
+          <button class="filter-btn" data-type="ファイター"><img src="ファイター.webp" alt="ファイター" onerror="this.style.display='none'">ファイター</button>
+          <button class="filter-btn" data-type="ダメージ"><img src="ダメージ.webp" alt="ダメージ" onerror="this.style.display='none'">ダメージ</button>
+          <button class="filter-btn" data-type="ヒール"><img src="ヒール.webp" alt="ヒール" onerror="this.style.display='none'">ヒール</button>
+          <button class="filter-btn" data-type="サポート"><img src="サポート.webp" alt="サポート" onerror="this.style.display='none'">サポート</button>
+          <button class="filter-btn" data-type="スペシャル"><img src="スペシャル.webp" alt="スペシャル" onerror="this.style.display='none'">スペシャル</button>
+        </div>
       </div>
-    </div>
+    </details>
 
     <!-- モンスター一覧 -->
     <div class="monster-grid" id="monsterGrid"></div>
