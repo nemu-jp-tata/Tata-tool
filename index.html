@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>モンスター配置ツール</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #121420;
+      color: #94a3b8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+    }
+    /* 6x6 グリッド */
+    .board-frame {
+      background: #181a29;
+      border: 1px solid #282d42;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .grid-6x6 {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .cell {
+      background: #0f111a;
+      border: 1px dashed #282d45;
+      border-radius: 6px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    /* モンスター一覧 */
+    .monster-frame {
+      background: #181a29;
+      border: 1px solid #282d42;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .monster-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .monster-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .monster-item {
+      background: #0f111a;
+      border: 1px solid #282d45;
+      border-radius: 8px;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .monster-item img {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+    }
+    .monster-name {
+      font-size: 9px;
+      color: #94a3b8;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 6x6 マス目 -->
+  <div class="board-frame">
+    <div class="grid-6x6" id="mainGrid"></div>
+  </div>
+
+  <!-- 横4体ずつ表示されるモンスター選択リスト -->
+  <div class="monster-frame">
+    <div class="monster-title">モンスター一覧</div>
+    <div class="monster-grid" id="monsterGrid"></div>
+  </div>
+</div>
+
+<script>
+  // モンスターデータ
+  const monsters = [
+    { name: "チーシェル", icon: "https://via.placeholder.com/60?text=チーシェル" },
+    { name: "ダイシェル", icon: "https://via.placeholder.com/60?text=ダイシェル" },
+    { name: "カピラス", icon: "https://via.placeholder.com/60?text=カピラス" },
+    { name: "カピバルリー", icon: "https://via.placeholder.com/60?text=カピバルリー" },
+    { name: "ネコオリ", icon: "https://via.placeholder.com/60?text=ネコオリ" },
+    { name: "チルネコ", icon: "https://via.placeholder.com/60?text=チルネコ" },
+    { name: "チルレオ", icon: "https://via.placeholder.com/60?text=チルレオ" },
+    { name: "ブリズレオ", icon: "https://via.placeholder.com/60?text=ブリズレオ" }
+  ];
+
+  // 6x6 グリッド生成
+  const mainGrid = document.getElementById('mainGrid');
+  for (let i = 0; i < 36; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    mainGrid.appendChild(cell);
+  }
+
+  // モンスター一覧生成（横4列）
+  const monsterGrid = document.getElementById('monsterGrid');
+  monsters.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'monster-item';
+    item.innerHTML = `<img src="${m.icon}" alt="${m.name}"><div class="monster-name">${m.name}</div>`;
+    monsterGrid.appendChild(item);
+  });
+</script>
+
+</body>
+</html>
