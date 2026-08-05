@@ -6,7 +6,7 @@
   <title>モンスター配置ツール</title>
   <!-- 外部CSSの読み込み -->
   <link rel="stylesheet" href="./style.css">
-  <!-- html2canvasライブラリの読み込み（画像保存用） -->
+  <!-- html2canvasライブラリの読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
@@ -266,13 +266,13 @@
     });
   });
 
-  // 画像保存ボタン（html2canvasを使用し、スマホやDiscordに貼りやすい丁度良いサイズで出力）
+  // 画像保存ボタン（scale: 1 にして丁度良いサイズで出力）
   document.getElementById('saveBtn').addEventListener('click', () => {
     const boardFrame = document.getElementById('boardFrame');
     
     html2canvas(boardFrame, {
       backgroundColor: '#181a29',
-      scale: 2, // 荒くならない程度に適度な解像度に調整
+      scale: 1, 
       useCORS: true
     }).then(canvas => {
       const imageURL = canvas.toDataURL('image/png');
