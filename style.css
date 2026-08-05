@@ -298,3 +298,111 @@ body {
   color: #ffffff;
   border-color: #3b82f6;
 }
+/* --- 注意書きエリア --- */
+.notice-bar {
+  background: #7f1d1d; /* 濃い赤色 */
+  color: #fecaca; /* 薄いピンク色 */
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #991b1b;
+  font-weight: bold;
+}
+
+/* 盤面フレームのマージンを少し調整 */
+.board-frame {
+  background: #181a29;
+  border: 1px solid #282d42;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px; /* 変更: 選択エリアとの間隔を少し詰める */
+}
+
+/* --- 既存のスタイル（変更なし） --- */
+.menu-btn {
+  background: #282d42;
+  color: #e2e8f0;
+  border: 1px solid #3b4261;
+  padding: 6px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 32px;
+  height: 28px;
+}
+.menu-btn span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 1.5px;
+}
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 999;
+}
+.drawer-overlay.open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.drawer-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 260px;
+  height: 100%;
+  background: #181a29;
+  border-left: 1px solid #282d42;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.5);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+.drawer-overlay.open .drawer-menu {
+  transform: translateX(0);
+}
+
+.drawer-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 1px solid #282d42;
+  padding-bottom: 10px;
+}
+
+.drawer-item {
+  background: #0f111a;
+  color: #94a3b8;
+  border: 1px solid #282d45;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s, color 0.2s;
+}
+.drawer-item:hover, .drawer-item.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
