@@ -116,23 +116,66 @@
   let currentAttr = "all";
   let currentTier = "all";
   let currentType = "all";
-  let currentGridSize = 5;
+  let currentGridSize = parseInt(localStorage.getItem('monsterBoard_size')) || 5;
   let currentPlayer = "1P";
 
   const mainGrid = document.getElementById('mainGrid');
   const playerSwitchContainer = document.getElementById('playerSwitchContainer');
   const btn1P = document.getElementById('btn1P');
   const btn2P = document.getElementById('btn2P');
+  const normalStageBtn = document.getElementById('normalStageBtn');
+  const zombieStageBtn = document.getElementById('zombieStageBtn');
+
+  // ローカルストレージに盤面状態を保存する関数
+  function saveBoardState() {
+    const cellsData = [];
+    document.querySelectorAll('#mainGrid .cell').forEach((cell, index) => {
+      const img = cell.querySelector('img');
+      if (img) {
+        cellsData.push({
+          index: index,
+          src: img.src,
+          species: img.dataset.species,
+          tier: img.dataset.tier,
+          player: img.dataset.player,
+          className: cell.className
+        });
+      }
+    });
+    localStorage.setItem('monsterBoard_size', currentGridSize);
+    localStorage.setItem('monsterBoard_cells', JSON.stringify(cellsData));
+  }
+
+  // ローカルストレージから盤面状態を復元する関数
+  function loadBoardState() {
+    const savedCells = JSON.parse(localStorage.getItem('monsterBoard_cells') || '[]');
+    savedCells.forEach(data => {
+      const cell = mainGrid.children[data.index];
+      if (cell) {
+        cell.className = data.className;
+        cell.innerHTML = `
+          <img src="${data.src}" 
+               alt="" 
+               data-species="${data.species}" 
+               data-tier="${data.tier}"
+               data-player="${data.player}">
+        `;
+      }
+    });
+  }
 
   function buildBoard(size) {
     currentGridSize = size;
     mainGrid.className = `grid-${size}x${size}`;
-    mainGrid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
     
     if (size === 6) {
       playerSwitchContainer.classList.add('show');
+      zombieStageBtn.classList.add('active');
+      normalStageBtn.classList.remove('active');
     } else {
       playerSwitchContainer.classList.remove('show');
+      normalStageBtn.classList.add('active');
+      zombieStageBtn.classList.remove('active');
       currentPlayer = "1P";
     }
 
@@ -145,6 +188,7 @@
         if (!currentSelected) {
           cell.innerHTML = '';
           cell.className = 'cell';
+          saveBoardState();
           return;
         }
 
@@ -185,9 +229,14 @@
                data-tier="${targetTier}"
                data-player="${currentGridSize === 6 ? currentPlayer : '1P'}">
         `;
+        
+        saveBoardState();
       });
       mainGrid.appendChild(cell);
     }
+
+    // 盤面構築後に前回の保存データをロード
+    loadBoardState();
   }
 
   const monsterGrid = document.getElementById('monsterGrid');
@@ -264,15 +313,16 @@
       cell.innerHTML = '';
       cell.className = 'cell';
     });
+    localStorage.removeItem('monsterBoard_cells');
   });
 
-  // 画像保存ボタン（scale: 1 にして丁度良いサイズで出力）
+  // 画像保存ボタン
   document.getElementById('saveBtn').addEventListener('click', () => {
     const boardFrame = document.getElementById('boardFrame');
     
     html2canvas(boardFrame, {
       backgroundColor: '#181a29',
-      scale: 1, 
+      scale: 2, // くっきりさせつつ丁度良いバランス
       useCORS: true
     }).then(canvas => {
       const imageURL = canvas.toDataURL('image/png');
@@ -304,8 +354,6 @@
   // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
-  const normalStageBtn = document.getElementById('normalStageBtn');
-  const zombieStageBtn = document.getElementById('zombieStageBtn');
 
   menuOpenBtn.addEventListener('click', () => {
     drawerOverlay.classList.add('open');
@@ -318,21 +366,23 @@
   });
 
   normalStageBtn.addEventListener('click', () => {
+    if (currentGridSize !== 5) {
+      localStorage.removeItem('monsterBoard_cells'); // ステージ切替時はクリアするかお好みで
+    }
     buildBoard(5);
-    normalStageBtn.classList.add('active');
-    zombieStageBtn.classList.remove('active');
     drawerOverlay.classList.remove('open');
   });
 
   zombieStageBtn.addEventListener('click', () => {
+    if (currentGridSize !== 6) {
+      localStorage.removeItem('monsterBoard_cells');
+    }
     buildBoard(6);
-    zombieStageBtn.classList.add('active');
-    normalStageBtn.classList.remove('active');
     drawerOverlay.classList.remove('open');
   });
 
-  // 初期化（デフォルト：ノーマルステージ 5×5）
-  buildBoard(5);
+  // 初期化（ローカルストレージに保存されているサイズで起動）
+  buildBoard(currentGridSize);
   renderMonsters();
 </script>
 
