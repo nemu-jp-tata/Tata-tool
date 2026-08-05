@@ -235,7 +235,6 @@
       mainGrid.appendChild(cell);
     }
 
-    // 盤面構築後に前回の保存データをロード
     loadBoardState();
   }
 
@@ -316,13 +315,17 @@
     localStorage.removeItem('monsterBoard_cells');
   });
 
-  // 画像保存ボタン
+  // 画像保存ボタン（要素の実際の幅・高さを明示的に指定して比率を固定）
   document.getElementById('saveBtn').addEventListener('click', () => {
     const boardFrame = document.getElementById('boardFrame');
+    const rect = boardFrame.getBoundingClientRect();
     
     html2canvas(boardFrame, {
       backgroundColor: '#181a29',
-      scale: 2, // くっきりさせつつ丁度良いバランス
+      scale: 2,
+      width: rect.width,
+      height: rect.height,
+      windowWidth: document.documentElement.clientWidth,
       useCORS: true
     }).then(canvas => {
       const imageURL = canvas.toDataURL('image/png');
@@ -367,7 +370,7 @@
 
   normalStageBtn.addEventListener('click', () => {
     if (currentGridSize !== 5) {
-      localStorage.removeItem('monsterBoard_cells'); // ステージ切替時はクリアするかお好みで
+      localStorage.removeItem('monsterBoard_cells');
     }
     buildBoard(5);
     drawerOverlay.classList.remove('open');
@@ -381,7 +384,7 @@
     drawerOverlay.classList.remove('open');
   });
 
-  // 初期化（ローカルストレージに保存されているサイズで起動）
+  // 初期化
   buildBoard(currentGridSize);
   renderMonsters();
 </script>
