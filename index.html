@@ -11,13 +11,21 @@
 
 <div class="container">
   <div class="header-tools">
-    <span style="font-size: 12px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
-    <button class="btn" id="clearBtn">盤面クリア</button>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <button class="btn" id="clearBtn">盤面クリア</button>
+      <span style="font-size: 11px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
+    </div>
+    <!-- 三本線メニューボタン -->
+    <button class="menu-btn" id="menuOpenBtn" aria-label="メニューを開く">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </div>
 
-  <!-- 6x6 盤面 -->
+  <!-- 盤面フレーム -->
   <div class="board-frame">
-    <div class="grid-6x6" id="mainGrid"></div>
+    <div id="mainGrid"></div>
   </div>
 
   <!-- モンスター選択エリア -->
@@ -72,6 +80,15 @@
   </div>
 </div>
 
+<!-- 右からスライドしてくるドロワーメニュー -->
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer-menu" id="drawerMenu">
+    <div class="drawer-title">ステージ選択</div>
+    <div class="drawer-item active" id="normalStageBtn">ノーマルステージ (5×5)</div>
+    <div class="drawer-item" id="zombieStageBtn">ゾンビラッシュ (6×6)</div>
+  </div>
+</div>
+
 <!-- 外部のデータファイルを読み込む -->
 <script src="monsters.js"></script>
 
@@ -85,25 +102,33 @@
   }));
 
   let currentSelected = null;
-
-  // 現在の絞り込み状態
   let currentAttr = "all";
   let currentTier = "all";
   let currentType = "all";
+  let currentGridSize = 5; // 初期値はノーマルステージ（5×5）
 
-  // 6x6盤面生成
   const mainGrid = document.getElementById('mainGrid');
-  for (let i = 0; i < 36; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.addEventListener('click', () => {
-      if (currentSelected) {
-        cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}">`;
-      } else {
-        cell.innerHTML = '';
-      }
-    });
-    mainGrid.appendChild(cell);
+
+  // 盤面を動的に生成する関数
+  function buildBoard(size) {
+    mainGrid.className = `grid-${size}x${size}`;
+    mainGrid.style.display = 'grid';
+    mainGrid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    mainGrid.style.gap = '6px';
+    
+    mainGrid.innerHTML = '';
+    for (let i = 0; i < size * size; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.addEventListener('click', () => {
+        if (currentSelected) {
+          cell.innerHTML = `<img src="${currentSelected.imgUrl}" alt="${currentSelected.name}">`;
+        } else {
+          cell.innerHTML = '';
+        }
+      });
+      mainGrid.appendChild(cell);
+    }
   }
 
   // モンスター一覧描画
@@ -113,7 +138,6 @@
   function renderMonsters() {
     monsterGrid.innerHTML = '';
 
-    // 属性・Tier・タイプの掛け合わせ絞り込み
     const filtered = monstersData.filter(m => {
       const matchAttr = (currentAttr === 'all' || m.attr === currentAttr);
       const matchTier = (currentTier === 'all' || m.tier === currentTier);
@@ -124,11 +148,11 @@
     filtered.forEach(m => {
       const name = m.name;
       const imgUrl = `${name}.webp`;
-      const typeImgUrl = `${m.type}.webp`; // タイプアイコン用のファイル名
+      const typeImgUrl = `${m.type}.webp`;
       
       const item = document.createElement('div');
       item.className = 'monster-item';
-      item.dataset.attr = m.attr; // 属性ごとの背景色指定用
+      item.dataset.attr = m.attr;
       
       if (currentSelected && currentSelected.name === name) {
         item.classList.add('active');
@@ -177,7 +201,40 @@
     document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
   });
 
-  // 初期描画
+  // --- ドロワーメニューの開閉＆ステージ切り替えロジック ---
+  const menuOpenBtn = document.getElementById('menuOpenBtn');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const normalStageBtn = document.getElementById('normalStageBtn');
+  const zombieStageBtn = document.getElementById('zombieStageBtn');
+
+  menuOpenBtn.addEventListener('click', () => {
+    drawerOverlay.classList.add('open');
+  });
+
+  drawerOverlay.addEventListener('click', (e) => {
+    if (e.target === drawerOverlay) {
+      drawerOverlay.classList.remove('open');
+    }
+  });
+
+  normalStageBtn.addEventListener('click', () => {
+    currentGridSize = 5;
+    buildBoard(5);
+    normalStageBtn.classList.add('active');
+    zombieStageBtn.classList.remove('active');
+    drawerOverlay.classList.remove('open');
+  });
+
+  zombieStageBtn.addEventListener('click', () => {
+    currentGridSize = 6;
+    buildBoard(6);
+    zombieStageBtn.classList.add('active');
+    normalStageBtn.classList.remove('active');
+    drawerOverlay.classList.remove('open');
+  });
+
+  // 初期化（デフォルト：ノーマルステージ 5×5）
+  buildBoard(5);
   renderMonsters();
 </script>
 
