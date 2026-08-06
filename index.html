@@ -336,12 +336,19 @@
         }
       });
 
-      // --- ドラッグ＆ドロップ（スマホ・PC対応）の追加 ---
+      // --- ドラッグ＆ドロップ（バグ修正版：残骸が残らないように改善） ---
       let activeGhost = null;
       let isDragging = false;
 
       item.addEventListener('pointerdown', (e) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
+        
+        // もし何らかの理由で古いゴーストが残っていればここで強制消去
+        if (activeGhost) {
+          activeGhost.remove();
+          activeGhost = null;
+        }
+
         const startX = e.clientX;
         const startY = e.clientY;
         isDragging = false;
@@ -371,7 +378,9 @@
             activeGhost.style.transform = 'translate(-50%, -50%)';
             document.body.appendChild(activeGhost);
             
-            item.setPointerCapture(moveEvent.pointerId);
+            try {
+              item.setPointerCapture(moveEvent.pointerId);
+            } catch (err) {}
           }
 
           if (isDragging && activeGhost) {
@@ -380,29 +389,34 @@
           }
         };
 
-        const onPointerUp = (upEvent) => {
+        const cleanup = (upEvent) => {
           item.removeEventListener('pointermove', onPointerMove);
-          item.removeEventListener('pointerup', onPointerUp);
+          item.removeEventListener('pointerup', cleanup);
+          item.removeEventListener('pointercancel', cleanup);
+          item.removeEventListener('lostpointercapture', cleanup);
 
-          if (isDragging) {
-            if (activeGhost) {
-              activeGhost.remove();
-              activeGhost = null;
-            }
+          // ゴースト画像を確実に削除
+          if (activeGhost) {
+            activeGhost.remove();
+            activeGhost = null;
+          }
 
-            // 指を離した場所にあるセルを検出
+          // ドラッグ中で、キャンセルでなければセルへ配置判定
+          if (isDragging && upEvent.type !== 'pointercancel') {
             const elemBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
             const cell = elemBelow ? elemBelow.closest('.cell') : null;
 
             if (cell) {
               placeMonsterToCell(cell, monsterInfo);
             }
-            isDragging = false;
           }
+          isDragging = false;
         };
 
         item.addEventListener('pointermove', onPointerMove);
-        item.addEventListener('pointerup', onPointerUp);
+        item.addEventListener('pointerup', cleanup);
+        item.addEventListener('pointercancel', cleanup);
+        item.addEventListener('lostpointercapture', cleanup);
       });
 
       monsterGrid.appendChild(item);
