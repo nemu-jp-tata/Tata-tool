@@ -61,7 +61,7 @@
           <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
         </div>
 
-        <!-- 2. Tier フィルター (※一覧はT1ベース表示のため非表示にするか全表示に連動) -->
+        <!-- 2. Tier フィルター -->
         <div class="filter-row" id="tierFilterGroup" style="display:none;"></div>
 
         <!-- 3. タイプ フィルター -->
@@ -90,6 +90,12 @@
       <div class="drawer-title">ステージ選択</div>
       <div class="drawer-item active" id="normalStageBtn">ノーマルステージ (5×5)</div>
       <div class="drawer-item" id="zombieStageBtn">ゾンビラッシュ (6×6)</div>
+
+      <!-- 操作説明のヒント -->
+      <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
+        <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
+        選択したモンスター（タタ）をもう一度タップすると、次のTierへ進化させられます。
+      </div>
     </div>
     <!-- こっそり入るクレジット -->
     <div class="drawer-footer" style="margin-top: auto; text-align: center; font-size: 10px; color: #475569; letter-spacing: 0.5px;">
@@ -112,7 +118,19 @@
     type: m.role
   }));
 
-  // 一覧には各種族のT1のデータのみを抽出してベースにする
+  // 各種族が持っているTierのリストをマッピング
+  const speciesTiersMap = {};
+  allMonsters.forEach(m => {
+    if (!speciesTiersMap[m.species]) speciesTiersMap[m.species] = [];
+    if (!speciesTiersMap[m.species].includes(m.tierNum)) {
+      speciesTiersMap[m.species].push(m.tierNum);
+    }
+  });
+  Object.keys(speciesTiersMap).forEach(species => {
+    speciesTiersMap[species].sort((a, b) => a - b);
+  });
+
+  // 一覧には各種族の最も低いTier（通常はT1）のデータのみを抽出してベースにする
   const baseMonstersMap = new Map();
   allMonsters.forEach(m => {
     if (!baseMonstersMap.has(m.species) || m.tierNum < baseMonstersMap.get(m.species).tierNum) {
@@ -203,25 +221,57 @@
         const targetSpecies = currentSelected.species;
         const targetTier = currentSelected.tierNum;
         
-        let isAlreadyOnBoard = false;
+        // 1. 配置数制限のチェック (合計15体、ゾンビなら1P/2Pそれぞれ15体)
+        let totalCount = 0;
+        let p1Count = 0;
+        let p2Count = 0;
         document.querySelectorAll('#mainGrid .cell').forEach(c => {
-          const img = c.querySelector('img');
-          if (img && parseInt(img.dataset.tier) === targetTier && img.dataset.species === targetSpecies) {
-            if (currentGridSize === 5 || img.dataset.player === currentPlayer) {
-              isAlreadyOnBoard = true;
-            }
+          const im = c.querySelector('img');
+          if (im) {
+            totalCount++;
+            if (im.dataset.player === '1P') p1Count++;
+            if (im.dataset.player === '2P') p2Count++;
           }
         });
 
         const existingImg = cell.querySelector('img');
         const isReplacingSelf = existingImg && 
-                                parseInt(existingImg.dataset.tier) === targetTier && 
                                 existingImg.dataset.species === targetSpecies &&
                                 (currentGridSize === 5 || existingImg.dataset.player === currentPlayer);
 
-        if (isAlreadyOnBoard && !isReplacingSelf) {
+        if (!isReplacingSelf) {
+          if (currentGridSize === 5 && totalCount >= 15) {
+            alert('ノーマルステージでは最大15体までしか配置できません。');
+            return;
+          }
+          if (currentGridSize === 6) {
+            if (currentPlayer === '1P' && p1Count >= 15) {
+              alert('1Pは最大15体までしか配置できません。');
+              return;
+            }
+            if (currentPlayer === '2P' && p2Count >= 15) {
+              alert('2Pは最大15体までしか配置できません。');
+              return;
+            }
+          }
+        }
+
+        // 2. 同じ種族が既に盤面に存在するかチェック
+        let isSpeciesOnBoard = false;
+        document.querySelectorAll('#mainGrid .cell').forEach(c => {
+          const im = c.querySelector('img');
+          if (im && im.dataset.species === targetSpecies) {
+            if (currentGridSize === 5 || im.dataset.player === currentPlayer) {
+              if (c !== cell) {
+                isSpeciesOnBoard = true;
+              }
+            }
+          }
+        });
+
+        if (isSpeciesOnBoard) {
           const playerText = (currentGridSize === 6) ? `[${currentPlayer}]` : "";
-          alert(`${playerText} ${currentSelected.name} (T${targetTier}) は既に配置されています。`);
+          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています（Tier違いの同種族は配置できません）。`);
           return;
         }
 
@@ -261,8 +311,8 @@
     filtered.forEach(baseM => {
       const species = baseM.species;
 
-      // 現在選択されている種族なら、現在のtierNumに合わせた実際のモンスターデータを取得
-      let activeTierNum = 1;
+      // 現在選択中の種族であれば、そのTierに対応する画像を表示
+      let activeTierNum = speciesTiersMap[species][0];
       let displayMonster = baseM;
 
       if (currentSelected && currentSelected.species === species) {
@@ -289,28 +339,31 @@
         <div class="monster-name">${name}</div>
       `;
 
-      // タップ時の挙動：同じものをタップするとTierが上がり、T4の次は選択解除（T1に戻る）
+      // タップ時の連続Tier切り替えロジック
       item.addEventListener('click', () => {
+        const availableTiers = speciesTiersMap[species];
+
         if (currentSelected && currentSelected.species === species) {
-          // すでに選択中の種族をさらにタップした場合
-          if (currentSelected.tierNum < 4) {
-            currentSelected.tierNum += 1;
-            const nextM = allMonsters.find(m => m.species === species && m.tierNum === currentSelected.tierNum);
+          const currentIndex = availableTiers.indexOf(currentSelected.tierNum);
+          if (currentIndex < availableTiers.length - 1) {
+            const nextTier = availableTiers[currentIndex + 1];
+            currentSelected.tierNum = nextTier;
+            const nextM = allMonsters.find(m => m.species === species && m.tierNum === nextTier);
             if (nextM) {
               currentSelected.name = nextM.name;
               currentSelected.imgUrl = `${nextM.name}.webp`;
             }
           } else {
-            // T4の次で選択解除
             currentSelected = null;
           }
         } else {
-          // 別のモンスターをタップした場合、新しくT1を選択状態にする
+          const minTier = availableTiers[0];
+          const t1Monster = allMonsters.find(m => m.species === species && m.tierNum === minTier) || baseM;
           currentSelected = {
             species: species,
-            tierNum: 1,
-            name: baseM.name,
-            imgUrl: `${baseM.name}.webp`
+            tierNum: minTier,
+            name: t1Monster.name,
+            imgUrl: `${t1Monster.name}.webp`
           };
         }
 
