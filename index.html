@@ -276,21 +276,43 @@
         <div class="monster-name">${name}</div>
       `;
 
-      // 通常のタップ選択のみ
+      // タップ時の連続Tier切り替えロジック
       item.addEventListener('click', () => {
-        document.querySelectorAll('.monster-item').forEach(el => el.classList.remove('active'));
-        if (currentSelected && currentSelected.name === name) {
-          currentSelected = null;
-          selectedNameEl.textContent = 'なし';
+        if (currentSelected && currentSelected.species === m.species) {
+          // 同じ種族がすでに選択されている場合、Tierを進める（T1 -> T2 -> T3 -> T4 -> 解除）
+          if (currentSelected.tierNum < 4) {
+            currentSelected.tierNum += 1;
+            // 該当するTierの実際のモンスター名や画像があれば更新（データ構造に依存）
+            // 同種の別Tierのデータを探す
+            const nextTierMonster = monstersData.find(item => item.species === m.species && item.tierNum === currentSelected.tierNum);
+            if (nextTierMonster) {
+              currentSelected.name = nextTierMonster.name;
+              currentSelected.imgUrl = `${nextTierMonster.name}.webp`;
+            } else {
+              currentSelected.tier = "T" + currentSelected.tierNum;
+            }
+          } else {
+            // T4の次で選択解除
+            currentSelected = null;
+          }
         } else {
+          // 別種族、または未選択の場合は、まずその種族のT1を選択する
+          const t1Monster = monstersData.find(item => item.species === m.species && item.tierNum === 1) || m;
           currentSelected = { 
-            name, 
-            species: m.species,
-            tierNum: m.tierNum,
-            imgUrl: item.querySelector('.monster-thumb').src 
+            name: t1Monster.name, 
+            species: t1Monster.species,
+            tierNum: 1,
+            tier: "T1",
+            imgUrl: `${t1Monster.name}.webp`
           };
-          item.classList.add('active');
-          selectedNameEl.textContent = name;
+        }
+
+        renderMonsters();
+
+        if (currentSelected) {
+          selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
+        } else {
+          selectedNameEl.textContent = 'なし';
         }
       });
 
@@ -328,7 +350,6 @@
     const boardFrame = document.getElementById('boardFrame');
     const cells = document.querySelectorAll('.cell');
     
-    // 【縦伸び防止】html2canvasのバグ対策として、撮影直前にセルの高さをpxで強制的に正方形に固定する
     cells.forEach(cell => {
       const cellWidth = cell.getBoundingClientRect().width;
       cell.style.height = `${cellWidth}px`;
@@ -338,13 +359,12 @@
     
     html2canvas(boardFrame, {
       backgroundColor: '#181a29',
-      scale: 1.5, // 【高画質化】Discordできれいに見える1.5倍に調整
+      scale: 1.5,
       width: rect.width,
       height: rect.height,
       windowWidth: document.documentElement.clientWidth,
       useCORS: true
     }).then(canvas => {
-      // 撮影完了後、スタイルの強制固定を解除
       cells.forEach(cell => {
         cell.style.height = '';
       });
@@ -359,8 +379,6 @@
     }).catch(err => {
       console.error('画像保存エラー:', err);
       alert('画像の保存に失敗しました。');
-      
-      // エラー時も解除
       cells.forEach(cell => {
         cell.style.height = '';
       });
