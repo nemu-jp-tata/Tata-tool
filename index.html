@@ -61,15 +61,8 @@
           <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
         </div>
 
-        <!-- 2. Tier フィルター -->
-        <div class="filter-row" id="tierFilterGroup">
-          <span class="filter-label">Tier:</span>
-          <button class="filter-btn active" data-tier="all">すべて</button>
-          <button class="filter-btn" data-tier="T1">T1</button>
-          <button class="filter-btn" data-tier="T2">T2</button>
-          <button class="filter-btn" data-tier="T3">T3</button>
-          <button class="filter-btn" data-tier="T4">T4</button>
-        </div>
+        <!-- 2. Tier フィルター (※一覧はT1ベース表示のため非表示にするか全表示に連動) -->
+        <div class="filter-row" id="tierFilterGroup" style="display:none;"></div>
 
         <!-- 3. タイプ フィルター -->
         <div class="filter-row" id="typeFilterGroup">
@@ -109,7 +102,8 @@
 <script src="monsters.js"></script>
 
 <script>
-  const monstersData = rawMonstersData.map(m => ({
+  // 全データをマッピング
+  const allMonsters = rawMonstersData.map(m => ({
     name: m.name,
     species: m.species,
     attr: m.type,
@@ -118,9 +112,17 @@
     type: m.role
   }));
 
-  let currentSelected = null;
+  // 一覧には各種族のT1のデータのみを抽出してベースにする
+  const baseMonstersMap = new Map();
+  allMonsters.forEach(m => {
+    if (!baseMonstersMap.has(m.species) || m.tierNum < baseMonstersMap.get(m.species).tierNum) {
+      baseMonstersMap.set(m.species, m);
+    }
+  });
+  const monstersData = Array.from(baseMonstersMap.values());
+
+  let currentSelected = null; // { species, tierNum, name, imgUrl }
   let currentAttr = "all";
-  let currentTier = "all";
   let currentType = "all";
   let currentGridSize = parseInt(localStorage.getItem('monsterBoard_size')) || 5;
   let currentPlayer = "1P";
@@ -252,58 +254,63 @@
 
     const filtered = monstersData.filter(m => {
       const matchAttr = (currentAttr === 'all' || m.attr === currentAttr);
-      const matchTier = (currentTier === 'all' || m.tier === currentTier);
       const matchType = (currentType === 'all' || m.type === currentType);
-      return matchAttr && matchTier && matchType;
+      return matchAttr && matchType;
     });
 
-    filtered.forEach(m => {
-      const name = m.name;
+    filtered.forEach(baseM => {
+      const species = baseM.species;
+
+      // 現在選択されている種族なら、現在のtierNumに合わせた実際のモンスターデータを取得
+      let activeTierNum = 1;
+      let displayMonster = baseM;
+
+      if (currentSelected && currentSelected.species === species) {
+        activeTierNum = currentSelected.tierNum;
+        const found = allMonsters.find(m => m.species === species && m.tierNum === activeTierNum);
+        if (found) displayMonster = found;
+      }
+
+      const name = displayMonster.name;
       const imgUrl = `${name}.webp`;
-      const typeImgUrl = `${m.type}.webp`;
+      const typeImgUrl = `${baseM.type}.webp`;
       
       const item = document.createElement('div');
       item.className = 'monster-item';
-      item.dataset.attr = m.attr;
+      item.dataset.attr = baseM.attr;
       
-      if (currentSelected && currentSelected.name === name) {
+      if (currentSelected && currentSelected.species === species) {
         item.classList.add('active');
       }
 
       item.innerHTML = `
-        <img class="monster-type-icon" src="${typeImgUrl}" alt="${m.type}" onerror="this.style.display='none'">
+        <img class="monster-type-icon" src="${typeImgUrl}" alt="${baseM.type}" onerror="this.style.display='none'">
         <img class="monster-thumb" src="${imgUrl}" alt="${name}" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
         <div class="monster-name">${name}</div>
       `;
 
-      // タップ時の連続Tier切り替えロジック
+      // タップ時の挙動：同じものをタップするとTierが上がり、T4の次は選択解除（T1に戻る）
       item.addEventListener('click', () => {
-        if (currentSelected && currentSelected.species === m.species) {
-          // 同じ種族がすでに選択されている場合、Tierを進める（T1 -> T2 -> T3 -> T4 -> 解除）
+        if (currentSelected && currentSelected.species === species) {
+          // すでに選択中の種族をさらにタップした場合
           if (currentSelected.tierNum < 4) {
             currentSelected.tierNum += 1;
-            // 該当するTierの実際のモンスター名や画像があれば更新（データ構造に依存）
-            // 同種の別Tierのデータを探す
-            const nextTierMonster = monstersData.find(item => item.species === m.species && item.tierNum === currentSelected.tierNum);
-            if (nextTierMonster) {
-              currentSelected.name = nextTierMonster.name;
-              currentSelected.imgUrl = `${nextTierMonster.name}.webp`;
-            } else {
-              currentSelected.tier = "T" + currentSelected.tierNum;
+            const nextM = allMonsters.find(m => m.species === species && m.tierNum === currentSelected.tierNum);
+            if (nextM) {
+              currentSelected.name = nextM.name;
+              currentSelected.imgUrl = `${nextM.name}.webp`;
             }
           } else {
             // T4の次で選択解除
             currentSelected = null;
           }
         } else {
-          // 別種族、または未選択の場合は、まずその種族のT1を選択する
-          const t1Monster = monstersData.find(item => item.species === m.species && item.tierNum === 1) || m;
-          currentSelected = { 
-            name: t1Monster.name, 
-            species: t1Monster.species,
+          // 別のモンスターをタップした場合、新しくT1を選択状態にする
+          currentSelected = {
+            species: species,
             tierNum: 1,
-            tier: "T1",
-            imgUrl: `${t1Monster.name}.webp`
+            name: baseM.name,
+            imgUrl: `${baseM.name}.webp`
           };
         }
 
@@ -333,7 +340,6 @@
   }
 
   setupFilter('attrFilterGroup', 'attr', val => currentAttr = val);
-  setupFilter('tierFilterGroup', 'tier', val => currentTier = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
   // クリアボタン
