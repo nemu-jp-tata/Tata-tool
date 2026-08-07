@@ -17,6 +17,11 @@ body {
   width: 100%;
   max-width: 420px;
 }
+.left-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 .header-tools {
   display: flex;
   justify-content: space-between;
@@ -386,7 +391,7 @@ body {
     justify-content: center;
     gap: 24px;
     width: 100%;
-    max-width: 1300px !important;
+    max-width: 1250px !important;
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
