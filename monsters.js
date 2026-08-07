@@ -16,10 +16,10 @@ const rawMonstersData = [
   { name: "ウミピョン", species: "ウミミ種", type: "水", role: "サポート", T: 2 },
   { name: "ウミロップ", species: "ウミミ種", type: "水", role: "サポート", T: 3 },
   { name: "アクアリーナ", species: "ウミミ種", type: "水", role: "サポート", T: 4 },
-  { name: "トコペンギン", species: "トコペンギン種", type: "水", role: "タンク", T: 1 },
-  { name: "タフペンギン", species: "トコペンギン種", type: "水", role: "タンク", T: 2 },
-  { name: "フブペンギン", species: "トコペンギン種", type: "水", role: "タンク", T: 3 },
-  { name: "ペンペラー", species: "トコペンギン種", type: "水", role: "タンク", T: 4 },
+  { name: "トコペン", species: "トコペン種", type: "水", role: "タンク", T: 1 },
+  { name: "タフペン", species: "トコペン種", type: "水", role: "タンク", T: 2 },
+  { name: "フブペン", species: "トコペン種", type: "水", role: "タンク", T: 3 },
+  { name: "ペンペラー", species: "トコペン種", type: "水", role: "タンク", T: 4 },
   { name: "ツヨカニ", species: "ツヨカニ種", type: "水", role: "ファイター", T: 1 },
   { name: "ケンカニ", species: "ツヨカニ種", type: "水", role: "ファイター", T: 2 },
   { name: "クラブロー", species: "ツヨカニ種", type: "水", role: "ファイター", T: 3 },
@@ -218,6 +218,6 @@ const rawMonstersData = [
   { name: "ヴァンパルス", species: "ビリモ種", type: "雷", role: "スペシャル", T: 4 },
   { name: "ピカル", species: "ピカル種", type: "雷", role: "ヒール", T: 1 },
   { name: "ボルタル", species: "ピカル種", type: "雷", role: "ヒール", T: 2 },
-  { name: "ルシフェル", species: "ピカル種", type: "雷", role: "ヒール", T: 3 },
+  { name: "ルシフタル, species: "ピカル種", type: "雷", role: "ヒール", T: 3 },
   { name: "ルミナリオン", species: "ピカル種", type: "雷", role: "ヒール", T: 4 }
 ];
