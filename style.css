@@ -4,7 +4,7 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none; /* スマホでの長押しメニュー（新しいタブで開く等）を防止 */
+  -webkit-touch-callout: none; /* スマホでの長押しメニュー（新しいタブで開く等）を完全防止 */
 }
 body {
   background-color: #121420;
@@ -14,6 +14,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  touch-action: manipulation; /* 画面スクロール遅延などを防止 */
 }
 .container {
   width: 100%;
@@ -97,6 +98,21 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* ドラッグ中のゴースト画像 */
+.drag-ghost {
+  display: none;
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+}
+
 /* 縦横比が絶対に崩れないグリッド定義 */
 .grid-5x5 {
   display: grid;
@@ -138,7 +154,7 @@ body {
   width: 90%;
   height: 90%;
   object-fit: contain;
-  pointer-events: none; /* 画像がクリックイベントを邪魔するのを防ぐ */
+  touch-action: none;
 }
 
 /* モンスター選択エリア */
