@@ -434,3 +434,37 @@ body {
     margin-top: 0 !important;
   }
 }
+/* モンスター選択エリアのレスポンシブ調整（4列維持） */
+@media (max-width: 600px) {
+  /* グリッドコンテナの調整 */
+  .monster-grid,
+  .monster-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 4列を維持 */
+
+    /* 左右の余白を広めにとって、画面端に指を置けるようにする */
+    padding: 16px 16px !important;
+
+    /* カード間の隙間を適度に確保 */
+    gap: 6px !important;
+  }
+
+  /* カード自体の内側余白を小さくしてコンパクト化 */
+  .monster-card {
+    padding: 4px 2px !important;
+  }
+
+  /* カード内のアイコン画像を少し小さくして隙間感を出す */
+  .monster-card img {
+    max-width: 80% !important;
+    height: auto !important;
+    margin: 0 auto !important;
+  }
+
+  /* 文字サイズも少し小さく調整 */
+  .monster-card span,
+  .monster-card p {
+    font-size: 10px !important;
+  }
+}
+
