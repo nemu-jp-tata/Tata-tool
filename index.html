@@ -64,10 +64,7 @@
           <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
         </div>
 
-        <!-- 2. Tier フィルター -->
-        <div class="filter-row" id="tierFilterGroup" style="display:none;"></div>
-
-        <!-- 3. タイプ フィルター -->
+        <!-- 2. タイプ フィルター -->
         <div class="filter-row" id="typeFilterGroup">
           <span class="filter-label">タイプ:</span>
           <button class="filter-btn active" data-type="all">すべて</button>
@@ -97,7 +94,9 @@
       <!-- 操作説明のヒント -->
       <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
         <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
-        選択したモンスター（タタ）をもう一度タップすると、次のTierへ進化させられます。
+        ・モンスターをタップして選択後、別のセルをタップで配置。<br>
+        ・配置済みのモンスターをタップすると<strong>「持ち上げて移動」</strong>できます。<br>
+        ・選択中のモンスターをもう一度タップするとTierが進化します。
       </div>
     </div>
     <!-- こっそり入るクレジット -->
@@ -188,7 +187,8 @@
                alt="" 
                data-species="${data.species}" 
                data-tier="${data.tier}"
-               data-player="${data.player}">
+               data-player="${data.player}"
+               draggable="false">
         `;
       }
     });
@@ -217,6 +217,27 @@
       cell.addEventListener('click', (e) => {
         e.stopPropagation();
 
+        const existingImg = cell.querySelector('img');
+
+        // 1. 何も選択していない状態で、モンスターが置かれているセルをクリック ＝ モンスターを「持ち上げる（移動）」
+        if (!currentSelected && existingImg) {
+          currentSelected = {
+            species: existingImg.dataset.species,
+            tierNum: parseInt(existingImg.dataset.tier),
+            name: existingImg.alt || existingImg.dataset.species,
+            imgUrl: existingImg.src
+          };
+          selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
+
+          // 元のセルを空にする
+          cell.innerHTML = '';
+          cell.className = 'cell';
+          saveBoardState();
+          renderMonsters();
+          return;
+        }
+
+        // 2. 選択状態のモンスターがいない場合、空セルをクリックしても何もしない
         if (!currentSelected) {
           cell.innerHTML = '';
           cell.className = 'cell';
@@ -239,7 +260,6 @@
           }
         });
 
-        const existingImg = cell.querySelector('img');
         const isReplacingSelf = existingImg && 
                                 existingImg.dataset.species === targetSpecies &&
                                 (currentGridSize === 5 || existingImg.dataset.player === currentPlayer);
@@ -289,10 +309,15 @@
                alt="${currentSelected.name}" 
                data-species="${targetSpecies}" 
                data-tier="${targetTier}"
-               data-player="${currentGridSize === 6 ? currentPlayer : '1P'}">
+               data-player="${currentGridSize === 6 ? currentPlayer : '1P'}"
+               draggable="false">
         `;
         
+        // 配置完了したら選択を解除する
+        currentSelected = null;
+        selectedNameEl.textContent = 'なし';
         saveBoardState();
+        renderMonsters();
       });
       mainGrid.appendChild(cell);
     }
@@ -336,8 +361,8 @@
       }
 
       item.innerHTML = `
-        <img class="monster-type-icon" src="${typeImgUrl}" alt="${baseM.type}" onerror="this.style.display='none'">
-        <img class="monster-thumb" src="${imgUrl}" alt="${name}" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
+        <img class="monster-type-icon" src="${typeImgUrl}" alt="${baseM.type}" onerror="this.style.display='none'" draggable="false">
+        <img class="monster-thumb" src="${imgUrl}" alt="${name}" draggable="false" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
         <div class="monster-name">${name}</div>
       `;
 
@@ -398,21 +423,18 @@
   setupFilter('attrFilterGroup', 'attr', val => currentAttr = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
-  document.addEventListener('click', () => {
-    if (currentSelected) {
-      currentSelected = null;
-      renderMonsters();
-      selectedNameEl.textContent = 'なし';
-    }
-  });
+  // 背景クリック時は選択解除せず保持（誤操作防止のため）
 
   document.getElementById('clearBtn').addEventListener('click', (e) => {
     e.stopPropagation();
+    currentSelected = null;
+    selectedNameEl.textContent = 'なし';
     document.querySelectorAll('.cell').forEach(cell => {
       cell.innerHTML = '';
       cell.className = 'cell';
     });
     localStorage.removeItem('monsterBoard_cells');
+    renderMonsters();
   });
 
   document.getElementById('saveBtn').addEventListener('click', (e) => {
@@ -492,7 +514,10 @@
     if (currentGridSize !== 5) {
       localStorage.removeItem('monsterBoard_cells');
     }
+    currentSelected = null;
+    selectedNameEl.textContent = 'なし';
     buildBoard(5);
+    renderMonsters();
     drawerOverlay.classList.remove('open');
   });
 
@@ -500,7 +525,10 @@
     if (currentGridSize !== 6) {
       localStorage.removeItem('monsterBoard_cells');
     }
+    currentSelected = null;
+    selectedNameEl.textContent = 'なし';
     buildBoard(6);
+    renderMonsters();
     drawerOverlay.classList.remove('open');
   });
 
