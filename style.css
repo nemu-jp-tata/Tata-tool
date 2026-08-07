@@ -365,6 +365,41 @@ body {
   margin-top: auto;
   text-align: center;
   font-size: 10px;
-  color: #475569; /* 周りに溶り込む暗めのグレー */
+  color: #475569;
   letter-spacing: 0.5px;
+}
+
+/* パソコン版（画面幅900px以上）の左右レイアウト対応 */
+@media (min-width: 900px) {
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  .container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+    max-width: 1300px !important;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+  }
+  .monster-frame {
+    width: 450px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    margin-top: 0 !important;
+  }
 }
