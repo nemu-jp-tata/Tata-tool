@@ -3,6 +3,8 @@
   margin: 0;
   padding: 0;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* スマホでの長押しメニュー（新しいタブで開く等）を防止 */
 }
 body {
   background-color: #121420;
@@ -136,6 +138,7 @@ body {
   width: 90%;
   height: 90%;
   object-fit: contain;
+  pointer-events: none; /* 画像がクリックイベントを邪魔するのを防ぐ */
 }
 
 /* モンスター選択エリア */
@@ -215,6 +218,7 @@ body {
   width: 14px;
   height: 14px;
   object-fit: contain;
+  pointer-events: none;
 }
 .filter-btn.active {
   background: #2563eb;
@@ -270,6 +274,7 @@ body {
   width: 76%;
   height: 76%;
   object-fit: contain;
+  pointer-events: none;
 }
 .monster-name {
   font-size: 9px;
@@ -278,6 +283,7 @@ body {
   line-height: 1.1;
   word-break: break-all;
   margin-top: 2px;
+  pointer-events: none;
 }
 
 /* ハンバーガーメニュー・ドロワー関連 */
