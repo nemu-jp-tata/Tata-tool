@@ -434,37 +434,29 @@ body {
     margin-top: 0 !important;
   }
 }
-/* モンスター選択エリアのレスポンシブ調整（4列維持） */
 @media (max-width: 600px) {
-  /* グリッドコンテナの調整 */
   .monster-grid,
   .monster-list {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important; /* 4列を維持 */
-
-    /* 左右の余白を広めにとって、画面端に指を置けるようにする */
-    padding: 16px 16px !important;
-
-    /* カード間の隙間を適度に確保 */
-    gap: 6px !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 4列固定 */
+    
+    /* 隙間を広くとる（ここを広げることで指を置く場所を作る） */
+    gap: 14px !important; 
+    
+    /* パディングは控えめにし、隙間を強調 */
+    padding: 8px !important;
   }
 
-  /* カード自体の内側余白を小さくしてコンパクト化 */
+  /* アイコンが隙間に負けないよう、カード内の余白を最小限に */
   .monster-card {
-    padding: 4px 2px !important;
+    padding: 2px !important;
+    /* 隙間を確保するためにカード自体を少しタイトにする */
   }
 
-  /* カード内のアイコン画像を少し小さくして隙間感を出す */
-  .monster-card img {
-    max-width: 80% !important;
-    height: auto !important;
-    margin: 0 auto !important;
-  }
-
-  /* 文字サイズも少し小さく調整 */
-  .monster-card span,
-  .monster-card p {
-    font-size: 10px !important;
+  /* さらにスクロール性能を向上させるおまけ設定 */
+  .monster-grid,
+  .monster-list {
+    /* ブラウザに対して「ここは上下スクロール用」と明示する */
+    touch-action: pan-y;
   }
 }
-
