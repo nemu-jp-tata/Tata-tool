@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="appContainer">
   <!-- 左カラム（ボタン関係・切替・盤面をひとまとめに配置） -->
   <div class="left-column">
     <div class="header-tools">
@@ -42,7 +42,7 @@
   </div>
 
   <!-- 右カラム：モンスター選択エリア（タタ選択） -->
-  <div class="monster-frame">
+  <div class="monster-frame" id="monsterFrame">
     <div class="monster-title">モンスター選択</div>
 
     <!-- アコーディオン（絞り込みフィルター） -->
@@ -97,9 +97,9 @@
       <!-- 操作説明のヒント -->
       <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
         <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
-        ・右側のモンスターをタップして選択後、盤面をタップで配置。<br>
-        ・<strong>配置したモンスターは長押し（またはドラッグ）してそのまま別のセルへ移動できます。</strong>無効な場所に離すと元の場所に戻ります。<br>
-        ・選択中のモンスターをもう一度タップするとTierが進化します。
+        ・右側のモンスターをタップ選択、または直接ドラッグして盤面に配置できます。<br>
+        ・盤面のモンスターをタップで削除、長押しドラッグで移動できます。<br>
+        ・タタ選択ボックス上でドロップすると元の位置に戻り（削除され）、盤面外では元の位置を維持します。
       </div>
     </div>
     <!-- こっそり入るクレジット -->
@@ -135,7 +135,7 @@
     speciesTiersMap[species].sort((a, b) => a - b);
   });
 
-  // 一覧には各種族の最も低いTier（通常はT1）のデータのみを抽出してベースにする
+  // 一覧には各種族の最も低いTierのデータのみを抽出してベースにする
   const baseMonstersMap = new Map();
   allMonsters.forEach(m => {
     if (!baseMonstersMap.has(m.species) || m.tierNum < baseMonstersMap.get(m.species).tierNum) {
@@ -151,10 +151,11 @@
   let currentPlayer = "1P";
 
   // ドラッグ＆ドロップ用の状態管理
-  let draggingItem = null; // { src, species, tier, player, sourceIndex }
+  let draggingItem = null; // { type: 'board'|'palette', src, species, tier, player, sourceIndex }
   const dragGhost = document.getElementById('dragGhost');
 
   const mainGrid = document.getElementById('mainGrid');
+  const monsterFrame = document.getElementById('monsterFrame');
   const playerSwitchContainer = document.getElementById('playerSwitchContainer');
   const btn1P = document.getElementById('btn1P');
   const btn2P = document.getElementById('btn2P');
@@ -193,7 +194,7 @@
     });
   }
 
-  // セルにモンスター画像を設定し、イベント（ドラッグ開始など）を付与するヘルパー
+  // セルにモンスター画像を設定し、ポインターイベントを付与する
   function fillCellWithMonster(cell, data) {
     cell.className = data.className;
     cell.innerHTML = `
@@ -207,36 +208,127 @@
 
     const img = cell.querySelector('img');
     
-    // ポインターイベントによるドラッグ＆ドロップ開始
     img.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
-      // 左クリックまたはタッチ操作のみ
       if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let isDragging = false;
 
       const cells = Array.from(mainGrid.children);
       const sourceIndex = cells.indexOf(cell);
 
-      draggingItem = {
-        src: img.src,
-        species: img.dataset.species,
-        tier: img.dataset.tier,
-        player: img.dataset.player,
-        sourceIndex: sourceIndex,
-        sourceClassName: cell.className
-      };
+      function onMove(moveEvent) {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!isDragging && Math.hypot(dx, dy) > 5) {
+          isDragging = true;
+          draggingItem = {
+            type: 'board',
+            src: img.src,
+            species: img.dataset.species,
+            tier: img.dataset.tier,
+            player: img.dataset.player,
+            sourceIndex: sourceIndex,
+            sourceClassName: cell.className
+          };
 
-      // ゴースト画像を表示して追従準備
-      dragGhost.style.backgroundImage = `url(${img.src})`;
-      dragGhost.style.display = 'block';
-      updateGhostPosition(e.clientX, e.clientY);
+          dragGhost.style.backgroundImage = `url(${img.src})`;
+          dragGhost.style.display = 'block';
+          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
 
-      // 元のセルを一時的に空にする（持ち上げた状態）
-      cell.innerHTML = '';
-      cell.className = 'cell';
+          cell.innerHTML = '';
+          cell.className = 'cell';
+        }
 
-      // グローバルイベントのバインド
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
+        if (isDragging) {
+          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+        }
+      }
+
+      function onUp(upEvent) {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+
+        if (!isDragging) {
+          // タップされた場合：盤面から削除
+          cell.innerHTML = '';
+          cell.className = 'cell';
+          saveBoardState();
+          return;
+        }
+
+        // ドラッグ終了時の処理
+        dragGhost.style.display = 'none';
+        const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+        const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
+        const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
+
+        // タタ選択ボックスの上でドロップされた場合 → 元に戻さず削除する
+        if (isOverMonsterFrame) {
+          draggingItem = null;
+          saveBoardState();
+          return;
+        }
+
+        // 盤面外にドロップされた場合 → 元の位置に戻す
+        if (!targetCell || !mainGrid.contains(targetCell)) {
+          revertToSourceCell();
+          return;
+        }
+
+        const targetIndex = cells.indexOf(targetCell);
+        const existingImg = targetCell.querySelector('img');
+        const targetSpecies = draggingItem.species;
+
+        let isSpeciesOnBoard = false;
+        cells.forEach((c, idx) => {
+          if (idx === targetIndex) return;
+          const im = c.querySelector('img');
+          if (im && im.dataset.species === targetSpecies) {
+            if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
+              isSpeciesOnBoard = true;
+            }
+          }
+        });
+
+        const isReplacingSelf = existingImg && 
+                                existingImg.dataset.species === targetSpecies &&
+                                (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
+
+        if (isSpeciesOnBoard) {
+          const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
+          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+          revertToSourceCell();
+          return;
+        }
+
+        if (existingImg && !isReplacingSelf) {
+          alert('すでにモンスターが配置されているセルには移動できません。');
+          revertToSourceCell();
+          return;
+        }
+
+        targetCell.className = 'cell';
+        if (currentGridSize === 6) {
+          targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
+        }
+
+        fillCellWithMonster(targetCell, {
+          src: draggingItem.src,
+          species: draggingItem.species,
+          tier: draggingItem.tier,
+          player: draggingItem.player,
+          className: targetCell.className
+        });
+
+        draggingItem = null;
+        saveBoardState();
+      }
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
     });
   }
 
@@ -245,89 +337,8 @@
     dragGhost.style.top = `${y - 25}px`;
   }
 
-  function onPointerMove(e) {
-    if (!draggingItem) return;
-    updateGhostPosition(e.clientX, e.clientY);
-  }
-
-  function onPointerUp(e) {
-    if (!draggingItem) return;
-
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
-    dragGhost.style.display = 'none';
-
-    // ドロップされた位置にある要素を取得
-    const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
-    const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
-    const cells = Array.from(mainGrid.children);
-
-    // 盤面内の有効なセルにドロップされたかチェック
-    if (targetCell && mainGrid.contains(targetCell)) {
-      const targetIndex = cells.indexOf(targetCell);
-      const existingImg = targetCell.querySelector('img');
-
-      const targetSpecies = draggingItem.species;
-      const targetTier = parseInt(draggingItem.tier);
-
-      // 配置制限のチェック（同種族が他のセルに既に存在するかなど）
-      let isSpeciesOnBoard = false;
-      cells.forEach((c, idx) => {
-        if (idx === targetIndex) return; // 自分のドロップ先は除外
-        const im = c.querySelector('img');
-        if (im && im.dataset.species === targetSpecies) {
-          if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
-            isSpeciesOnBoard = true;
-          }
-        }
-      });
-
-      const isReplacingSelf = existingImg && 
-                              existingImg.dataset.species === targetSpecies &&
-                              (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
-
-      if (isSpeciesOnBoard) {
-        const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
-        alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
-        revertToSourceCell();
-        return;
-      }
-
-      // ドロップ先が埋まっている場合の処理（スワップまたは上書き）
-      // ここでは空でない場合、元の位置に戻すか、あるいは入れ替えにするか。
-      // 今回は安全のため、すでにモンスターがいる場所にドロップした場合は元の位置に戻す仕様にします。
-      if (existingImg && !isReplacingSelf) {
-        alert('すでにモンスターが配置されているセルには移動できません。');
-        revertToSourceCell();
-        return;
-      }
-
-      // 正常に移動完了
-      targetCell.className = 'cell';
-      if (currentGridSize === 6) {
-        targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
-      }
-
-      fillCellWithMonster(targetCell, {
-        src: draggingItem.src,
-        species: draggingItem.species,
-        tier: draggingItem.tier,
-        player: draggingItem.player,
-        className: targetCell.className
-      });
-
-      draggingItem = null;
-      saveBoardState();
-
-    } else {
-      // 盤面外や無効な場所にドロップした場合 → 元の位置に戻す
-      revertToSourceCell();
-    }
-  }
-
-  // 元のセルに画像を戻す関数
   function revertToSourceCell() {
-    if (!draggingItem) return;
+    if (!draggingItem || draggingItem.type !== 'board') return;
     const cells = Array.from(mainGrid.children);
     const sourceCell = cells[draggingItem.sourceIndex];
     if (sourceCell) {
@@ -363,7 +374,7 @@
       const cell = document.createElement('div');
       cell.className = 'cell';
       
-      // セルをクリックして新規配置する処理
+      // 空セルをクリックして新規配置する処理
       cell.addEventListener('click', (e) => {
         e.stopPropagation();
 
@@ -425,7 +436,7 @@
 
         if (isSpeciesOnBoard) {
           const playerText = (currentGridSize === 6) ? `[${currentPlayer}]` : "";
-          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています（Tier違いの同種族は配置できません）。`);
+          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
           return;
         }
 
@@ -492,46 +503,185 @@
         <div class="monster-name">${name}</div>
       `;
 
-      item.addEventListener('click', (e) => {
+      item.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        let isDragging = false;
+
         const availableTiers = speciesTiersMap[species];
+        const minTier = availableTiers[0];
+        const t1Monster = allMonsters.find(m => m.species === species && m.tierNum === minTier) || baseM;
+        const paletteItemData = {
+          species: species,
+          tierNum: minTier,
+          name: t1Monster.name,
+          imgUrl: `${t1Monster.name}.webp`
+        };
 
-        if (currentSelected && currentSelected.species === species) {
-          const currentIndex = availableTiers.indexOf(currentSelected.tierNum);
-          if (currentIndex < availableTiers.length - 1) {
-            const nextTier = availableTiers[currentIndex + 1];
-            currentSelected.tierNum = nextTier;
-            const nextM = allMonsters.find(m => m.species === species && m.tierNum === nextTier);
-            if (nextM) {
-              currentSelected.name = nextM.name;
-              currentSelected.imgUrl = `${nextM.name}.webp`;
-            }
-          } else {
-            currentSelected = null;
+        function onMove(moveEvent) {
+          const dx = moveEvent.clientX - startX;
+          const dy = moveEvent.clientY - startY;
+          if (!isDragging && Math.hypot(dx, dy) > 5) {
+            isDragging = true;
+            draggingItem = {
+              type: 'palette',
+              src: paletteItemData.imgUrl,
+              species: paletteItemData.species,
+              tier: paletteItemData.tierNum,
+              player: currentGridSize === 6 ? currentPlayer : '1P'
+            };
+
+            dragGhost.style.backgroundImage = `url(${paletteItemData.imgUrl})`;
+            dragGhost.style.display = 'block';
+            updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
           }
-        } else {
-          const minTier = availableTiers[0];
-          const t1Monster = allMonsters.find(m => m.species === species && m.tierNum === minTier) || baseM;
-          currentSelected = {
-            species: species,
-            tierNum: minTier,
-            name: t1Monster.name,
-            imgUrl: `${t1Monster.name}.webp`
-          };
+
+          if (isDragging) {
+            updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          }
         }
 
-        renderMonsters();
+        function onUp(upEvent) {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
 
-        if (currentSelected) {
-          selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
-        } else {
-          selectedNameEl.textContent = 'なし';
+          if (!isDragging) {
+            if (currentSelected && currentSelected.species === species) {
+              const currentIndex = availableTiers.indexOf(currentSelected.tierNum);
+              if (currentIndex < availableTiers.length - 1) {
+                const nextTier = availableTiers[currentIndex + 1];
+                currentSelected.tierNum = nextTier;
+                const nextM = allMonsters.find(m => m.species === species && m.tierNum === nextTier);
+                if (nextM) {
+                  currentSelected.name = nextM.name;
+                  currentSelected.imgUrl = `${nextM.name}.webp`;
+                }
+              } else {
+                currentSelected = null;
+              }
+            } else {
+              currentSelected = paletteItemData;
+            }
+
+            renderMonsters();
+            if (currentSelected) {
+              selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
+            } else {
+              selectedNameEl.textContent = 'なし';
+            }
+            return;
+          }
+
+          dragGhost.style.display = 'none';
+          const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+          const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
+          const cells = Array.from(mainGrid.children);
+
+          if (targetCell && mainGrid.contains(targetCell)) {
+            const targetIndex = cells.indexOf(targetCell);
+            const existingImg = targetCell.querySelector('img');
+            const targetSpecies = draggingItem.species;
+
+            let totalCount = 0;
+            let p1Count = 0;
+            let p2Count = 0;
+            cells.forEach(c => {
+              const im = c.querySelector('img');
+              if (im) {
+                totalCount++;
+                if (im.dataset.player === '1P') p1Count++;
+                if (im.dataset.player === '2P') p2Count++;
+              }
+            });
+
+            const isReplacingSelf = existingImg && 
+                                    existingImg.dataset.species === targetSpecies &&
+                                    (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
+
+            if (!isReplacingSelf) {
+              if (currentGridSize === 5 && totalCount >= 15) {
+                alert('ノーマルステージでは最大15体までしか配置できません。');
+                draggingItem = null;
+                return;
+              }
+              if (currentGridSize === 6) {
+                if (draggingItem.player === '1P' && p1Count >= 15) {
+                  alert('1Pは最大15体までしか配置できません。');
+                  draggingItem = null;
+                  return;
+                }
+                if (draggingItem.player === '2P' && p2Count >= 15) {
+                  alert('2Pは最大15体までしか配置できません。');
+                  draggingItem = null;
+                  return;
+                }
+              }
+            }
+
+            let isSpeciesOnBoard = false;
+            cells.forEach((c, idx) => {
+              if (idx === targetIndex) return;
+              const im = c.querySelector('img');
+              if (im && im.dataset.species === targetSpecies) {
+                if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
+                  isSpeciesOnBoard = true;
+                }
+              }
+            });
+
+            if (isSpeciesOnBoard) {
+              const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
+              alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+              draggingItem = null;
+              return;
+            }
+
+            if (existingImg && !isReplacingSelf) {
+              alert('すでにモンスターが配置されているセルには移動できません。');
+              draggingItem = null;
+              return;
+            }
+
+            targetCell.className = 'cell';
+            if (currentGridSize === 6) {
+              targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
+            }
+
+            fillCellWithMonster(targetCell, {
+              src: draggingItem.src,
+              species: draggingItem.species,
+              tier: draggingItem.tier,
+              player: draggingItem.player,
+              className: targetCell.className
+            });
+
+            saveBoardState();
+          }
+
+          draggingItem = null;
         }
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
       });
 
       monsterGrid.appendChild(item);
     });
   }
+
+  // 選択解除機能：盤面のセルやモンスターアイテム以外の場所をクリックした場合に解除
+  document.getElementById('appContainer').addEventListener('click', (e) => {
+    if (!e.target.closest('.cell') && !e.target.closest('.monster-item')) {
+      if (currentSelected) {
+        currentSelected = null;
+        selectedNameEl.textContent = 'なし';
+        renderMonsters();
+      }
+    }
+  });
 
   function setupFilter(groupId, attrName, callback) {
     const btns = document.querySelectorAll(`#${groupId} .filter-btn`);
