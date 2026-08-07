@@ -394,7 +394,11 @@ body {
   .left-column {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto;
+    width: 540px;
+    flex: 0 0 540px;
+  }
+  .board-frame {
+    width: 100%;
   }
   .monster-frame {
     width: 450px;
