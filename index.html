@@ -12,33 +12,36 @@
 <body>
 
 <div class="container">
-  <div class="header-tools">
-    <div style="display: flex; gap: 6px; align-items: center;">
-      <button class="btn" id="clearBtn">盤面クリア</button>
-      <button class="btn" id="saveBtn" style="background: #2563eb; border-color: #3b82f6; color: #fff;">画像保存</button>
-      <span style="font-size: 11px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
+  <!-- 左カラム（ボタン関係・切替・盤面をひとまとめに配置） -->
+  <div class="left-column">
+    <div class="header-tools">
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button class="btn" id="clearBtn">盤面クリア</button>
+        <button class="btn" id="saveBtn" style="background: #2563eb; border-color: #3b82f6; color: #fff;">画像保存</button>
+        <span style="font-size: 11px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
+      </div>
+      <!-- 三本線メニューボタン -->
+      <button class="menu-btn" id="menuOpenBtn" aria-label="メニューを開く">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
-    <!-- 三本線メニューボタン -->
-    <button class="menu-btn" id="menuOpenBtn" aria-label="メニューを開く">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
+
+    <!-- ゾンビラッシュ時のみ表示される1P / 2P 切り替えボタン -->
+    <div class="player-switch-container" id="playerSwitchContainer">
+      <button class="player-btn p1 active" id="btn1P">1P 視点</button>
+      <button class="player-btn p2" id="btn2P">2P 視点</button>
+    </div>
+
+    <!-- 盤面フレーム -->
+    <div class="board-frame" id="boardFrame">
+      <div class="board-notice">こちらからゾンビが来ます ▼</div>
+      <div id="mainGrid"></div>
+    </div>
   </div>
 
-  <!-- ゾンビラッシュ時のみ表示される1P / 2P 切り替えボタン -->
-  <div class="player-switch-container" id="playerSwitchContainer">
-    <button class="player-btn p1 active" id="btn1P">1P 視点</button>
-    <button class="player-btn p2" id="btn2P">2P 視点</button>
-  </div>
-
-  <!-- 盤面フレーム -->
-  <div class="board-frame" id="boardFrame">
-    <div class="board-notice">こちらからゾンビが来ます ▼</div>
-    <div id="mainGrid"></div>
-  </div>
-
-  <!-- モンスター選択エリア -->
+  <!-- 右カラム：モンスター選択エリア（タタ選択） -->
   <div class="monster-frame">
     <div class="monster-title">モンスター選択</div>
 
@@ -212,7 +215,7 @@
       cell.className = 'cell';
       
       cell.addEventListener('click', (e) => {
-        e.stopPropagation(); // 盤面クリックが背景の選択解除にバブリングしないようにする
+        e.stopPropagation();
 
         if (!currentSelected) {
           cell.innerHTML = '';
@@ -224,7 +227,6 @@
         const targetSpecies = currentSelected.species;
         const targetTier = currentSelected.tierNum;
         
-        // 1. 配置数制限のチェック (合計15体、ゾンビなら1P/2Pそれぞれ15体)
         let totalCount = 0;
         let p1Count = 0;
         let p2Count = 0;
@@ -259,7 +261,6 @@
           }
         }
 
-        // 2. 同じ種族が既に盤面に存在するかチェック
         let isSpeciesOnBoard = false;
         document.querySelectorAll('#mainGrid .cell').forEach(c => {
           const im = c.querySelector('img');
@@ -313,7 +314,6 @@
     filtered.forEach(baseM => {
       const species = baseM.species;
 
-      // 現在選択中の種族であれば、そのTierに対応する画像を表示
       let activeTierNum = speciesTiersMap[species][0];
       let displayMonster = baseM;
 
@@ -341,9 +341,8 @@
         <div class="monster-name">${name}</div>
       `;
 
-      // タップ時の連続Tier切り替えロジック
       item.addEventListener('click', (e) => {
-        e.stopPropagation(); // タタ一覧クリックが背景の選択解除にバブリングしないようにする
+        e.stopPropagation();
         const availableTiers = speciesTiersMap[species];
 
         if (currentSelected && currentSelected.species === species) {
@@ -399,7 +398,6 @@
   setupFilter('attrFilterGroup', 'attr', val => currentAttr = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
-  // 盤面やタタ一覧、操作パネル以外の余白部分をタップしたときの選択解除処理
   document.addEventListener('click', () => {
     if (currentSelected) {
       currentSelected = null;
@@ -408,7 +406,6 @@
     }
   });
 
-  // クリアボタン
   document.getElementById('clearBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.querySelectorAll('.cell').forEach(cell => {
@@ -418,7 +415,6 @@
     localStorage.removeItem('monsterBoard_cells');
   });
 
-  // 画像保存ボタン
   document.getElementById('saveBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     const boardFrame = document.getElementById('boardFrame');
@@ -459,7 +455,6 @@
     });
   });
 
-  // 1P / 2P 切替ボタンの挙動
   btn1P.addEventListener('click', (e) => {
     e.stopPropagation();
     currentPlayer = "1P";
@@ -474,7 +469,6 @@
     btn1P.classList.remove('active');
   });
 
-  // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const drawerMenu = document.getElementById('drawerMenu');
@@ -510,7 +504,6 @@
     drawerOverlay.classList.remove('open');
   });
 
-  // 初期化
   buildBoard(currentGridSize);
   renderMonsters();
 </script>
