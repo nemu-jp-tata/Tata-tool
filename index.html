@@ -99,7 +99,7 @@
     </div>
     <!-- こっそり入るクレジット -->
     <div class="drawer-footer" style="margin-top: auto; text-align: center; font-size: 10px; color: #475569; letter-spacing: 0.5px;">
-      by nemu
+      by ぱんだ
     </div>
   </div>
 </div>
@@ -151,6 +151,7 @@
   const btn2P = document.getElementById('btn2P');
   const normalStageBtn = document.getElementById('normalStageBtn');
   const zombieStageBtn = document.getElementById('zombieStageBtn');
+  const selectedNameEl = document.getElementById('selectedName');
 
   // ローカルストレージに盤面状態を保存する関数
   function saveBoardState() {
@@ -210,7 +211,9 @@
       const cell = document.createElement('div');
       cell.className = 'cell';
       
-      cell.addEventListener('click', () => {
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation(); // 盤面クリックが背景の選択解除にバブリングしないようにする
+
         if (!currentSelected) {
           cell.innerHTML = '';
           cell.className = 'cell';
@@ -297,7 +300,6 @@
   }
 
   const monsterGrid = document.getElementById('monsterGrid');
-  const selectedNameEl = document.getElementById('selectedName');
 
   function renderMonsters() {
     monsterGrid.innerHTML = '';
@@ -340,7 +342,8 @@
       `;
 
       // タップ時の連続Tier切り替えロジック
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation(); // タタ一覧クリックが背景の選択解除にバブリングしないようにする
         const availableTiers = speciesTiersMap[species];
 
         if (currentSelected && currentSelected.species === species) {
@@ -383,7 +386,8 @@
   function setupFilter(groupId, attrName, callback) {
     const btns = document.querySelectorAll(`#${groupId} .filter-btn`);
     btns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         callback(btn.dataset[attrName]);
@@ -395,8 +399,18 @@
   setupFilter('attrFilterGroup', 'attr', val => currentAttr = val);
   setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
+  // 盤面やタタ一覧、操作パネル以外の余白部分をタップしたときの選択解除処理
+  document.addEventListener('click', () => {
+    if (currentSelected) {
+      currentSelected = null;
+      renderMonsters();
+      selectedNameEl.textContent = 'なし';
+    }
+  });
+
   // クリアボタン
-  document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('clearBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
     document.querySelectorAll('.cell').forEach(cell => {
       cell.innerHTML = '';
       cell.className = 'cell';
@@ -405,7 +419,8 @@
   });
 
   // 画像保存ボタン
-  document.getElementById('saveBtn').addEventListener('click', () => {
+  document.getElementById('saveBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
     const boardFrame = document.getElementById('boardFrame');
     const cells = document.querySelectorAll('.cell');
     
@@ -445,13 +460,15 @@
   });
 
   // 1P / 2P 切替ボタンの挙動
-  btn1P.addEventListener('click', () => {
+  btn1P.addEventListener('click', (e) => {
+    e.stopPropagation();
     currentPlayer = "1P";
     btn1P.classList.add('active');
     btn2P.classList.remove('active');
   });
 
-  btn2P.addEventListener('click', () => {
+  btn2P.addEventListener('click', (e) => {
+    e.stopPropagation();
     currentPlayer = "2P";
     btn2P.classList.add('active');
     btn1P.classList.remove('active');
@@ -460,8 +477,10 @@
   // ドロワーメニューロジック
   const menuOpenBtn = document.getElementById('menuOpenBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
+  const drawerMenu = document.getElementById('drawerMenu');
 
-  menuOpenBtn.addEventListener('click', () => {
+  menuOpenBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     drawerOverlay.classList.add('open');
   });
 
@@ -469,6 +488,10 @@
     if (e.target === drawerOverlay) {
       drawerOverlay.classList.remove('open');
     }
+  });
+
+  drawerMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
   });
 
   normalStageBtn.addEventListener('click', () => {
