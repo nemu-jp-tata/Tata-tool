@@ -48,11 +48,27 @@ const normalStageBtn = document.getElementById('normalStageBtn');
 const zombieStageBtn = document.getElementById('zombieStageBtn');
 const selectedNameEl = document.getElementById('selectedName');
 
+// --- ドロップ位置のハイライト処理 ---
+function updateHoverHighlight(x, y) {
+  clearHoverHighlight();
+  const dropTarget = document.elementFromPoint(x, y);
+  const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
+  if (targetCell && mainGrid.contains(targetCell)) {
+    targetCell.classList.add('drag-over');
+  }
+}
+
+function clearHoverHighlight() {
+  document.querySelectorAll('.cell, .board-slot').forEach(cell => {
+    cell.classList.remove('drag-over');
+  });
+}
+
 // ローカルストレージに盤面状態を保存する関数
 function saveBoardState() {
   const cellsData = [];
-  document.querySelectorAll('#mainGrid .cell').forEach((cell, index) => {
-    const img = cell.querySelector('img');
+  document.querySelectorAll('#mainGrid .cell').forEach((indexCell, index) => {
+    const img = indexCell.querySelector('img');
     if (img) {
       cellsData.push({
         index: index,
@@ -60,7 +76,7 @@ function saveBoardState() {
         species: img.dataset.species,
         tier: img.dataset.tier,
         player: img.dataset.player,
-        className: cell.className
+        className: indexCell.className
       });
     }
   });
@@ -129,12 +145,14 @@ function fillCellWithMonster(cell, data) {
 
       if (isDragging) {
         updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+        updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
       }
     }
 
     function onUp(upEvent) {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      clearHoverHighlight();
 
       if (!isDragging) {
         // タップされた場合：盤面から削除
@@ -147,7 +165,7 @@ function fillCellWithMonster(cell, data) {
       // ドラッグ終了時の処理
       dragGhost.style.display = 'none';
       const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-      const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
+      const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
       const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
 
       // モンスター選択ボックスの上でドロップされた場合 → 元に戻さず削除する
@@ -398,7 +416,6 @@ function renderMonsters() {
 
       const availableTiers = speciesTiersMap[species];
       
-      // すでにタップで選択・Tierが上がっている場合はその状態をドラッグに引き継ぐ
       let paletteItemData;
       if (currentSelected && currentSelected.species === species) {
         paletteItemData = {
@@ -438,12 +455,14 @@ function renderMonsters() {
 
         if (isDragging) {
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
         }
       }
 
       function onUp(upEvent) {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        clearHoverHighlight();
 
         if (!isDragging) {
           if (currentSelected && currentSelected.species === species) {
@@ -474,7 +493,7 @@ function renderMonsters() {
 
         dragGhost.style.display = 'none';
         const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-        const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
+        const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
         const cells = Array.from(mainGrid.children);
 
         if (targetCell && mainGrid.contains(targetCell)) {
@@ -569,9 +588,9 @@ function renderMonsters() {
   });
 }
 
-// 選択解除機能：盤面のセルやモンスターアイテム以外の場所をクリックした場合に解除
+// 選択解除機能
 document.getElementById('appContainer').addEventListener('click', (e) => {
-  if (!e.target.closest('.cell') && !e.target.closest('.monster-item')) {
+  if (!e.target.closest('.cell, .board-slot') && !e.target.closest('.monster-item')) {
     if (currentSelected) {
       currentSelected = null;
       selectedNameEl.textContent = 'なし';
