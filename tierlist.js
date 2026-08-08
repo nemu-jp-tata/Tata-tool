@@ -16,10 +16,24 @@ const tierTableTitle = document.getElementById('tierTableTitle');
 let draggingCard = null;
 let currentHoveredDropzone = null;
 
-// キーを更新して古い破損データをリセット
-const STORAGE_KEY = 'tierList_save_data_v5';
+const STORAGE_KEY = 'tierList_save_data_v6';
 
 const DEFAULT_TITLE = '○○ティア表';
+
+// 10色のカラーパレット定義
+const COLOR_PALETTE = [
+  { name: '赤', hex: '#ff7f7f' },
+  { name: '橙', hex: '#ffbf7f' },
+  { name: '黄', hex: '#ffff7f' },
+  { name: '黄緑', hex: '#bfff7f' },
+  { name: '緑', hex: '#7fff7f' },
+  { name: '水', hex: '#7fbfff' },
+  { name: '青', hex: '#7f7fff' },
+  { name: '紫', hex: '#bf7fff' },
+  { name: '桃', hex: '#ff7fff' },
+  { name: '灰', hex: '#a6a6a6' }
+];
+
 const DEFAULT_ROWS = [
   { id: 'tier-1', label: 'S', color: '#ff7f7f' },
   { id: 'tier-2', label: 'A', color: '#ffbf7f' },
@@ -70,11 +84,22 @@ function createRowElement(id, labelText, colorHex) {
   row.className = 'tier-row';
   row.dataset.rowId = id;
 
+  // 10色のドロップダウン選択肢を生成
+  let colorOptionsHtml = '';
+  COLOR_PALETTE.forEach(c => {
+    const isSelected = (c.hex.toLowerCase() === colorHex.toLowerCase()) ? 'selected' : '';
+    colorOptionsHtml += `<option value="${c.hex}" ${isSelected}>${c.name}</option>`;
+  });
+
   row.innerHTML = `
     <div class="tier-label" contenteditable="true" spellcheck="false" style="background-color: ${colorHex};">${labelText}</div>
     <div class="tier-dropzone"></div>
     <div class="tier-row-controls">
-      <input type="color" class="row-color-picker" value="${colorHex}" title="背景色を変更">
+      <button class="row-move-btn row-move-up-btn" title="上へ移動">▲</button>
+      <select class="row-color-select" title="背景色を選択">
+        ${colorOptionsHtml}
+      </select>
+      <button class="row-move-btn row-move-down-btn" title="下へ移動">▼</button>
       <button class="row-delete-btn" title="行を削除">✕</button>
     </div>
   `;
@@ -85,14 +110,42 @@ function createRowElement(id, labelText, colorHex) {
     label.addEventListener('blur', saveState);
   }
 
-  const colorPicker = row.querySelector('.row-color-picker');
-  if (colorPicker) {
-    colorPicker.addEventListener('input', (e) => {
+  // 10色選択変更イベント
+  const colorSelect = row.querySelector('.row-color-select');
+  if (colorSelect) {
+    colorSelect.addEventListener('change', (e) => {
       if (label) label.style.backgroundColor = e.target.value;
       saveState();
     });
   }
 
+  // 上へ移動（▲）ボタン
+  const upBtn = row.querySelector('.row-move-up-btn');
+  if (upBtn) {
+    upBtn.addEventListener('click', () => {
+      const prevRow = row.previousElementSibling;
+      if (prevRow && prevRow.classList.contains('tier-row')) {
+        tierTable.insertBefore(row, prevRow);
+        updateRowControlsState();
+        saveState();
+      }
+    });
+  }
+
+  // 下へ移動（▼）ボタン
+  const downBtn = row.querySelector('.row-move-down-btn');
+  if (downBtn) {
+    downBtn.addEventListener('click', () => {
+      const nextRow = row.nextElementSibling;
+      if (nextRow && nextRow.classList.contains('tier-row')) {
+        tierTable.insertBefore(nextRow, row);
+        updateRowControlsState();
+        saveState();
+      }
+    });
+  }
+
+  // 削除ボタン
   const deleteBtn = row.querySelector('.row-delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', () => {
@@ -116,11 +169,13 @@ function createRowElement(id, labelText, colorHex) {
   return row;
 }
 
+// 行数および上下移動ボタンの状態制御
 function updateRowControlsState() {
-  const rows = document.querySelectorAll('.tier-row');
+  const rows = Array.from(document.querySelectorAll('.tier-row'));
   const count = rows.length;
   const addBtn = document.getElementById('addRowBtn');
 
+  // 行追加ボタン（最大8行）
   if (addBtn) {
     if (count >= MAX_ROWS) {
       addBtn.disabled = true;
@@ -133,15 +188,46 @@ function updateRowControlsState() {
     }
   }
 
-  rows.forEach(row => {
+  rows.forEach((row, index) => {
+    // 削除ボタン（最低5行）
     const deleteBtn = row.querySelector('.row-delete-btn');
     if (deleteBtn) {
       if (count <= MIN_ROWS) {
+        deleteBtn.disabled = true;
         deleteBtn.style.opacity = '0.3';
         deleteBtn.style.cursor = 'not-allowed';
       } else {
+        deleteBtn.disabled = false;
         deleteBtn.style.opacity = '1';
         deleteBtn.style.cursor = 'pointer';
+      }
+    }
+
+    // 先頭行の▲ボタン非活性
+    const upBtn = row.querySelector('.row-move-up-btn');
+    if (upBtn) {
+      if (index === 0) {
+        upBtn.disabled = true;
+        upBtn.style.opacity = '0.3';
+        upBtn.style.cursor = 'default';
+      } else {
+        upBtn.disabled = false;
+        upBtn.style.opacity = '1';
+        upBtn.style.cursor = 'pointer';
+      }
+    }
+
+    // 末尾行の▼ボタン非活性
+    const downBtn = row.querySelector('.row-move-down-btn');
+    if (downBtn) {
+      if (index === count - 1) {
+        downBtn.disabled = true;
+        downBtn.style.opacity = '0.3';
+        downBtn.style.cursor = 'default';
+      } else {
+        downBtn.disabled = false;
+        downBtn.style.opacity = '1';
+        downBtn.style.cursor = 'pointer';
       }
     }
   });
@@ -247,12 +333,12 @@ function saveState() {
   document.querySelectorAll('.tier-row').forEach(row => {
     const rowId = row.dataset.rowId;
     const label = row.querySelector('.tier-label');
-    const colorPicker = row.querySelector('.row-color-picker');
+    const colorSelect = row.querySelector('.row-color-select');
 
     rowsData.push({
       id: rowId,
       label: label ? label.innerText : '',
-      color: colorPicker ? colorPicker.value : '#ff7f7f'
+      color: colorSelect ? colorSelect.value : '#ff7f7f'
     });
 
     const cards = row.querySelectorAll('.monster-card');
@@ -278,7 +364,6 @@ function loadState() {
 
   const saved = localStorage.getItem(STORAGE_KEY);
   
-  // 既存の行を削除
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
 
   if (!saved) {
@@ -346,7 +431,7 @@ function setupEvents() {
       }
 
       const newId = 'tier-' + Date.now();
-      const newRow = createRowElement(newId, 'NEW', '#9c27b0');
+      const newRow = createRowElement(newId, 'NEW', '#bf7fff');
       if (tierTable) tierTable.appendChild(newRow);
       
       updateRowControlsState();
