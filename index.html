@@ -6,24 +6,6 @@
   <title>モンスター配置ツール</title>
   <!-- 外部CSSの読み込み -->
   <link rel="stylesheet" href="./style.css">
-  <style>
-    /* 長押し時のメニュー抑制とドラッグ操作の優先 */
-    .cell img {
-      -webkit-touch-callout: none; /* iOSの長押しメニュー禁止 */
-      -webkit-user-select: none;
-      user-select: none;
-      touch-action: none; /* スマホのスクロール・ジェスチャー無効化 */
-      -webkit-tap-highlight-color: transparent; /* タップ時のハイライト消去 */
-    }
-
-    /* ドラッグ中にドロップ対象のマス目を光らせる演出 */
-    .cell.drag-over {
-      border-color: #00ffff !important;
-      background-color: rgba(0, 255, 255, 0.2) !important;
-      box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
-      transition: all 0.1s ease;
-    }
-  </style>
   <!-- html2canvasライブラリの読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
