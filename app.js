@@ -114,136 +114,143 @@ function fillCellWithMonster(cell, data) {
          data-tier="${data.tier}"
          data-player="${data.player}"
          draggable="false"
-         style="pointer-events: auto; touch-action: none;">
+         style="pointer-events: auto; touch-action: none;"
+         onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
   `;
 
-  const img = cell.querySelector('img');
+  const targetEl = cell.querySelector('img') || cell.querySelector('.no-image-badge');
   
-  img.addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
-    if (e.cancelable) e.preventDefault();
+  if (targetEl) {
+    targetEl.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      if (e.cancelable) e.preventDefault();
 
-    const startX = e.clientX;
-    const startY = e.clientY;
-    let isDragging = false;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let isDragging = false;
 
-    const cells = Array.from(mainGrid.children);
-    const sourceIndex = cells.indexOf(cell);
+      const cells = Array.from(mainGrid.children);
+      const sourceIndex = cells.indexOf(cell);
 
-    function onMove(moveEvent) {
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      if (!isDragging && Math.hypot(dx, dy) > 5) {
-        isDragging = true;
-        draggingItem = {
-          type: 'board',
-          src: img.src,
-          species: img.dataset.species,
-          tier: img.dataset.tier,
-          player: img.dataset.player,
-          sourceIndex: sourceIndex,
-          sourceClassName: cell.className
-        };
+      const species = targetEl.dataset ? targetEl.dataset.species : data.species;
+      const tier = targetEl.dataset ? targetEl.dataset.tier : data.tier;
+      const player = targetEl.dataset ? targetEl.dataset.player : data.player;
 
-        dragGhost.style.backgroundImage = `url(${img.src})`;
-        dragGhost.style.display = 'block';
-        updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+      function onMove(moveEvent) {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!isDragging && Math.hypot(dx, dy) > 5) {
+          isDragging = true;
+          draggingItem = {
+            type: 'board',
+            src: data.src,
+            species: species,
+            tier: tier,
+            player: player,
+            sourceIndex: sourceIndex,
+            sourceClassName: cell.className
+          };
 
-        cell.innerHTML = '';
-        cell.className = 'cell';
+          dragGhost.style.backgroundImage = `url(${data.src})`;
+          dragGhost.style.display = 'block';
+          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+
+          cell.innerHTML = '';
+          cell.className = 'cell';
+        }
+
+        if (isDragging) {
+          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
+        }
       }
 
-      if (isDragging) {
-        updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-        updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
-      }
-    }
+      function onUp(upEvent) {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        clearHoverHighlight();
 
-    function onUp(upEvent) {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      clearHoverHighlight();
+        if (!isDragging) {
+          // タップされた場合：盤面から削除
+          cell.innerHTML = '';
+          cell.className = 'cell';
+          saveBoardState();
+          return;
+        }
 
-      if (!isDragging) {
-        // タップされた場合：盤面から削除
-        cell.innerHTML = '';
-        cell.className = 'cell';
-        saveBoardState();
-        return;
-      }
+        // ドラッグ終了時の処理
+        dragGhost.style.display = 'none';
+        const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+        const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
+        const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
 
-      // ドラッグ終了時の処理
-      dragGhost.style.display = 'none';
-      const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-      const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
-      const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
+        // モンスター選択ボックスの上でドロップされた場合 → 元に戻さず削除する
+        if (isOverMonsterFrame) {
+          draggingItem = null;
+          saveBoardState();
+          return;
+        }
 
-      // モンスター選択ボックスの上でドロップされた場合 → 元に戻さず削除する
-      if (isOverMonsterFrame) {
+        // 盤面外にドロップされた場合 → 元の位置に戻す
+        if (!targetCell || !mainGrid.contains(targetCell)) {
+          revertToSourceCell();
+          return;
+        }
+
+        const targetIndex = cells.indexOf(targetCell);
+        const existingImg = targetCell.querySelector('img, .no-image-badge');
+        const targetSpecies = draggingItem.species;
+
+        let isSpeciesOnBoard = false;
+        cells.forEach((c, idx) => {
+          if (idx === targetIndex) return;
+          const im = c.querySelector('img, .no-image-badge');
+          if (im && im.dataset && im.dataset.species === targetSpecies) {
+            if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
+              isSpeciesOnBoard = true;
+            }
+          }
+        });
+
+        const isReplacingSelf = existingImg && existingImg.dataset &&
+                                existingImg.dataset.species === targetSpecies &&
+                                (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
+
+        if (isSpeciesOnBoard) {
+          const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
+          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+          revertToSourceCell();
+          return;
+        }
+
+        if (existingImg && !isReplacingSelf) {
+          alert('すでにモンスターが配置されているセルには移動できません。');
+          revertToSourceCell();
+          return;
+        }
+
+        targetCell.className = 'cell';
+        if (currentGridSize === 6) {
+          targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
+        }
+
+        fillCellWithMonster(targetCell, {
+          src: draggingItem.src,
+          species: draggingItem.species,
+          tier: draggingItem.tier,
+          player: draggingItem.player,
+          className: targetCell.className
+        });
+
         draggingItem = null;
         saveBoardState();
-        return;
       }
 
-      // 盤面外にドロップされた場合 → 元の位置に戻す
-      if (!targetCell || !mainGrid.contains(targetCell)) {
-        revertToSourceCell();
-        return;
-      }
-
-      const targetIndex = cells.indexOf(targetCell);
-      const existingImg = targetCell.querySelector('img');
-      const targetSpecies = draggingItem.species;
-
-      let isSpeciesOnBoard = false;
-      cells.forEach((c, idx) => {
-        if (idx === targetIndex) return;
-        const im = c.querySelector('img');
-        if (im && im.dataset.species === targetSpecies) {
-          if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
-            isSpeciesOnBoard = true;
-          }
-        }
-      });
-
-      const isReplacingSelf = existingImg && 
-                              existingImg.dataset.species === targetSpecies &&
-                              (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
-
-      if (isSpeciesOnBoard) {
-        const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
-        alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
-        revertToSourceCell();
-        return;
-      }
-
-      if (existingImg && !isReplacingSelf) {
-        alert('すでにモンスターが配置されているセルには移動できません。');
-        revertToSourceCell();
-        return;
-      }
-
-      targetCell.className = 'cell';
-      if (currentGridSize === 6) {
-        targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
-      }
-
-      fillCellWithMonster(targetCell, {
-        src: draggingItem.src,
-        species: draggingItem.species,
-        tier: draggingItem.tier,
-        player: draggingItem.player,
-        className: targetCell.className
-      });
-
-      draggingItem = null;
-      saveBoardState();
-    }
-
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-  });
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  }
 }
 
 function updateGhostPosition(x, y) {
@@ -306,16 +313,16 @@ function buildBoard(size) {
       let p1Count = 0;
       let p2Count = 0;
       document.querySelectorAll('#mainGrid .cell').forEach(c => {
-        const im = c.querySelector('img');
+        const im = c.querySelector('img, .no-image-badge');
         if (im) {
           totalCount++;
-          if (im.dataset.player === '1P') p1Count++;
-          if (im.dataset.player === '2P') p2Count++;
+          if (im.dataset && im.dataset.player === '1P') p1Count++;
+          if (im.dataset && im.dataset.player === '2P') p2Count++;
         }
       });
 
-      const existingImg = cell.querySelector('img');
-      const isReplacingSelf = existingImg && 
+      const existingImg = cell.querySelector('img, .no-image-badge');
+      const isReplacingSelf = existingImg && existingImg.dataset &&
                               existingImg.dataset.species === targetSpecies &&
                               (currentGridSize === 5 || existingImg.dataset.player === currentPlayer);
 
@@ -338,8 +345,8 @@ function buildBoard(size) {
 
       let isSpeciesOnBoard = false;
       document.querySelectorAll('#mainGrid .cell').forEach(c => {
-        const im = c.querySelector('img');
-        if (im && im.dataset.species === targetSpecies) {
+        const im = c.querySelector('img, .no-image-badge');
+        if (im && im.dataset && im.dataset.species === targetSpecies) {
           if (currentGridSize === 5 || im.dataset.player === currentPlayer) {
             if (c !== cell) {
               isSpeciesOnBoard = true;
@@ -413,7 +420,7 @@ function renderMonsters() {
 
     item.innerHTML = `
       <img class="monster-type-icon" src="${typeImgUrl}" alt="${baseM.type}" onerror="this.style.display='none'" draggable="false">
-      <img class="monster-thumb" src="${imgUrl}" alt="${name}" draggable="false" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry==1){this.dataset.retry=2;this.src='${name}.jpg';}else{this.style.display='none';}">
+      <img class="monster-thumb" src="${imgUrl}" alt="${name}" draggable="false" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${name}.png';}else if(this.dataset.retry=='1'){this.dataset.retry=2;this.src='${name}.jpg';}else{this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';}">
       <div class="monster-name">${name}</div>
     `;
 
@@ -509,22 +516,22 @@ function renderMonsters() {
 
         if (targetCell && mainGrid.contains(targetCell)) {
           const targetIndex = cells.indexOf(targetCell);
-          const existingImg = targetCell.querySelector('img');
+          const existingImg = targetCell.querySelector('img, .no-image-badge');
           const targetSpecies = draggingItem.species;
 
           let totalCount = 0;
           let p1Count = 0;
           let p2Count = 0;
           cells.forEach(c => {
-            const im = c.querySelector('img');
+            const im = c.querySelector('img, .no-image-badge');
             if (im) {
               totalCount++;
-              if (im.dataset.player === '1P') p1Count++;
-              if (im.dataset.player === '2P') p2Count++;
+              if (im.dataset && im.dataset.player === '1P') p1Count++;
+              if (im.dataset && im.dataset.player === '2P') p2Count++;
             }
           });
 
-          const isReplacingSelf = existingImg && 
+          const isReplacingSelf = existingImg && existingImg.dataset &&
                                   existingImg.dataset.species === targetSpecies &&
                                   (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
 
@@ -551,8 +558,8 @@ function renderMonsters() {
           let isSpeciesOnBoard = false;
           cells.forEach((c, idx) => {
             if (idx === targetIndex) return;
-            const im = c.querySelector('img');
-            if (im && im.dataset.species === targetSpecies) {
+            const im = c.querySelector('img, .no-image-badge');
+            if (im && im.dataset && im.dataset.species === targetSpecies) {
               if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
                 isSpeciesOnBoard = true;
               }
