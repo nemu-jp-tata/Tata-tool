@@ -364,14 +364,34 @@ body {
   100% { opacity: 1; transform: scale(1); }
 }
 
-/* 画像書き出し（エクスポート）用設定 */
+/* ==========================================
+   画像書き出し（エクスポート）専用スタイル
+   ========================================== */
+body.is-exporting,
+body.is-exporting .tier-container {
+  height: auto !important;
+  overflow: visible !important;
+}
+
 .tier-table-wrapper.exporting {
   width: 1000px !important;
   max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+}
+
+.tier-table-wrapper.exporting .tier-table {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .tier-table-wrapper.exporting .tier-row {
   min-height: 80px !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 .tier-table-wrapper.exporting .tier-label {
@@ -381,8 +401,10 @@ body {
 }
 
 .tier-table-wrapper.exporting .tier-dropzone {
-  flex-wrap: nowrap !important;
-  overflow-x: visible !important;
+  height: auto !important;
+  min-height: 80px !important;
+  overflow: visible !important;
+  flex-wrap: wrap !important;
 }
 
 .tier-table-wrapper.exporting .monster-card {
@@ -425,11 +447,11 @@ body {
   /* 上部ラッパー：高さを柔軟にしつつ最小高さを0にリセット */
   .tier-table-wrapper {
     flex: 1 1 auto;
-    min-height: 0; /* Flexbox内部で子要素のスクロールを有効化するために必須 */
+    min-height: 0;
     display: flex;
     flex-direction: column;
     margin-bottom: 8px;
-    overflow: hidden; /* ラッパー自体からははみ出させない */
+    overflow: hidden;
   }
 
   .tier-table-title-container {
@@ -441,11 +463,11 @@ body {
     font-size: 14px;
   }
 
-  /* ★ ティア表本体：ここが確実に行追加時にスクロールするように修正 */
+  /* ティア表本体：確実に行追加時にスクロールするように設定 */
   .tier-table {
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto !important; /* 縦スクロールを強制 */
+    overflow-y: auto !important;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
@@ -453,7 +475,7 @@ body {
   .tier-row {
     min-height: 50px;
     height: auto !important;
-    flex-shrink: 0; /* 行自体が潰れないように設定 */
+    flex-shrink: 0;
   }
 
   .tier-label {
