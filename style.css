@@ -6,6 +6,7 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
+
 body {
   background-color: #121420;
   color: #94a3b8;
@@ -16,21 +17,25 @@ body {
   align-items: center;
   touch-action: manipulation;
 }
+
 .container {
   width: 100%;
   max-width: 420px;
 }
+
 .left-column {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
+
 .header-tools {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .btn {
   background: #282d42;
   color: #e2e8f0;
@@ -40,6 +45,7 @@ body {
   font-size: 12px;
   cursor: pointer;
 }
+
 .btn:active {
   background: #3b4261;
 }
@@ -51,9 +57,11 @@ body {
   gap: 8px;
   margin-bottom: 8px;
 }
+
 .player-switch-container.show {
   display: flex;
 }
+
 .player-btn {
   background: #181a29;
   color: #94a3b8;
@@ -65,11 +73,13 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .player-btn.p1.active {
   background: rgba(239, 68, 68, 0.25);
   color: #f87171;
   border-color: #ef4444;
 }
+
 .player-btn.p2.active {
   background: rgba(59, 130, 246, 0.25);
   color: #60a5fa;
@@ -83,6 +93,8 @@ body {
   border-radius: 12px;
   padding: 10px;
   margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .board-notice {
@@ -119,18 +131,24 @@ body {
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 6px;
+  width: 100%;
 }
+
 .grid-6x6 {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 6px;
+  width: 100%;
 }
 
-.cell {
+/* 盤面マス目（スマホ対応の可変サイズ） */
+.cell, .board-slot {
   background: #0f111a;
   border: 1px dashed #282d45;
   border-radius: 6px;
+  width: 100%;
+  height: auto;
   aspect-ratio: 1 / 1;
   position: relative;
   cursor: pointer;
@@ -138,22 +156,40 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .cell.p1-cell {
   border: 2px solid #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
+
 .cell.p2-cell {
   border: 2px solid #3b4261;
   background: rgba(59, 130, 246, 0.1);
+}
+
+/* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
+.cell.drag-over,
+.board-slot.drag-over {
+  border-color: #00ffff !important;
+  background-color: rgba(0, 255, 255, 0.15) !important;
+  box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
+  transform: scale(1.05);
+  z-index: 10;
 }
 
 .cell img {
   width: 90%;
   height: 90%;
   object-fit: contain;
+  pointer-events: none;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* モンスター選択エリア */
@@ -163,6 +199,7 @@ body {
   border-radius: 12px;
   padding: 10px;
 }
+
 .monster-title {
   font-size: 13px;
   font-weight: bold;
@@ -179,6 +216,7 @@ body {
   margin-bottom: 10px;
   overflow: hidden;
 }
+
 .filter-summary {
   padding: 8px 10px;
   font-size: 11px;
@@ -188,12 +226,15 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+
 .filter-summary::-webkit-details-marker {
   display: none;
 }
+
 .filter-details[open] .summary-arrow {
   transform: rotate(180deg);
 }
+
 .summary-arrow {
   transition: transform 0.2s;
 }
@@ -205,6 +246,7 @@ body {
   padding: 8px;
   border-top: 1px solid #282d45;
 }
+
 .filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -212,11 +254,13 @@ body {
   align-items: center;
   justify-content: center;
 }
+
 .filter-label {
   font-size: 10px;
   color: #64748b;
   margin-right: 2px;
 }
+
 .filter-btn {
   background: #181a29;
   color: #94a3b8;
@@ -229,12 +273,14 @@ body {
   align-items: center;
   gap: 4px;
 }
+
 .filter-btn img {
   width: 14px;
   height: 14px;
   object-fit: contain;
   pointer-events: none;
 }
+
 .filter-btn.active {
   background: #2563eb;
   color: #ffffff;
@@ -250,6 +296,7 @@ body {
   overflow-y: auto;
   padding-right: 2px;
 }
+
 .monster-item {
   background: #0f111a;
   border: 1px solid #282d45;
@@ -292,6 +339,7 @@ body {
   object-fit: contain;
   pointer-events: none;
 }
+
 .monster-name {
   font-size: 9px;
   color: #cbd5e1;
@@ -316,6 +364,7 @@ body {
   width: 32px;
   height: 28px;
 }
+
 .menu-btn span {
   display: block;
   height: 3px;
@@ -336,6 +385,7 @@ body {
   transition: opacity 0.3s ease;
   z-index: 999;
 }
+
 .drawer-overlay.open {
   visibility: visible;
   opacity: 1;
@@ -357,6 +407,7 @@ body {
   flex-direction: column;
   padding: 20px;
 }
+
 .drawer-overlay.open .drawer-menu {
   transform: translateX(0);
 }
@@ -383,11 +434,13 @@ body {
   font-size: 13px;
   transition: background 0.2s, color 0.2s;
 }
+
 .drawer-item:hover, .drawer-item.active {
   background: #2563eb;
   color: #ffffff;
   border-color: #3b82f6;
 }
+
 .drawer-footer {
   margin-top: auto;
   text-align: center;
@@ -434,60 +487,19 @@ body {
     margin-top: 0 !important;
   }
 }
+
+/* スマホ表示の最適化（600px以下） */
 @media (max-width: 600px) {
   .monster-grid,
   .monster-list {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important; /* 4列固定 */
-    
-    /* 隙間を広くとる（ここを広げることで指を置く場所を作る） */
-    gap: 14px !important; 
-    
-    /* パディングは控えめにし、隙間を強調 */
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
     padding: 8px !important;
-  }
-
-  /* アイコンが隙間に負けないよう、カード内の余白を最小限に */
-  .monster-card {
-    padding: 2px !important;
-    /* 隙間を確保するためにカード自体を少しタイトにする */
-  }
-
-  /* さらにスクロール性能を向上させるおまけ設定 */
-  .monster-grid,
-  .monster-list {
-    /* ブラウザに対して「ここは上下スクロール用」と明示する */
     touch-action: pan-y;
   }
-}
-.cell img {
-      -webkit-touch-callout: none; /* iOSの長押しメニュー禁止 */
-      -webkit-user-select: none;
-      user-select: none;
-      touch-action: none; /* スマホのスクロール・ジェスチャー無効化 */
-      -webkit-tap-highlight-color: transparent; /* タップ時のハイライト消去 */
-    }
 
-/* ==========================================
-   CSS: ドロップ先のマス目とハイライト演出
-========================================== */
-
-/* 通常の盤面マス目 */
-.cell,.board-slot {
-  width: 80px;
-  height: 80px;
-  border: 2px dashed #444;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-/* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
-.cell.drag-over,
-.board-slot.drag-over {
-  border-color: #00ffff !important;
-  background-color: rgba(0, 255, 255, 0.15) !important;
-  /* ネオンのように外側と内側を光らせる */
-  box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
-  transform: scale(1.05); /* 少し大きくして分かりやすくする */
-  z-index: 10;
+  .monster-card {
+    padding: 2px !important;
+  }
 }
