@@ -7,13 +7,21 @@
   <!-- 外部CSSの読み込み -->
   <link rel="stylesheet" href="./style.css">
   <style>
-    /* 【追加】長押し時のメニュー抑制とドラッグ操作の優先 */
+    /* 長押し時のメニュー抑制とドラッグ操作の優先 */
     .cell img {
       -webkit-touch-callout: none; /* iOSの長押しメニュー禁止 */
       -webkit-user-select: none;
       user-select: none;
       touch-action: none; /* スマホのスクロール・ジェスチャー無効化 */
       -webkit-tap-highlight-color: transparent; /* タップ時のハイライト消去 */
+    }
+
+    /* ドラッグ中にドロップ対象のマス目を光らせる演出 */
+    .cell.drag-over {
+      border-color: #00ffff !important;
+      background-color: rgba(0, 255, 255, 0.2) !important;
+      box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
+      transition: all 0.1s ease;
     }
   </style>
   <!-- html2canvasライブラリの読み込み -->
@@ -162,6 +170,7 @@
 
   // ドラッグ＆ドロップ用の状態管理
   let draggingItem = null; // { type: 'board'|'palette', src, species, tier, player, sourceIndex }
+  let currentHoveredCell = null; // ドラッグ中に現在ホバーしているセル
   const dragGhost = document.getElementById('dragGhost');
 
   const mainGrid = document.getElementById('mainGrid');
@@ -172,6 +181,30 @@
   const normalStageBtn = document.getElementById('normalStageBtn');
   const zombieStageBtn = document.getElementById('zombieStageBtn');
   const selectedNameEl = document.getElementById('selectedName');
+
+  // ★【追加】ドラッグ中にホバーしているセルをハイライト（光らせる）制御
+  function updateCellHighlight(x, y) {
+    const dropTarget = document.elementFromPoint(x, y);
+    const targetCell = dropTarget ? dropTarget.closest('#mainGrid .cell') : null;
+
+    if (currentHoveredCell !== targetCell) {
+      if (currentHoveredCell) {
+        currentHoveredCell.classList.remove('drag-over');
+      }
+      if (targetCell) {
+        targetCell.classList.add('drag-over');
+      }
+      currentHoveredCell = targetCell;
+    }
+  }
+
+  // ★【追加】ハイライトの解除
+  function clearCellHighlight() {
+    if (currentHoveredCell) {
+      currentHoveredCell.classList.remove('drag-over');
+      currentHoveredCell = null;
+    }
+  }
 
   // ローカルストレージに盤面状態を保存する関数
   function saveBoardState() {
@@ -254,6 +287,7 @@
 
         if (isDragging) {
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          updateCellHighlight(moveEvent.clientX, moveEvent.clientY); // ★ホバー位置を光らせる
         }
       }
 
@@ -270,6 +304,7 @@
         }
 
         // ドラッグ終了時の処理
+        clearCellHighlight(); // ★ハイライトを解除
         dragGhost.style.display = 'none';
         const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
         const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
@@ -523,7 +558,6 @@
 
         const availableTiers = speciesTiersMap[species];
         
-        // 【修正】すでにタップで選択・Tierが上がっている場合はその状態をドラッグに引き継ぐ
         let paletteItemData;
         if (currentSelected && currentSelected.species === species) {
           paletteItemData = {
@@ -563,6 +597,7 @@
 
           if (isDragging) {
             updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+            updateCellHighlight(moveEvent.clientX, moveEvent.clientY); // ★ホバー位置を光らせる
           }
         }
 
@@ -597,6 +632,7 @@
             return;
           }
 
+          clearCellHighlight(); // ★ハイライトを解除
           dragGhost.style.display = 'none';
           const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
           const targetCell = dropTarget ? dropTarget.closest('.cell') : null;
