@@ -491,32 +491,34 @@ function setupEvents() {
     });
   }
 
-  const saveImgBtn = document.getElementById('saveImgBtn');
-  if (saveImgBtn) {
-    saveImgBtn.addEventListener('click', () => {
-      if (!tierTable) return;
-      
-      tierTable.classList.add('html2canvas-exporting');
-      if (tierTableTitle) tierTableTitle.style.borderColor = 'transparent';
+// 画像保存ボタン（出力時のみ一時的に横長レイアウトに変換）
+document.getElementById('saveImgBtn').addEventListener('click', () => {
+  const table = document.getElementById('tierTable');
 
-      html2canvas(tierTable, {
-        backgroundColor: '#000000',
-        scale: 2,
-        useCORS: true
-      }).then(canvas => {
-        tierTable.classList.remove('html2canvas-exporting');
-        
-        const link = document.createElement('a');
-        const filename = ((tierTableTitle ? tierTableTitle.value.trim() : '') || 'tier-list') + '.png';
-        link.download = filename;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(err => {
-        tierTable.classList.remove('html2canvas-exporting');
-        console.error('保存エラー:', err);
-        alert('画像の保存に失敗しました。');
-      });
-    });
+  // 1. 横長出力用のクラスを付与
+  table.classList.add('exporting');
+
+  // 2. キャプチャ実行
+  html2canvas(table, {
+    backgroundColor: '#000000',
+    scale: 2, // 高解像度で出力
+    useCORS: true,
+    windowWidth: 1200 // 描画領域の幅を固定確保
+  }).then(canvas => {
+    // 3. 完了したら元のスマホ用レイアウトに戻す
+    table.classList.remove('exporting');
+
+    // 画像のダウンロード処理
+    const link = document.createElement('a');
+    link.download = 'tier-list.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    console.error('保存エラー:', err);
+    table.classList.remove('exporting');
+    alert('画像の保存に失敗しました。');
+  });
+});
   }
 }
 
