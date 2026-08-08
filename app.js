@@ -48,20 +48,29 @@ const normalStageBtn = document.getElementById('normalStageBtn');
 const zombieStageBtn = document.getElementById('zombieStageBtn');
 const selectedNameEl = document.getElementById('selectedName');
 
-// --- ドロップ位置のハイライト処理 ---
+// --- ドロップ位置のハイライト処理（キャッシュ最適化） ---
+let currentHoveredCell = null;
+
 function updateHoverHighlight(x, y) {
-  clearHoverHighlight();
   const dropTarget = document.elementFromPoint(x, y);
   const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
+  
   if (targetCell && mainGrid.contains(targetCell)) {
-    targetCell.classList.add('drag-over');
+    if (currentHoveredCell !== targetCell) {
+      clearHoverHighlight();
+      targetCell.classList.add('drag-over');
+      currentHoveredCell = targetCell;
+    }
+  } else {
+    clearHoverHighlight();
   }
 }
 
 function clearHoverHighlight() {
-  document.querySelectorAll('.cell, .board-slot').forEach(cell => {
-    cell.classList.remove('drag-over');
-  });
+  if (currentHoveredCell) {
+    currentHoveredCell.classList.remove('drag-over');
+    currentHoveredCell = null;
+  }
 }
 
 // ローカルストレージに盤面状態を保存する関数
@@ -105,7 +114,7 @@ function fillCellWithMonster(cell, data) {
          data-tier="${data.tier}"
          data-player="${data.player}"
          draggable="false"
-         style="pointer-events: auto;">
+         style="pointer-events: auto; touch-action: none;">
   `;
 
   const img = cell.querySelector('img');
