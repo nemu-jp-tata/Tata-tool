@@ -219,13 +219,13 @@ function fillCellWithMonster(cell, data) {
 
         if (isSpeciesOnBoard) {
           const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
-          alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+          alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
           revertToSourceCell();
           return;
         }
 
         if (existingImg && !isReplacingSelf) {
-          alert('すでにモンスターが配置されているセルには移動できません。');
+          alert('すでにタタが配置されているセルには移動できません。');
           revertToSourceCell();
           return;
         }
@@ -357,7 +357,7 @@ function buildBoard(size) {
 
       if (isSpeciesOnBoard) {
         const playerText = (currentGridSize === 6) ? `[${currentPlayer}]` : "";
-        alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+        alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
         return;
       }
 
@@ -568,13 +568,13 @@ function renderMonsters() {
 
           if (isSpeciesOnBoard) {
             const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
-            alert(`${playerText} 同じ種族のモンスターは既に盤面に配置されています。`);
+            alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
             draggingItem = null;
             return;
           }
 
           if (existingImg && !isReplacingSelf) {
-            alert('すでにモンスターが配置されているセルには移動できません。');
+            alert('すでにタタが配置されているセルには移動できません。');
             draggingItem = null;
             return;
           }
