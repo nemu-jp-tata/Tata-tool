@@ -468,3 +468,7 @@ body {
   height: 70px !important;
   flex-shrink: 0 !important;
 }
+/* 画像書き出し時（.exportingクラス付与時）に操作ボタン群を非表示にする */
+.tier-table.exporting .tier-row-controls {
+  display: none !important;
+}
