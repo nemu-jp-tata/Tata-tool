@@ -219,5 +219,9 @@ const rawMonstersData = [
   { name: "ピカル", species: "ピカル種", type: "雷", role: "ヒール", T: 1 },
   { name: "ボルタル", species: "ピカル種", type: "雷", role: "ヒール", T: 2 },
   { name: "ルシフタル", species: "ピカル種", type: "雷", role: "ヒール", T: 3 },
-  { name: "ルミナリオン", species: "ピカル種", type: "雷", role: "ヒール", T: 4 }
+  { name: "ルミナリオン", species: "ピカル種", type: "雷", role: "ヒール", T: 4 },
+  { name: "トジコモル", species: "トジコモル種", type: "雷", role: "ダメージ", T: 1 },
+  { name: "ヒキコモル", species: "トジコモル種", type: "雷", role: "ダメージ", T: 2 },
+  { name: "モルターボ", species: "トジコモル種", type: "雷", role: "ダメージ", T: 3 },
+  { name: "モルボット", species: "トジコモル種", type: "雷", role: "ダメージ", T: 4 }
 ];
