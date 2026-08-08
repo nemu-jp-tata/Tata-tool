@@ -512,3 +512,34 @@ body {
     max-height: 520px;
   }
 }
+.no-image-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  background: rgba(255, 182, 193, 0.12);
+  border: 1.5px dashed #ffb6c1;
+  border-radius: 12px;
+  color: #ff9ebb;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
+  padding: 2px;
+  text-align: center;
+  user-select: none;
+  animation: pulse-no-img 2s infinite ease-in-out;
+}
+
+.cell .no-image-badge {
+  height: 100%;
+  font-size: 9px;
+  border-radius: 6px;
+  background: rgba(255, 182, 193, 0.18);
+}
+
+@keyframes pulse-no-img {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(0.97); }
+}
