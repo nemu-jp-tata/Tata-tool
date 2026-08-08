@@ -1,278 +1,58 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  user-select: none;
-}
-
-body {
-  background-color: #121212;
-  color: #ffffff;
-  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-  padding: 15px;
-}
-
-.tier-container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.header-tools {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.title-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.header-tools h1 {
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-.btn-group {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  text-decoration: none;
-}
-
-.btn:hover {
-  opacity: 0.85;
-}
-
-.btn-back {
-  background-color: #333;
-  color: #fff;
-  font-size: 12px;
-  padding: 6px 12px;
-}
-
-.btn-reset {
-  background-color: #4a4a4a;
+/* 追加ボタン・削除ボタンのスタイル */
+.btn-add {
+  background-color: #2196F3;
   color: #fff;
 }
 
-.btn-save {
-  background-color: #ff9ebb;
-  color: #121212;
-}
-
-/* ティア表本体デザイン */
-.tier-table {
+.tier-row-controls {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background-color: #000;
-  border: 2px solid #000;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-/* 編集可能タイトル部分 */
-.tier-table-title-container {
-  background-color: #181a29;
-  padding: 10px;
-  text-align: center;
-  border-bottom: 2px solid #000;
-}
-
-.tier-table-title {
-  width: 100%;
-  background: transparent;
-  border: 1px dashed transparent;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  padding: 4px;
-  outline: none;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-.tier-table-title:hover,
-.tier-table-title:focus {
-  border-color: #ff9ebb;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.tier-row {
-  display: flex;
-  min-height: 70px;
-  background-color: #1a1a1a;
-}
-
-/* 編集可能なティア名ラベル */
-.tier-label {
-  width: 120px;
-  min-width: 120px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 13px;
-  text-align: center;
-  color: #000;
-  padding: 5px;
-  line-height: 1.3;
-  cursor: text;
-  outline: none;
-  word-break: break-all;
-  user-select: text;
-  transition: box-shadow 0.2s;
-}
-
-.tier-label:focus {
-  box-shadow: inset 0 0 0 2px #000;
-  background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2));
-}
-
-/* ラベル色設定 */
-.tier-easy { background-color: #ff7f7f; }
-.tier-s    { background-color: #ff7fff; }
-.tier-a    { background-color: #ffbf7f; }
-.tier-b    { background-color: #ffff7f; }
-.tier-c    { background-color: #7fff7f; }
-.tier-f    { background-color: #7fbf7f; }
-
-/* モンスタードロップエリア */
-.tier-dropzone {
-  flex: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
+  align-items: center;
   gap: 4px;
-  padding: 5px;
-  min-height: 70px;
-  transition: background-color 0.2s;
-  user-select: none;
+  background-color: #2a2a2a;
+  padding: 4px;
+  border-left: 1px solid #000;
 }
 
-.tier-dropzone.drag-over {
-  background-color: rgba(255, 255, 255, 0.15);
+.row-delete-btn {
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 未配置プール */
-.pool-section {
-  margin-top: 20px;
-  background-color: #1a1a1a;
-  border-radius: 6px;
-  padding: 12px;
+.row-delete-btn:hover {
+  opacity: 0.8;
 }
 
-.pool-section h2 {
-  font-size: 14px;
-  color: #aaa;
-  margin-bottom: 10px;
-  letter-spacing: 0.5px;
+.row-color-picker {
+  -webkit-appearance: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
 }
 
-.pool-dropzone {
-  min-height: 100px;
-  background-color: #121212;
-  border: 1px dashed #333;
+.row-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.row-color-picker::-webkit-color-swatch {
+  border: 1px solid #ffffff;
   border-radius: 4px;
 }
 
-/* モンスターカード */
-.monster-card {
-  width: 60px;
-  height: 60px;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: grab;
-  touch-action: none;
-  background-color: #2a2a2a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.monster-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-/* 画像読み込みエラー時の可愛いバッジ表示 */
-.no-image-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 182, 193, 0.12);
-  border: 1.5px dashed #ffb6c1;
-  border-radius: 6px;
-  color: #ff9ebb;
-  font-size: clamp(7px, 1.8vw, 9px);
-  font-weight: bold;
-  letter-spacing: -0.2px;
-  white-space: nowrap;
-  box-sizing: border-box;
-  padding: 0 1px;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  animation: pulse-no-img 2s infinite ease-in-out;
-}
-
-@keyframes pulse-no-img {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(0.97); }
-}
-
-/* ドラッグゴースト */
-.drag-ghost {
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  width: 60px;
-  height: 60px;
-  border-radius: 6px;
-  background-size: cover;
-  background-position: center;
-  display: none;
-  opacity: 0.8;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-}
-
-@media (max-width: 600px) {
-  .tier-label {
-    width: 80px;
-    min-width: 80px;
-    font-size: 11px;
-  }
-  .monster-card {
-    width: 48px;
-    height: 48px;
-  }
-  .drag-ghost {
-    width: 48px;
-    height: 48px;
-  }
-  .tier-table-title {
-    font-size: 15px;
-  }
+/* 画像出力時（キャプチャ実行中）は操作コントロールを非表示にして綺麗に出力する */
+.html2canvas-exporting .tier-row-controls {
+  display: none !important;
 }
