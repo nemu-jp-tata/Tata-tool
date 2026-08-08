@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T1 -> T2 Priority List Maker</title>
+  <link rel="stylesheet" href="tierlist.css">
+  <!-- html2canvas（画像保存用ライブラリ） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+  <div class="tier-container">
+    <header class="header-tools">
+      <h1>TIER LIST MAKER</h1>
+      <div class="btn-group">
+        <button id="resetBtn" class="btn btn-reset">リセット</button>
+        <button id="saveImgBtn" class="btn btn-save">画像として保存</button>
+      </div>
+    </header>
+
+    <!-- ティア表本体 -->
+    <div id="tierTable" class="tier-table">
+      <!-- ティア行：EASY TO EVOLVE -->
+      <div class="tier-row" data-tier="EASY TO EVOLVE">
+        <div class="tier-label tier-easy">EASY TO<br>EVOLVE</div>
+        <div class="tier-dropzone"></div>
+      </div>
+
+      <!-- ティア行：S -->
+      <div class="tier-row" data-tier="S">
+        <div class="tier-label tier-s">S</div>
+        <div class="tier-dropzone"></div>
+      </div>
+
+      <!-- ティア行：A -->
+      <div class="tier-row" data-tier="A">
+        <div class="tier-label tier-a">A</div>
+        <div class="tier-dropzone"></div>
+      </div>
+
+      <!-- ティア行：B -->
+      <div class="tier-row" data-tier="B">
+        <div class="tier-label tier-b">B</div>
+        <div class="tier-dropzone"></div>
+      </div>
+
+      <!-- ティア行：C -->
+      <div class="tier-row" data-tier="C">
+        <div class="tier-label tier-c">C</div>
+        <div class="tier-dropzone"></div>
+      </div>
+
+      <!-- ティア行：F -->
+      <div class="tier-row" data-tier="F">
+        <div class="tier-label tier-f">F</div>
+        <div class="tier-dropzone"></div>
+      </div>
+    </div>
+
+    <!-- 未配置のモンスタープール -->
+    <div class="pool-section">
+      <h2>UNASSIGNED MONSTERS</h2>
+      <div id="monsterPool" class="tier-dropzone pool-dropzone"></div>
+    </div>
+  </div>
+
+  <!-- ドラッグ中のゴースト表示 -->
+  <div id="dragGhost" class="drag-ghost"></div>
+
+  <!-- 既存のデータファイルを読み込み -->
+  <script src="monsters.js"></script>
+  <script src="tierlist.js"></script>
+</body>
+</html>
