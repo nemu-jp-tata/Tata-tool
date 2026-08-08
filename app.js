@@ -104,7 +104,8 @@ function fillCellWithMonster(cell, data) {
          data-species="${data.species}" 
          data-tier="${data.tier}"
          data-player="${data.player}"
-         draggable="false">
+         draggable="false"
+         style="pointer-events: auto;">
   `;
 
   const img = cell.querySelector('img');
@@ -112,6 +113,7 @@ function fillCellWithMonster(cell, data) {
   img.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (e.cancelable) e.preventDefault();
 
     const startX = e.clientX;
     const startY = e.clientY;
