@@ -395,7 +395,7 @@ body {
   display: none !important;
 }
 
-/* スマホ向け（幅600px以下）のスクロール＆固定レイアウト */
+/* スマホ向け（幅600px以下）：上下分離・それぞれ独立スクロールレイアウト */
 @media (max-width: 600px) {
   html, body {
     height: 100%;
@@ -403,33 +403,41 @@ body {
   }
 
   body {
-    padding: 10px 10px 0 10px;
+    padding: 8px 8px 0 8px;
   }
 
   .tier-container {
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    box-sizing: border-box;
   }
 
   .header-tools {
     flex-shrink: 0;
+    margin-bottom: 6px;
+  }
+
+  .header-tools h1 {
+    font-size: 15px;
+  }
+
+  /* 上部：ティア表部分（独立スクロール） */
+  .tier-table-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     margin-bottom: 8px;
   }
 
   .tier-table-title-container {
     flex-shrink: 0;
+    padding: 6px;
   }
 
   .tier-table-title {
-    font-size: 15px;
-  }
-
-  /* ティア表領域：高さ制御をして内部スクロールを成立させる */
-  .tier-table-wrapper {
-    flex: 1;
-    min-height: 0;
-    margin-bottom: 10px;
+    font-size: 14px;
   }
 
   .tier-table {
@@ -441,19 +449,19 @@ body {
   }
 
   .tier-row {
-    min-height: 52px;
+    min-height: 50px;
     height: auto !important;
   }
 
   .tier-label {
-    width: 70px;
-    min-width: 70px;
-    font-size: 11px;
+    width: 60px;
+    min-width: 60px;
+    font-size: 10px;
     padding: 2px;
   }
 
   .tier-dropzone {
-    min-height: 52px;
+    min-height: 50px;
     height: auto !important;
     padding: 2px;
     gap: 2px;
@@ -463,32 +471,34 @@ body {
   .pool-dropzone .monster-card,
   .drag-ghost,
   .drop-placeholder {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
-  /* 未配置プール：画面下部に固定 */
+  /* 下部：未配置プール（固定＆独立スクロール） */
   .pool-section {
     flex-shrink: 0;
     margin-top: 0;
-    padding: 8px 10px;
-    background-color: #1e1e1e;
+    padding: 8px;
+    background-color: #1a1a1a;
     border-top: 2px solid #333;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.6);
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.7);
     z-index: 100;
   }
 
   .pool-section h2 {
     font-size: 11px;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   .pool-dropzone {
-    max-height: 140px;
+    max-height: 130px;
     overflow-y: auto;
+    overflow-x: hidden;
     background-color: #121212;
-    padding: 6px;
+    padding: 4px;
+    gap: 2px;
     -webkit-overflow-scrolling: touch;
   }
 }
