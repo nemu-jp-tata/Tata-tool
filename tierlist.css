@@ -472,3 +472,60 @@ body {
 .tier-table.exporting .tier-row-controls {
   display: none !important;
 }
+/* スマホ向け：上下分割＆下部固定レイアウト */
+@media (max-width: 600px) {
+  html, body {
+    height: 100%;
+    overflow: hidden; /* 全体の無駄なスクロールを防止 */
+  }
+
+  body {
+    padding: 10px 10px 0 10px;
+  }
+
+  .tier-container {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh; /* 画面いっぱいに表示 */
+  }
+
+  .header-tools {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+  }
+
+  /* ティア表エリア：余った高さを占有して内部でスクロール */
+  .tier-table {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* モンスタープール：画面下部に固定 */
+  .pool-section {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding: 8px 10px;
+    background-color: #1e1e1e;
+    border-top: 2px solid #333;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+  }
+
+  .pool-section h2 {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  /* プール内部：指定した高さでスクロール可能に */
+  .pool-dropzone {
+    max-height: 160px; /* お好みに合わせて高さ調整可能 */
+    overflow-y: auto;
+    background-color: #121212;
+    padding: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
