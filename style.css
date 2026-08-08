@@ -460,3 +460,24 @@ body {
     touch-action: pan-y;
   }
 }
+/* ==========================================
+   CSS: ドロップ先のマス目とハイライト演出
+========================================== */
+
+/* 通常の盤面マス目 */
+.board-slot {
+  width: 80px;
+  height: 80px;
+  border: 2px dashed #444;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
+.board-slot.drag-over {
+  border-color: #00ffff !important;
+  background-color: rgba(0, 255, 255, 0.15) !important;
+  /* ネオンのように外側と内側を光らせる */
+  box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
+  transform: scale(1.05); /* 少し大きくして分かりやすくする */
+}
