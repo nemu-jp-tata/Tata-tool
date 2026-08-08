@@ -482,7 +482,7 @@ body {
   }
   .monster-frame {
     width: 450px;
-    max-height: calc(100vh - 40px);
+    min-height: 615px;
     overflow-y: auto;
     margin-top: 0 !important;
   }
@@ -506,4 +506,9 @@ body {
 /* タッチ操作の遅延を防止 */
 .cell, .monster-item, #mainGrid img, #dragGhost {
   touch-action: none;
+}
+@media (min-width: 768px) {
+  .monster-grid {
+    max-height: 520px;
+  }
 }
