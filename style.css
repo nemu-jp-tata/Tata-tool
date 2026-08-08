@@ -503,3 +503,7 @@ body {
     padding: 2px !important;
   }
 }
+/* タッチ操作の遅延を防止 */
+.cell, .monster-item, #mainGrid img, #dragGhost {
+  touch-action: none;
+}
