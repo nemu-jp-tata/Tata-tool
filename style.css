@@ -468,19 +468,12 @@ body {
       -webkit-tap-highlight-color: transparent; /* タップ時のハイライト消去 */
     }
 
-    /* ドラッグ中にドロップ対象のマス目を光らせる演出 */
-    .cell.drag-over {
-      border-color: #00ffff !important;
-      background-color: rgba(0, 255, 255, 0.2) !important;
-      box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
-      transition: all 0.1s ease;
-    }
 /* ==========================================
    CSS: ドロップ先のマス目とハイライト演出
 ========================================== */
 
 /* 通常の盤面マス目 */
-.board-slot {
+.cell,.board-slot {
   width: 80px;
   height: 80px;
   border: 2px dashed #444;
@@ -489,10 +482,12 @@ body {
 }
 
 /* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
+.cell.drag-over,
 .board-slot.drag-over {
   border-color: #00ffff !important;
   background-color: rgba(0, 255, 255, 0.15) !important;
   /* ネオンのように外側と内側を光らせる */
   box-shadow: 0 0 12px #00ffff, inset 0 0 12px #00ffff !important;
   transform: scale(1.05); /* 少し大きくして分かりやすくする */
+  z-index: 10;
 }
