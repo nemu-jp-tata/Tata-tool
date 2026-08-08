@@ -487,17 +487,17 @@ function setupEvents() {
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
-      const table = document.getElementById('tierTable');
+      const tableArea = document.getElementById('tierTableArea');
 
-      table.classList.add('exporting');
+      tableArea.classList.add('exporting');
 
-      html2canvas(table, {
+      html2canvas(tableArea, {
         backgroundColor: '#000000',
         scale: 2,
         useCORS: true,
         windowWidth: 1200
       }).then(canvas => {
-        table.classList.remove('exporting');
+        tableArea.classList.remove('exporting');
 
         const link = document.createElement('a');
         link.download = 'tier-list.png';
@@ -505,7 +505,7 @@ function setupEvents() {
         link.click();
       }).catch(err => {
         console.error('保存エラー:', err);
-        table.classList.remove('exporting');
+        tableArea.classList.remove('exporting');
         alert('画像の保存に失敗しました。');
       });
     });
