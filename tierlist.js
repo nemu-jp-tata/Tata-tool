@@ -16,11 +16,14 @@ const tierTableTitle = document.getElementById('tierTableTitle');
 let draggingCard = null;
 let currentHoveredDropzone = null;
 
-const STORAGE_KEY = 'tierList_save_data_v6';
+// リアルタイムな隙間を作るプレースホルダー要素
+const placeholder = document.createElement('div');
+placeholder.className = 'drop-placeholder';
+
+const STORAGE_KEY = 'tierList_save_data_v7';
 
 const DEFAULT_TITLE = '○○ティア表';
 
-// 10色のカラーパレット定義
 const COLOR_PALETTE = [
   { name: '赤', hex: '#ff7f7f' },
   { name: '橙', hex: '#ffbf7f' },
@@ -84,7 +87,6 @@ function createRowElement(id, labelText, colorHex) {
   row.className = 'tier-row';
   row.dataset.rowId = id;
 
-  // 10色のドロップダウン選択肢を生成
   let colorOptionsHtml = '';
   COLOR_PALETTE.forEach(c => {
     const isSelected = (c.hex.toLowerCase() === colorHex.toLowerCase()) ? 'selected' : '';
@@ -110,7 +112,6 @@ function createRowElement(id, labelText, colorHex) {
     label.addEventListener('blur', saveState);
   }
 
-  // 10色選択変更イベント
   const colorSelect = row.querySelector('.row-color-select');
   if (colorSelect) {
     colorSelect.addEventListener('change', (e) => {
@@ -119,7 +120,6 @@ function createRowElement(id, labelText, colorHex) {
     });
   }
 
-  // 上へ移動（▲）ボタン
   const upBtn = row.querySelector('.row-move-up-btn');
   if (upBtn) {
     upBtn.addEventListener('click', () => {
@@ -132,7 +132,6 @@ function createRowElement(id, labelText, colorHex) {
     });
   }
 
-  // 下へ移動（▼）ボタン
   const downBtn = row.querySelector('.row-move-down-btn');
   if (downBtn) {
     downBtn.addEventListener('click', () => {
@@ -145,7 +144,6 @@ function createRowElement(id, labelText, colorHex) {
     });
   }
 
-  // 削除ボタン
   const deleteBtn = row.querySelector('.row-delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', () => {
@@ -169,13 +167,11 @@ function createRowElement(id, labelText, colorHex) {
   return row;
 }
 
-// 行数および上下移動ボタンの状態制御
 function updateRowControlsState() {
   const rows = Array.from(document.querySelectorAll('.tier-row'));
   const count = rows.length;
   const addBtn = document.getElementById('addRowBtn');
 
-  // 行追加ボタン（最大8行）
   if (addBtn) {
     if (count >= MAX_ROWS) {
       addBtn.disabled = true;
@@ -189,7 +185,6 @@ function updateRowControlsState() {
   }
 
   rows.forEach((row, index) => {
-    // 削除ボタン（最低5行）
     const deleteBtn = row.querySelector('.row-delete-btn');
     if (deleteBtn) {
       if (count <= MIN_ROWS) {
@@ -203,7 +198,6 @@ function updateRowControlsState() {
       }
     }
 
-    // 先頭行の▲ボタン非活性
     const upBtn = row.querySelector('.row-move-up-btn');
     if (upBtn) {
       if (index === 0) {
@@ -217,7 +211,6 @@ function updateRowControlsState() {
       }
     }
 
-    // 末尾行の▼ボタン非活性
     const downBtn = row.querySelector('.row-move-down-btn');
     if (downBtn) {
       if (index === count - 1) {
@@ -231,6 +224,38 @@ function updateRowControlsState() {
       }
     }
   });
+}
+
+// マウス位置から最も近いカード要素を取得し、前後の挿入位置を割り出す
+function getDragAfterElement(dropzone, x, y) {
+  const draggableElements = Array.from(dropzone.querySelectorAll('.monster-card:not(.dragging)'));
+
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    // カードの中心点からの距離（X軸・Y軸）を計算
+    const offsetX = x - (box.left + box.width / 2);
+    const offsetY = y - (box.top + box.height / 2);
+
+    if (offsetY < 0 && offsetX < 0) {
+      const distance = Math.hypot(offsetX, offsetY);
+      if (distance < closest.distance) {
+        return { distance: distance, element: child };
+      }
+    }
+    
+    // 単純な位置距離判定
+    const distance = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
+    if (distance < closest.distance) {
+      // カーソルが要素の左半分にある場合はその要素の前に挿入、右半分の場合は次の要素の前に挿入
+      if (x < box.left + box.width / 2) {
+        return { distance: distance, element: child };
+      } else {
+        return { distance: distance, element: child.nextElementSibling };
+      }
+    }
+
+    return closest;
+  }, { distance: Number.POSITIVE_INFINITY }).element;
 }
 
 function attachDragEvents(card) {
@@ -252,6 +277,7 @@ function attachDragEvents(card) {
       if (!isDragging && Math.hypot(dx, dy) > 5) {
         isDragging = true;
         draggingCard = card;
+        card.classList.add('dragging');
         
         if (dragGhost) {
           if (imgSrc) {
@@ -264,12 +290,32 @@ function attachDragEvents(card) {
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
         }
 
-        card.style.opacity = '0.3';
+        card.style.display = 'none'; // ドラッグ中は元のカードを隠す
       }
 
       if (isDragging) {
         updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-        highlightDropzone(moveEvent.clientX, moveEvent.clientY);
+        
+        // カーソル下にあるドロップゾーンを検知
+        const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
+        const dropzone = target ? target.closest('.tier-dropzone') : null;
+
+        if (dropzone) {
+          highlightDropzone(dropzone);
+          const afterElement = getDragAfterElement(dropzone, moveEvent.clientX, moveEvent.clientY);
+          
+          // リアルタイムでプレースホルダー（隙間）を差し込むことで画像が自動的にズレる
+          if (afterElement == null) {
+            dropzone.appendChild(placeholder);
+          } else {
+            dropzone.insertBefore(placeholder, afterElement);
+          }
+        } else {
+          clearHighlight();
+          if (placeholder.parentNode) {
+            placeholder.parentNode.removeChild(placeholder);
+          }
+        }
       }
     }
 
@@ -279,13 +325,13 @@ function attachDragEvents(card) {
 
       if (isDragging) {
         if (dragGhost) dragGhost.style.display = 'none';
-        card.style.opacity = '1';
+        card.classList.remove('dragging');
+        card.style.display = 'flex';
 
-        const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-        const dropzone = dropTarget ? dropTarget.closest('.tier-dropzone') : null;
-
-        if (dropzone) {
-          dropzone.appendChild(card);
+        // プレースホルダーの位置にカードを置き換えて確定
+        if (placeholder.parentNode) {
+          placeholder.parentNode.insertBefore(card, placeholder);
+          placeholder.parentNode.removeChild(placeholder);
         }
 
         clearHighlight();
@@ -306,10 +352,7 @@ function updateGhostPosition(x, y) {
   }
 }
 
-function highlightDropzone(x, y) {
-  const target = document.elementFromPoint(x, y);
-  const dropzone = target ? target.closest('.tier-dropzone') : null;
-
+function highlightDropzone(dropzone) {
   if (currentHoveredDropzone !== dropzone) {
     clearHighlight();
     if (dropzone) {
@@ -420,7 +463,6 @@ function setupEvents() {
     tierTableTitle.addEventListener('input', saveState);
   }
 
-  // 行追加ボタン
   const addRowBtn = document.getElementById('addRowBtn');
   if (addRowBtn) {
     addRowBtn.addEventListener('click', () => {
@@ -439,7 +481,6 @@ function setupEvents() {
     });
   }
 
-  // リセットボタン
   const resetBtn = document.getElementById('resetBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
@@ -450,7 +491,6 @@ function setupEvents() {
     });
   }
 
-  // 画像保存ボタン
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
