@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ティアリスト作成ツール</title>
   <link rel="stylesheet" href="tierlist.css">
-  <!-- html2canvas（画像保存用ライブラリ） -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
@@ -17,6 +16,7 @@
         <h1>ティアリスト作成ツール</h1>
       </div>
       <div class="btn-group">
+        <button id="addRowBtn" class="btn btn-add">＋ 行を追加</button>
         <button id="resetBtn" class="btn btn-reset">リセット</button>
         <button id="saveImgBtn" class="btn btn-save">画像として保存</button>
       </div>
@@ -26,44 +26,10 @@
     <div id="tierTable" class="tier-table">
       <!-- 編集可能なタイトルヘッダー -->
       <div class="tier-table-title-container">
-        <input type="text" id="tierTableTitle" class="tier-table-title" value="T1 ➔ T2 進化優先度表" placeholder="タイトルを入力（例: 属性別おすすめTier表）" spellcheck="false" />
+        <input type="text" id="tierTableTitle" class="tier-table-title" value="T1 ➔ T2 進化優先度表" placeholder="タイトルを入力" spellcheck="false" />
       </div>
 
-      <!-- ティア行：EASY TO EVOLVE -->
-      <div class="tier-row" data-row-id="tier-1">
-        <div class="tier-label tier-easy" contenteditable="true" spellcheck="false">進化優先 (高)</div>
-        <div class="tier-dropzone"></div>
-      </div>
-
-      <!-- ティア行：S -->
-      <div class="tier-row" data-row-id="tier-2">
-        <div class="tier-label tier-s" contenteditable="true" spellcheck="false">S</div>
-        <div class="tier-dropzone"></div>
-      </div>
-
-      <!-- ティア行：A -->
-      <div class="tier-row" data-row-id="tier-3">
-        <div class="tier-label tier-a" contenteditable="true" spellcheck="false">A</div>
-        <div class="tier-dropzone"></div>
-      </div>
-
-      <!-- ティア行：B -->
-      <div class="tier-row" data-row-id="tier-4">
-        <div class="tier-label tier-b" contenteditable="true" spellcheck="false">B</div>
-        <div class="tier-dropzone"></div>
-      </div>
-
-      <!-- ティア行：C -->
-      <div class="tier-row" data-row-id="tier-5">
-        <div class="tier-label tier-c" contenteditable="true" spellcheck="false">C</div>
-        <div class="tier-dropzone"></div>
-      </div>
-
-      <!-- ティア行：F -->
-      <div class="tier-row" data-row-id="tier-6">
-        <div class="tier-label tier-f" contenteditable="true" spellcheck="false">F</div>
-        <div class="tier-dropzone"></div>
-      </div>
+      <!-- 初期行はJSから自動生成します -->
     </div>
 
     <!-- 未配置のモンスタープール -->
@@ -73,10 +39,8 @@
     </div>
   </div>
 
-  <!-- ドラッグ中のゴースト表示 -->
   <div id="dragGhost" class="drag-ghost"></div>
 
-  <!-- 既存のデータファイルを読み込み -->
   <script src="monsters.js"></script>
   <script src="tierlist.js"></script>
 </body>
