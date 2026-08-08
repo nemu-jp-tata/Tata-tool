@@ -1,7 +1,5 @@
-// monsters.js の読み込みチェック
 const rawMonsters = (typeof rawMonstersData !== 'undefined') ? rawMonstersData : [];
 
-// 各種族の最小Tierモンスターのみ抽出
 const baseMonstersMap = new Map();
 rawMonsters.forEach(m => {
   if (!baseMonstersMap.has(m.species) || m.T < baseMonstersMap.get(m.species).T) {
@@ -12,33 +10,35 @@ const uniqueMonsters = Array.from(baseMonstersMap.values());
 
 const monsterPool = document.getElementById('monsterPool');
 const dragGhost = document.getElementById('dragGhost');
+const tierTable = document.getElementById('tierTable');
 const tierTableTitle = document.getElementById('tierTableTitle');
 
 let draggingCard = null;
 let currentHoveredDropzone = null;
 
-// ローカルストレージキー
-const STORAGE_KEY = 'tierList_save_data_v2';
+const STORAGE_KEY = 'tierList_save_data_v4';
 
-// 初期デフォルトデータ
-const DEFAULT_TITLE = 'T1 ➔ T2 進化優先度表';
-const DEFAULT_LABELS = {
-  'tier-1': '進化優先 (高)',
-  'tier-2': 'S',
-  'tier-3': 'A',
-  'tier-4': 'B',
-  'tier-5': 'C',
-  'tier-6': 'F'
-};
+// デフォルト設定の変更
+const DEFAULT_TITLE = '○○ティア表';
+const DEFAULT_ROWS = [
+  { id: 'tier-1', label: 'S', color: '#ff7f7f' },
+  { id: 'tier-2', label: 'A', color: '#ffbf7f' },
+  { id: 'tier-3', label: 'B', color: '#ffff7f' },
+  { id: 'tier-4', label: 'C', color: '#7fff7f' },
+  { id: 'tier-5', label: 'D', color: '#7fbfff' },
+  { id: 'tier-6', label: 'E', color: '#bf7fff' }
+];
 
-// 初期描画
+// 行制限の定数
+const MIN_ROWS = 5;
+const MAX_ROWS = 8;
+
 function init() {
   renderMonsters();
   loadState();
   setupEvents();
 }
 
-// モンスターカードの作成
 function createMonsterCard(monster) {
   const card = document.createElement('div');
   card.className = 'monster-card';
@@ -57,7 +57,6 @@ function createMonsterCard(monster) {
   return card;
 }
 
-// プールへのモンスター初期配置
 function renderMonsters() {
   monsterPool.innerHTML = '';
   uniqueMonsters.forEach(m => {
@@ -66,7 +65,86 @@ function renderMonsters() {
   });
 }
 
-// Pointer Events によるドラッグ＆ドロップ実装（PC・スマホ両対応）
+// ティア行エレメントの動的生成
+function createRowElement(id, labelText, colorHex) {
+  const row = document.createElement('div');
+  row.className = 'tier-row';
+  row.dataset.rowId = id;
+
+  row.innerHTML = `
+    <div class="tier-label" contenteditable="true" spellcheck="false" style="background-color: ${colorHex};">${labelText}</div>
+    <div class="tier-dropzone"></div>
+    <div class="tier-row-controls">
+      <input type="color" class="row-color-picker" value="${colorHex}" title="背景色を変更">
+      <button class="row-delete-btn" title="行を削除">✕</button>
+    </div>
+  `;
+
+  // イベント登録：ラベル名変更・色変更・削除
+  const label = row.querySelector('.tier-label');
+  label.addEventListener('input', saveState);
+  label.addEventListener('blur', saveState);
+
+  const colorPicker = row.querySelector('.row-color-picker');
+  colorPicker.addEventListener('input', (e) => {
+    label.style.backgroundColor = e.target.value;
+    saveState();
+  });
+
+  const deleteBtn = row.querySelector('.row-delete-btn');
+  deleteBtn.addEventListener('click', () => {
+    const currentRows = document.querySelectorAll('.tier-row').length;
+    if (currentRows <= MIN_ROWS) {
+      alert(`行は最低${MIN_ROWS}行必要です。`);
+      return;
+    }
+
+    // 含まれていたモンスターを未配置プールへ戻す
+    const cards = row.querySelectorAll('.monster-card');
+    cards.forEach(card => monsterPool.appendChild(card));
+    row.remove();
+    
+    updateRowControlsState();
+    saveState();
+  });
+
+  return row;
+}
+
+// 行数の状態に応じて追加ボタン・削除ボタンの有効/無効を更新
+function updateRowControlsState() {
+  const rows = document.querySelectorAll('.tier-row');
+  const count = rows.length;
+  const addBtn = document.getElementById('addRowBtn');
+
+  // 追加ボタンの制御（最大8行まで）
+  if (addBtn) {
+    if (count >= MAX_ROWS) {
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.5';
+      addBtn.style.cursor = 'not-allowed';
+    } else {
+      addBtn.disabled = false;
+      addBtn.style.opacity = '1';
+      addBtn.style.cursor = 'pointer';
+    }
+  }
+
+  // 削除ボタンの制御（最低5行まで）
+  rows.forEach(row => {
+    const deleteBtn = row.querySelector('.row-delete-btn');
+    if (deleteBtn) {
+      if (count <= MIN_ROWS) {
+        deleteBtn.style.opacity = '0.3';
+        deleteBtn.style.cursor = 'not-allowed';
+      } else {
+        deleteBtn.style.opacity = '1';
+        deleteBtn.style.cursor = 'pointer';
+      }
+    }
+  });
+}
+
 function attachDragEvents(card) {
   card.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
@@ -156,16 +234,20 @@ function clearHighlight() {
   }
 }
 
-// 全状態（タイトル・各ラベル名・配置状況）の保存
 function saveState() {
-  const labelsData = {};
+  const rowsData = [];
   const monstersData = [];
 
-  // 各行のラベル名と配置モンスターを収集
   document.querySelectorAll('.tier-row').forEach(row => {
     const rowId = row.dataset.rowId;
-    const labelText = row.querySelector('.tier-label').innerText;
-    labelsData[rowId] = labelText;
+    const label = row.querySelector('.tier-label');
+    const colorPicker = row.querySelector('.row-color-picker');
+
+    rowsData.push({
+      id: rowId,
+      label: label.innerText,
+      color: colorPicker.value
+    });
 
     const cards = row.querySelectorAll('.monster-card');
     cards.forEach(card => {
@@ -178,38 +260,48 @@ function saveState() {
 
   const state = {
     title: tierTableTitle.value,
-    labels: labelsData,
+    rows: rowsData,
     monsters: monstersData
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// 状態復元
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return;
+  
+  // 既存の行をクリア
+  document.querySelectorAll('.tier-row').forEach(r => r.remove());
+
+  if (!saved) {
+    tierTableTitle.value = DEFAULT_TITLE;
+    DEFAULT_ROWS.forEach(r => {
+      const rowEl = createRowElement(r.id, r.label, r.color);
+      tierTable.appendChild(rowEl);
+    });
+    updateRowControlsState();
+    return;
+  }
 
   try {
     const state = JSON.parse(saved);
 
-    // タイトル復元
     if (state.title !== undefined) {
       tierTableTitle.value = state.title;
     }
 
-    // ラベル名復元
-    if (state.labels) {
-      Object.keys(state.labels).forEach(rowId => {
-        const row = document.querySelector(`.tier-row[data-row-id="${rowId}"]`);
-        if (row) {
-          const labelEl = row.querySelector('.tier-label');
-          if (labelEl) labelEl.innerText = state.labels[rowId];
-        }
+    if (state.rows && state.rows.length >= MIN_ROWS) {
+      state.rows.forEach(r => {
+        const rowEl = createRowElement(r.id, r.label, r.color);
+        tierTable.appendChild(rowEl);
+      });
+    } else {
+      DEFAULT_ROWS.forEach(r => {
+        const rowEl = createRowElement(r.id, r.label, r.color);
+        tierTable.appendChild(rowEl);
       });
     }
 
-    // モンスター配置復元
     if (state.monsters) {
       state.monsters.forEach(item => {
         const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
@@ -222,38 +314,34 @@ function loadState() {
   } catch (e) {
     console.error('復元エラー:', e);
   }
+
+  updateRowControlsState();
 }
 
-// イベントリスナー設定
 function setupEvents() {
-  // タイトル変更時に保存
   tierTableTitle.addEventListener('input', saveState);
 
-  // ラベル文字変更時に保存
-  document.querySelectorAll('.tier-label').forEach(label => {
-    label.addEventListener('input', saveState);
-    label.addEventListener('blur', saveState);
+  // 行追加ボタン
+  document.getElementById('addRowBtn').addEventListener('click', () => {
+    const currentRows = document.querySelectorAll('.tier-row').length;
+    if (currentRows >= MAX_ROWS) {
+      alert(`行は最大${MAX_ROWS}行までです。`);
+      return;
+    }
+
+    const newId = 'tier-' + Date.now();
+    const newRow = createRowElement(newId, 'NEW', '#9c27b0');
+    tierTable.appendChild(newRow);
+    
+    updateRowControlsState();
+    saveState();
   });
 
-  // リセットボタン（全リセット）
+  // リセットボタン
   document.getElementById('resetBtn').addEventListener('click', () => {
     localStorage.removeItem(STORAGE_KEY);
-
-    // タイトルを初期化
     tierTableTitle.value = DEFAULT_TITLE;
-
-    // 各行のラベルと配置をクリア＆初期化
-    document.querySelectorAll('.tier-row').forEach(row => {
-      const rowId = row.dataset.rowId;
-      const labelEl = row.querySelector('.tier-label');
-      if (labelEl && DEFAULT_LABELS[rowId]) {
-        labelEl.innerText = DEFAULT_LABELS[rowId];
-      }
-      const dropzone = row.querySelector('.tier-dropzone');
-      if (dropzone) dropzone.innerHTML = '';
-    });
-
-    // モンスタープール再描画
+    loadState();
     renderMonsters();
   });
 
@@ -261,7 +349,7 @@ function setupEvents() {
   document.getElementById('saveImgBtn').addEventListener('click', () => {
     const table = document.getElementById('tierTable');
     
-    // 入力領域の点線枠を一時的に消して綺麗に出力
+    table.classList.add('html2canvas-exporting');
     tierTableTitle.style.borderColor = 'transparent';
 
     html2canvas(table, {
@@ -269,12 +357,15 @@ function setupEvents() {
       scale: 2,
       useCORS: true
     }).then(canvas => {
+      table.classList.remove('html2canvas-exporting');
+      
       const link = document.createElement('a');
       const filename = (tierTableTitle.value.trim() || 'tier-list') + '.png';
       link.download = filename;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }).catch(err => {
+      table.classList.remove('html2canvas-exporting');
       console.error('保存エラー:', err);
       alert('画像の保存に失敗しました。');
     });
