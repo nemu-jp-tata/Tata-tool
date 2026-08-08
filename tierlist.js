@@ -12,11 +12,24 @@ const uniqueMonsters = Array.from(baseMonstersMap.values());
 
 const monsterPool = document.getElementById('monsterPool');
 const dragGhost = document.getElementById('dragGhost');
+const tierTableTitle = document.getElementById('tierTableTitle');
+
 let draggingCard = null;
 let currentHoveredDropzone = null;
 
 // ローカルストレージキー
-const STORAGE_KEY = 'tierList_save_data';
+const STORAGE_KEY = 'tierList_save_data_v2';
+
+// 初期デフォルトデータ
+const DEFAULT_TITLE = 'T1 ➔ T2 進化優先度表';
+const DEFAULT_LABELS = {
+  'tier-1': '進化優先 (高)',
+  'tier-2': 'S',
+  'tier-3': 'A',
+  'tier-4': 'B',
+  'tier-5': 'C',
+  'tier-6': 'F'
+};
 
 // 初期描画
 function init() {
@@ -143,20 +156,32 @@ function clearHighlight() {
   }
 }
 
-// 状態保存（ローカルストレージ）
+// 全状態（タイトル・各ラベル名・配置状況）の保存
 function saveState() {
-  const state = [];
+  const labelsData = {};
+  const monstersData = [];
+
+  // 各行のラベル名と配置モンスターを収集
   document.querySelectorAll('.tier-row').forEach(row => {
-    const tier = row.dataset.tier;
+    const rowId = row.dataset.rowId;
+    const labelText = row.querySelector('.tier-label').innerText;
+    labelsData[rowId] = labelText;
+
     const cards = row.querySelectorAll('.monster-card');
     cards.forEach(card => {
-      state.push({
+      monstersData.push({
         species: card.dataset.species,
-        name: card.dataset.name,
-        tier: tier
+        rowId: rowId
       });
     });
   });
+
+  const state = {
+    title: tierTableTitle.value,
+    labels: labelsData,
+    monsters: monstersData
+  };
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -165,42 +190,88 @@ function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return;
 
-  const state = JSON.parse(saved);
-  state.forEach(item => {
-    const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
-    const targetRow = document.querySelector(`.tier-row[data-tier="${item.tier}"] .tier-dropzone`);
-    if (card && targetRow) {
-      targetRow.appendChild(card);
+  try {
+    const state = JSON.parse(saved);
+
+    // タイトル復元
+    if (state.title !== undefined) {
+      tierTableTitle.value = state.title;
     }
-  });
+
+    // ラベル名復元
+    if (state.labels) {
+      Object.keys(state.labels).forEach(rowId => {
+        const row = document.querySelector(`.tier-row[data-row-id="${rowId}"]`);
+        if (row) {
+          const labelEl = row.querySelector('.tier-label');
+          if (labelEl) labelEl.innerText = state.labels[rowId];
+        }
+      });
+    }
+
+    // モンスター配置復元
+    if (state.monsters) {
+      state.monsters.forEach(item => {
+        const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
+        const targetRow = document.querySelector(`.tier-row[data-row-id="${item.rowId}"] .tier-dropzone`);
+        if (card && targetRow) {
+          targetRow.appendChild(card);
+        }
+      });
+    }
+  } catch (e) {
+    console.error('復元エラー:', e);
+  }
 }
 
 // イベントリスナー設定
 function setupEvents() {
-  // リセットボタン（修正箇所）
+  // タイトル変更時に保存
+  tierTableTitle.addEventListener('input', saveState);
+
+  // ラベル文字変更時に保存
+  document.querySelectorAll('.tier-label').forEach(label => {
+    label.addEventListener('input', saveState);
+    label.addEventListener('blur', saveState);
+  });
+
+  // リセットボタン（全リセット）
   document.getElementById('resetBtn').addEventListener('click', () => {
-    // 1. 保存データを削除
     localStorage.removeItem(STORAGE_KEY);
 
-    // 2. ティア行に入っている要素をクリア
-    document.querySelectorAll('.tier-row .tier-dropzone').forEach(dropzone => {
-      dropzone.innerHTML = '';
+    // タイトルを初期化
+    tierTableTitle.value = DEFAULT_TITLE;
+
+    // 各行のラベルと配置をクリア＆初期化
+    document.querySelectorAll('.tier-row').forEach(row => {
+      const rowId = row.dataset.rowId;
+      const labelEl = row.querySelector('.tier-label');
+      if (labelEl && DEFAULT_LABELS[rowId]) {
+        labelEl.innerText = DEFAULT_LABELS[rowId];
+      }
+      const dropzone = row.querySelector('.tier-dropzone');
+      if (dropzone) dropzone.innerHTML = '';
     });
 
-    // 3. モンスタープールを再生成
+    // モンスタープール再描画
     renderMonsters();
   });
 
   // 画像保存ボタン
   document.getElementById('saveImgBtn').addEventListener('click', () => {
     const table = document.getElementById('tierTable');
+    
+    // 入力領域の点線枠を一時的に消して綺麗に出力
+    tierTableTitle.style.borderColor = 'transparent';
+
     html2canvas(table, {
-      backgroundColor: '#121212',
+      backgroundColor: '#000000',
       scale: 2,
       useCORS: true
     }).then(canvas => {
       const link = document.createElement('a');
-      link.download = 'tier-list.png';
+      const filename = (tierTableTitle.value.trim() || 'tier-list') + '.png';
+      link.download = filename;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }).catch(err => {
