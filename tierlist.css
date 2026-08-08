@@ -518,7 +518,7 @@ body.is-exporting .tier-container {
   }
 
   .pool-dropzone {
-    max-height: 130px;
+    max-height: 190px;
     overflow-y: auto !important;
     overflow-x: hidden;
     background-color: #121212;
