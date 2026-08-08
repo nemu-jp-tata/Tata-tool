@@ -23,14 +23,17 @@
       </div>
     </header>
 
-    <!-- ティア表本体（画像保存対象） -->
-    <div id="tierTable" class="tier-table">
+    <!-- 画像保存対象ラッパー -->
+    <div id="tierTableArea" class="tier-table-wrapper">
       <!-- 編集可能なタイトルヘッダー -->
       <div class="tier-table-title-container">
         <input type="text" id="tierTableTitle" class="tier-table-title" value="○○ティア表" placeholder="タイトルを入力" spellcheck="false" />
       </div>
 
-      <!-- 行はJavaScriptから自動生成されます -->
+      <!-- ティア表本体 -->
+      <div id="tierTable" class="tier-table">
+        <!-- 行はJavaScriptから自動生成されます -->
+      </div>
     </div>
 
     <!-- 未配置のモンスタープール -->
