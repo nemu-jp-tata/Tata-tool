@@ -158,7 +158,7 @@ function createRowElement(id, labelText, colorHex) {
         if (monsterPool) monsterPool.appendChild(card);
       });
       row.remove();
-      
+
       updateRowControlsState();
       saveState();
     });
@@ -240,7 +240,7 @@ function getDragAfterElement(dropzone, x, y) {
         return { distance: distance, element: child };
       }
     }
-    
+
     const distance = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
     if (distance < closest.distance) {
       if (x < box.left + box.width / 2) {
@@ -274,7 +274,7 @@ function attachDragEvents(card) {
         isDragging = true;
         draggingCard = card;
         card.classList.add('dragging');
-        
+
         if (dragGhost) {
           if (imgSrc) {
             dragGhost.style.backgroundImage = `url("${imgSrc}")`;
@@ -291,14 +291,14 @@ function attachDragEvents(card) {
 
       if (isDragging) {
         updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-        
+
         const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
         const dropzone = target ? target.closest('.tier-dropzone') : null;
 
         if (dropzone) {
           highlightDropzone(dropzone);
           const afterElement = getDragAfterElement(dropzone, moveEvent.clientX, moveEvent.clientY);
-          
+
           if (afterElement == null) {
             dropzone.appendChild(placeholder);
           } else {
@@ -399,7 +399,7 @@ function loadState() {
   if (!tierTable) return;
 
   const saved = localStorage.getItem(STORAGE_KEY);
-  
+
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
 
   if (!saved) {
@@ -468,7 +468,7 @@ function setupEvents() {
       const newId = 'tier-' + Date.now();
       const newRow = createRowElement(newId, 'NEW', '#bf7fff');
       if (tierTable) tierTable.appendChild(newRow);
-      
+
       updateRowControlsState();
       saveState();
     });
@@ -489,25 +489,31 @@ function setupEvents() {
     saveImgBtn.addEventListener('click', () => {
       const tableArea = document.getElementById('tierTableArea');
 
+      document.body.classList.add('is-exporting');
       tableArea.classList.add('exporting');
 
-      html2canvas(tableArea, {
-        backgroundColor: '#000000',
-        scale: 2,
-        useCORS: true,
-        windowWidth: 1200
-      }).then(canvas => {
-        tableArea.classList.remove('exporting');
+      setTimeout(() => {
+        html2canvas(tableArea, {
+          backgroundColor: '#000000',
+          scale: 2,
+          useCORS: true,
+          width: 1000,
+          windowWidth: 1200
+        }).then(canvas => {
+          document.body.classList.remove('is-exporting');
+          tableArea.classList.remove('exporting');
 
-        const link = document.createElement('a');
-        link.download = 'tier-list.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(err => {
-        console.error('保存エラー:', err);
-        tableArea.classList.remove('exporting');
-        alert('画像の保存に失敗しました。');
-      });
+          const link = document.createElement('a');
+          link.download = 'tier-list.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }).catch(err => {
+          console.error('保存エラー:', err);
+          document.body.classList.remove('is-exporting');
+          tableArea.classList.remove('exporting');
+          alert('画像の保存に失敗しました。');
+        });
+      }, 100);
     });
   }
 }
