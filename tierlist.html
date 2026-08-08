@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ティアリスト作成ツール</title>
   <link rel="stylesheet" href="./tierlist.css">
+  <!-- html2canvas（画像保存用ライブラリ） -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
@@ -12,7 +13,7 @@
   <div class="tier-container">
     <header class="header-tools">
       <div class="title-area">
-        <a href="index.html" class="btn btn-back">← 配置ツールへ戻る</a>
+        <a href="./index.html" class="btn btn-back">← 配置ツールへ戻る</a>
         <h1>ティアリスト作成ツール</h1>
       </div>
       <div class="btn-group">
@@ -26,10 +27,10 @@
     <div id="tierTable" class="tier-table">
       <!-- 編集可能なタイトルヘッダー -->
       <div class="tier-table-title-container">
-        <input type="text" id="tierTableTitle" class="tier-table-title" value="T1 ➔ T2 進化優先度表" placeholder="タイトルを入力" spellcheck="false" />
+        <input type="text" id="tierTableTitle" class="tier-table-title" value="○○ティア表" placeholder="タイトルを入力" spellcheck="false" />
       </div>
 
-      <!-- 初期行はJSから自動生成します -->
+      <!-- 行はJavaScriptから自動生成されます -->
     </div>
 
     <!-- 未配置のモンスタープール -->
@@ -39,9 +40,11 @@
     </div>
   </div>
 
+  <!-- ドラッグ中のゴースト表示 -->
   <div id="dragGhost" class="drag-ghost"></div>
 
-  <script src="monsters.js"></script>
-  <script src="tierlist.js"></script>
+  <!-- スクリプト読み込み -->
+  <script src="./monsters.js"></script>
+  <script src="./tierlist.js"></script>
 </body>
 </html>
