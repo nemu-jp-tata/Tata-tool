@@ -226,13 +226,11 @@ function updateRowControlsState() {
   });
 }
 
-// マウス位置から最も近いカード要素を取得し、前後の挿入位置を割り出す
 function getDragAfterElement(dropzone, x, y) {
   const draggableElements = Array.from(dropzone.querySelectorAll('.monster-card:not(.dragging)'));
 
   return draggableElements.reduce((closest, child) => {
     const box = child.getBoundingClientRect();
-    // カードの中心点からの距離（X軸・Y軸）を計算
     const offsetX = x - (box.left + box.width / 2);
     const offsetY = y - (box.top + box.height / 2);
 
@@ -243,10 +241,8 @@ function getDragAfterElement(dropzone, x, y) {
       }
     }
     
-    // 単純な位置距離判定
     const distance = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
     if (distance < closest.distance) {
-      // カーソルが要素の左半分にある場合はその要素の前に挿入、右半分の場合は次の要素の前に挿入
       if (x < box.left + box.width / 2) {
         return { distance: distance, element: child };
       } else {
@@ -290,13 +286,12 @@ function attachDragEvents(card) {
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
         }
 
-        card.style.display = 'none'; // ドラッグ中は元のカードを隠す
+        card.style.display = 'none';
       }
 
       if (isDragging) {
         updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
         
-        // カーソル下にあるドロップゾーンを検知
         const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
         const dropzone = target ? target.closest('.tier-dropzone') : null;
 
@@ -304,7 +299,6 @@ function attachDragEvents(card) {
           highlightDropzone(dropzone);
           const afterElement = getDragAfterElement(dropzone, moveEvent.clientX, moveEvent.clientY);
           
-          // リアルタイムでプレースホルダー（隙間）を差し込むことで画像が自動的にズレる
           if (afterElement == null) {
             dropzone.appendChild(placeholder);
           } else {
@@ -328,7 +322,6 @@ function attachDragEvents(card) {
         card.classList.remove('dragging');
         card.style.display = 'flex';
 
-        // プレースホルダーの位置にカードを置き換えて確定
         if (placeholder.parentNode) {
           placeholder.parentNode.insertBefore(card, placeholder);
           placeholder.parentNode.removeChild(placeholder);
@@ -486,39 +479,36 @@ function setupEvents() {
     resetBtn.addEventListener('click', () => {
       localStorage.removeItem(STORAGE_KEY);
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
-      loadState();
       renderMonsters();
+      loadState();
     });
   }
 
-// 画像保存ボタン（出力時のみ一時的に横長レイアウトに変換）
-document.getElementById('saveImgBtn').addEventListener('click', () => {
-  const table = document.getElementById('tierTable');
+  const saveImgBtn = document.getElementById('saveImgBtn');
+  if (saveImgBtn) {
+    saveImgBtn.addEventListener('click', () => {
+      const table = document.getElementById('tierTable');
 
-  // 1. 横長出力用のクラスを付与
-  table.classList.add('exporting');
+      table.classList.add('exporting');
 
-  // 2. キャプチャ実行
-  html2canvas(table, {
-    backgroundColor: '#000000',
-    scale: 2, // 高解像度で出力
-    useCORS: true,
-    windowWidth: 1200 // 描画領域の幅を固定確保
-  }).then(canvas => {
-    // 3. 完了したら元のスマホ用レイアウトに戻す
-    table.classList.remove('exporting');
+      html2canvas(table, {
+        backgroundColor: '#000000',
+        scale: 2,
+        useCORS: true,
+        windowWidth: 1200
+      }).then(canvas => {
+        table.classList.remove('exporting');
 
-    // 画像のダウンロード処理
-    const link = document.createElement('a');
-    link.download = 'tier-list.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  }).catch(err => {
-    console.error('保存エラー:', err);
-    table.classList.remove('exporting');
-    alert('画像の保存に失敗しました。');
-  });
-});
+        const link = document.createElement('a');
+        link.download = 'tier-list.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        console.error('保存エラー:', err);
+        table.classList.remove('exporting');
+        alert('画像の保存に失敗しました。');
+      });
+    });
   }
 }
 
