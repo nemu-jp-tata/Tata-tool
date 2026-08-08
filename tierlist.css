@@ -116,7 +116,7 @@ body {
 
 .tier-row {
   display: flex;
-  min-height: 70px;
+  min-height: 64px;
   background-color: #1a1a1a;
 }
 
@@ -153,15 +153,15 @@ body {
 .tier-c    { background-color: #7fff7f; }
 .tier-f    { background-color: #7fbf7f; }
 
-/* モンスタードロップエリア */
+/* モンスタードロップエリア（つめつめ配置設定） */
 .tier-dropzone {
   flex: 1;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 4px;
-  padding: 5px;
-  min-height: 70px;
+  gap: 2px; /* 間隔をつめて詰めて配置 */
+  padding: 2px; /* 余白を最小化 */
+  min-height: 64px;
   transition: background-color 0.2s;
   user-select: none;
 }
@@ -190,21 +190,24 @@ body {
   background-color: #121212;
   border: 1px dashed #333;
   border-radius: 4px;
+  gap: 2px;
+  padding: 4px;
 }
 
-/* モンスターカード */
+/* モンスターカード（背景色を透過して盤面と透過一致） */
 .monster-card {
   width: 60px;
   height: 60px;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   cursor: grab;
   touch-action: none;
-  background-color: #2a2a2a;
+  background-color: transparent; /* 背景色を親の盤面色と完全一致させる */
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .monster-card img {
@@ -212,6 +215,7 @@ body {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  display: block;
 }
 
 /* 画像読み込みエラー時の可愛いバッジ表示 */
@@ -223,7 +227,7 @@ body {
   height: 100%;
   background: rgba(255, 182, 193, 0.12);
   border: 1.5px dashed #ffb6c1;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #ff9ebb;
   font-size: clamp(7px, 1.8vw, 9px);
   font-weight: bold;
@@ -249,7 +253,7 @@ body {
   z-index: 9999;
   width: 60px;
   height: 60px;
-  border-radius: 6px;
+  border-radius: 4px;
   background-size: cover;
   background-position: center;
   display: none;
@@ -258,24 +262,6 @@ body {
   box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
-@media (max-width: 600px) {
-  .tier-label {
-    width: 80px;
-    min-width: 80px;
-    font-size: 11px;
-  }
-  .monster-card {
-    width: 48px;
-    height: 48px;
-  }
-  .drag-ghost {
-    width: 48px;
-    height: 48px;
-  }
-  .tier-table-title {
-    font-size: 15px;
-  }
-}
 /* 追加ボタン・削除ボタンのスタイル */
 .btn-add {
   background-color: #2196F3;
@@ -333,4 +319,39 @@ body {
 /* 画像出力時（キャプチャ実行中）は操作コントロールを非表示にして綺麗に出力する */
 .html2canvas-exporting .tier-row-controls {
   display: none !important;
+}
+
+/* レスポンシブ対応：幅が狭くなったタイミングで2列〜小さめ配置に自動切り替え */
+@media (max-width: 600px) {
+  .tier-label {
+    width: 80px;
+    min-width: 80px;
+    font-size: 11px;
+  }
+  .monster-card {
+    width: 48px;
+    height: 48px;
+  }
+  .drag-ghost {
+    width: 48px;
+    height: 48px;
+  }
+  .tier-table-title {
+    font-size: 15px;
+  }
+}
+
+/* モバイルなどで非常に幅が狭い場合、2列グリッドで綺麗に収めるタイミングの設定 */
+@media (max-width: 380px) {
+  .tier-dropzone,
+  .pool-dropzone {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+  .monster-card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
 }
