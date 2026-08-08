@@ -1,6 +1,9 @@
+// monsters.js の読み込みチェック
+const rawMonsters = (typeof rawMonstersData !== 'undefined') ? rawMonstersData : [];
+
 // 各種族の最小Tierモンスターのみ抽出
 const baseMonstersMap = new Map();
-rawMonstersData.forEach(m => {
+rawMonsters.forEach(m => {
   if (!baseMonstersMap.has(m.species) || m.T < baseMonstersMap.get(m.species).T) {
     baseMonstersMap.set(m.species, m);
   }
@@ -174,9 +177,17 @@ function loadState() {
 
 // イベントリスナー設定
 function setupEvents() {
-  // リセットボタン
+  // リセットボタン（修正箇所）
   document.getElementById('resetBtn').addEventListener('click', () => {
+    // 1. 保存データを削除
     localStorage.removeItem(STORAGE_KEY);
+
+    // 2. ティア行に入っている要素をクリア
+    document.querySelectorAll('.tier-row .tier-dropzone').forEach(dropzone => {
+      dropzone.innerHTML = '';
+    });
+
+    // 3. モンスタープールを再生成
     renderMonsters();
   });
 
