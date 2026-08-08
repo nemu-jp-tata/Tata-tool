@@ -522,19 +522,21 @@ body {
   border: 1.5px dashed #ffb6c1;
   border-radius: 12px;
   color: #ff9ebb;
-  font-size: 11px;
+  font-size: clamp(8px, 2.2vw, 11px); 
   font-weight: bold;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.2px;
+  white-space: nowrap; 
   box-sizing: border-box;
-  padding: 2px;
+  padding: 0 1px;
   text-align: center;
   user-select: none;
+  overflow: hidden;
   animation: pulse-no-img 2s infinite ease-in-out;
 }
 
 .cell .no-image-badge {
   height: 100%;
-  font-size: 9px;
+  font-size: clamp(7px, 1.8vw, 9px);
   border-radius: 6px;
   background: rgba(255, 182, 193, 0.18);
 }
