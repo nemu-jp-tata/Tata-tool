@@ -16,9 +16,9 @@ const tierTableTitle = document.getElementById('tierTableTitle');
 let draggingCard = null;
 let currentHoveredDropzone = null;
 
-const STORAGE_KEY = 'tierList_save_data_v4';
+// キーを更新して古い破損データをリセット
+const STORAGE_KEY = 'tierList_save_data_v5';
 
-// デフォルト設定の変更
 const DEFAULT_TITLE = '○○ティア表';
 const DEFAULT_ROWS = [
   { id: 'tier-1', label: 'S', color: '#ff7f7f' },
@@ -29,7 +29,6 @@ const DEFAULT_ROWS = [
   { id: 'tier-6', label: 'E', color: '#bf7fff' }
 ];
 
-// 行制限の定数
 const MIN_ROWS = 5;
 const MAX_ROWS = 8;
 
@@ -58,6 +57,7 @@ function createMonsterCard(monster) {
 }
 
 function renderMonsters() {
+  if (!monsterPool) return;
   monsterPool.innerHTML = '';
   uniqueMonsters.forEach(m => {
     const card = createMonsterCard(m);
@@ -65,7 +65,6 @@ function renderMonsters() {
   });
 }
 
-// ティア行エレメントの動的生成
 function createRowElement(id, labelText, colorHex) {
   const row = document.createElement('div');
   row.className = 'tier-row';
@@ -80,44 +79,48 @@ function createRowElement(id, labelText, colorHex) {
     </div>
   `;
 
-  // イベント登録：ラベル名変更・色変更・削除
   const label = row.querySelector('.tier-label');
-  label.addEventListener('input', saveState);
-  label.addEventListener('blur', saveState);
+  if (label) {
+    label.addEventListener('input', saveState);
+    label.addEventListener('blur', saveState);
+  }
 
   const colorPicker = row.querySelector('.row-color-picker');
-  colorPicker.addEventListener('input', (e) => {
-    label.style.backgroundColor = e.target.value;
-    saveState();
-  });
+  if (colorPicker) {
+    colorPicker.addEventListener('input', (e) => {
+      if (label) label.style.backgroundColor = e.target.value;
+      saveState();
+    });
+  }
 
   const deleteBtn = row.querySelector('.row-delete-btn');
-  deleteBtn.addEventListener('click', () => {
-    const currentRows = document.querySelectorAll('.tier-row').length;
-    if (currentRows <= MIN_ROWS) {
-      alert(`行は最低${MIN_ROWS}行必要です。`);
-      return;
-    }
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      const currentRows = document.querySelectorAll('.tier-row').length;
+      if (currentRows <= MIN_ROWS) {
+        alert(`行は最低${MIN_ROWS}行必要です。`);
+        return;
+      }
 
-    // 含まれていたモンスターを未配置プールへ戻す
-    const cards = row.querySelectorAll('.monster-card');
-    cards.forEach(card => monsterPool.appendChild(card));
-    row.remove();
-    
-    updateRowControlsState();
-    saveState();
-  });
+      const cards = row.querySelectorAll('.monster-card');
+      cards.forEach(card => {
+        if (monsterPool) monsterPool.appendChild(card);
+      });
+      row.remove();
+      
+      updateRowControlsState();
+      saveState();
+    });
+  }
 
   return row;
 }
 
-// 行数の状態に応じて追加ボタン・削除ボタンの有効/無効を更新
 function updateRowControlsState() {
   const rows = document.querySelectorAll('.tier-row');
   const count = rows.length;
   const addBtn = document.getElementById('addRowBtn');
 
-  // 追加ボタンの制御（最大8行まで）
   if (addBtn) {
     if (count >= MAX_ROWS) {
       addBtn.disabled = true;
@@ -130,7 +133,6 @@ function updateRowControlsState() {
     }
   }
 
-  // 削除ボタンの制御（最低5行まで）
   rows.forEach(row => {
     const deleteBtn = row.querySelector('.row-delete-btn');
     if (deleteBtn) {
@@ -165,14 +167,16 @@ function attachDragEvents(card) {
         isDragging = true;
         draggingCard = card;
         
-        if (imgSrc) {
-          dragGhost.style.backgroundImage = `url("${imgSrc}")`;
-        } else {
-          dragGhost.style.backgroundImage = 'none';
-          dragGhost.style.backgroundColor = '#ffb6c1';
+        if (dragGhost) {
+          if (imgSrc) {
+            dragGhost.style.backgroundImage = `url("${imgSrc}")`;
+          } else {
+            dragGhost.style.backgroundImage = 'none';
+            dragGhost.style.backgroundColor = '#ffb6c1';
+          }
+          dragGhost.style.display = 'block';
+          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
         }
-        dragGhost.style.display = 'block';
-        updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
 
         card.style.opacity = '0.3';
       }
@@ -188,7 +192,7 @@ function attachDragEvents(card) {
       window.removeEventListener('pointerup', onPointerUp);
 
       if (isDragging) {
-        dragGhost.style.display = 'none';
+        if (dragGhost) dragGhost.style.display = 'none';
         card.style.opacity = '1';
 
         const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
@@ -210,8 +214,10 @@ function attachDragEvents(card) {
 }
 
 function updateGhostPosition(x, y) {
-  dragGhost.style.left = `${x}px`;
-  dragGhost.style.top = `${y}px`;
+  if (dragGhost) {
+    dragGhost.style.left = `${x}px`;
+    dragGhost.style.top = `${y}px`;
+  }
 }
 
 function highlightDropzone(x, y) {
@@ -245,8 +251,8 @@ function saveState() {
 
     rowsData.push({
       id: rowId,
-      label: label.innerText,
-      color: colorPicker.value
+      label: label ? label.innerText : '',
+      color: colorPicker ? colorPicker.value : '#ff7f7f'
     });
 
     const cards = row.querySelectorAll('.monster-card');
@@ -259,7 +265,7 @@ function saveState() {
   });
 
   const state = {
-    title: tierTableTitle.value,
+    title: tierTableTitle ? tierTableTitle.value : DEFAULT_TITLE,
     rows: rowsData,
     monsters: monstersData
   };
@@ -268,13 +274,15 @@ function saveState() {
 }
 
 function loadState() {
+  if (!tierTable) return;
+
   const saved = localStorage.getItem(STORAGE_KEY);
   
-  // 既存の行をクリア
+  // 既存の行を削除
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
 
   if (!saved) {
-    tierTableTitle.value = DEFAULT_TITLE;
+    if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
     DEFAULT_ROWS.forEach(r => {
       const rowEl = createRowElement(r.id, r.label, r.color);
       tierTable.appendChild(rowEl);
@@ -286,7 +294,7 @@ function loadState() {
   try {
     const state = JSON.parse(saved);
 
-    if (state.title !== undefined) {
+    if (tierTableTitle && state.title !== undefined) {
       tierTableTitle.value = state.title;
     }
 
@@ -302,7 +310,7 @@ function loadState() {
       });
     }
 
-    if (state.monsters) {
+    if (state.monsters && monsterPool) {
       state.monsters.forEach(item => {
         const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
         const targetRow = document.querySelector(`.tier-row[data-row-id="${item.rowId}"] .tier-dropzone`);
@@ -313,63 +321,78 @@ function loadState() {
     }
   } catch (e) {
     console.error('復元エラー:', e);
+    DEFAULT_ROWS.forEach(r => {
+      const rowEl = createRowElement(r.id, r.label, r.color);
+      tierTable.appendChild(rowEl);
+    });
   }
 
   updateRowControlsState();
 }
 
 function setupEvents() {
-  tierTableTitle.addEventListener('input', saveState);
+  if (tierTableTitle) {
+    tierTableTitle.addEventListener('input', saveState);
+  }
 
   // 行追加ボタン
-  document.getElementById('addRowBtn').addEventListener('click', () => {
-    const currentRows = document.querySelectorAll('.tier-row').length;
-    if (currentRows >= MAX_ROWS) {
-      alert(`行は最大${MAX_ROWS}行までです。`);
-      return;
-    }
+  const addRowBtn = document.getElementById('addRowBtn');
+  if (addRowBtn) {
+    addRowBtn.addEventListener('click', () => {
+      const currentRows = document.querySelectorAll('.tier-row').length;
+      if (currentRows >= MAX_ROWS) {
+        alert(`行は最大${MAX_ROWS}行までです。`);
+        return;
+      }
 
-    const newId = 'tier-' + Date.now();
-    const newRow = createRowElement(newId, 'NEW', '#9c27b0');
-    tierTable.appendChild(newRow);
-    
-    updateRowControlsState();
-    saveState();
-  });
+      const newId = 'tier-' + Date.now();
+      const newRow = createRowElement(newId, 'NEW', '#9c27b0');
+      if (tierTable) tierTable.appendChild(newRow);
+      
+      updateRowControlsState();
+      saveState();
+    });
+  }
 
   // リセットボタン
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    tierTableTitle.value = DEFAULT_TITLE;
-    loadState();
-    renderMonsters();
-  });
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
+      loadState();
+      renderMonsters();
+    });
+  }
 
   // 画像保存ボタン
-  document.getElementById('saveImgBtn').addEventListener('click', () => {
-    const table = document.getElementById('tierTable');
-    
-    table.classList.add('html2canvas-exporting');
-    tierTableTitle.style.borderColor = 'transparent';
-
-    html2canvas(table, {
-      backgroundColor: '#000000',
-      scale: 2,
-      useCORS: true
-    }).then(canvas => {
-      table.classList.remove('html2canvas-exporting');
+  const saveImgBtn = document.getElementById('saveImgBtn');
+  if (saveImgBtn) {
+    saveImgBtn.addEventListener('click', () => {
+      if (!tierTable) return;
       
-      const link = document.createElement('a');
-      const filename = (tierTableTitle.value.trim() || 'tier-list') + '.png';
-      link.download = filename;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }).catch(err => {
-      table.classList.remove('html2canvas-exporting');
-      console.error('保存エラー:', err);
-      alert('画像の保存に失敗しました。');
+      tierTable.classList.add('html2canvas-exporting');
+      if (tierTableTitle) tierTableTitle.style.borderColor = 'transparent';
+
+      html2canvas(tierTable, {
+        backgroundColor: '#000000',
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        tierTable.classList.remove('html2canvas-exporting');
+        
+        const link = document.createElement('a');
+        const filename = ((tierTableTitle ? tierTableTitle.value.trim() : '') || 'tier-list') + '.png';
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        tierTable.classList.remove('html2canvas-exporting');
+        console.error('保存エラー:', err);
+        alert('画像の保存に失敗しました。');
+      });
     });
-  });
+  }
 }
 
 init();
