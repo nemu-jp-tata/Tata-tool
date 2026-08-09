@@ -527,3 +527,38 @@ body.is-exporting .tier-container {
     -webkit-overflow-scrolling: touch;
   }
 }
+/* --- 未配置タタのT1~T4切り替えボタン用スタイル --- */
+.pool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pool-header h2 {
+  margin: 0;
+}
+
+.tier-switch-group {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-tier-switch {
+  padding: 4px 10px;
+  background-color: #333333;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-tier-switch:active {
+  transform: scale(0.95);
+  background-color: #4CAF50;
+}
