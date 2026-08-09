@@ -37,7 +37,6 @@ const COLOR_PALETTE = [
   { name: '灰', hex: '#a6a6a6' }
 ];
 
-// 初期設定の行を5行（S, A, B, C, D）に変更
 const DEFAULT_ROWS = [
   { id: 'tier-1', label: 'S', color: '#ff7f7f' },
   { id: 'tier-2', label: 'A', color: '#ffbf7f' },
@@ -52,7 +51,6 @@ const MAX_ROWS = 8;
 function init() {
   renderMonsters();
 
-  // URLに共有データがある場合は読み込み、無ければLocalStorageから読み込む
   if (window.location.search.includes('data=')) {
     loadFromUrl();
   } else {
@@ -62,20 +60,50 @@ function init() {
   setupEvents();
 }
 
+// 画像の読み込みエラーと名前表示のハンドリング共通関数
+function setupMonsterImage(img, badge, monsterName) {
+  if (!img) return;
+
+  img.dataset.retry = '';
+  img.style.display = 'block';
+  if (badge) {
+    badge.style.display = 'none';
+    badge.textContent = monsterName;
+  }
+
+  img.onerror = function() {
+    if (!this.dataset.retry) {
+      this.dataset.retry = '1';
+      this.src = `${monsterName}.png`;
+    } else if (this.dataset.retry === '1') {
+      this.dataset.retry = '2';
+      this.src = `${monsterName}.jpg`;
+    } else {
+      // 読み込み完全失敗時：imgを非表示にし、名前入りのバッジを表示
+      this.style.display = 'none';
+      if (badge) {
+        badge.textContent = monsterName;
+        badge.style.display = 'flex';
+      }
+    }
+  };
+}
+
 function createMonsterCard(monster) {
   const card = document.createElement('div');
   card.className = 'monster-card';
   card.dataset.species = monster.species;
   card.dataset.name = monster.name;
 
-  const imgUrl = `${monster.name}.webp`;
-
   card.innerHTML = `
-    <img src="${imgUrl}" 
-         alt="${monster.name}" 
-         onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='${monster.name}.png';}else if(this.dataset.retry=='1'){this.dataset.retry=2;this.src='${monster.name}.jpg';}else{this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';}">
+    <img src="${monster.name}.webp" alt="${monster.name}">
+    <div class="no-image-badge" style="display: none;">${monster.name}</div>
   `;
 
+  const img = card.querySelector('img');
+  const badge = card.querySelector('.no-image-badge');
+
+  setupMonsterImage(img, badge, monster.name);
   attachDragEvents(card);
   return card;
 }
@@ -96,20 +124,16 @@ function changePoolMonstersTier(targetTier) {
   
   poolCards.forEach(card => {
     const species = card.dataset.species;
-    // 指定されたTのモンスターデータを検索
     const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === Number(targetTier));
     
     if (targetMonster) {
       card.dataset.name = targetMonster.name;
       const img = card.querySelector('img');
+      const badge = card.querySelector('.no-image-badge');
+      
       if (img) {
-        img.dataset.retry = '';
+        setupMonsterImage(img, badge, targetMonster.name);
         img.src = `${targetMonster.name}.webp`;
-        img.onerror = function() {
-          if (!this.dataset.retry) { this.dataset.retry = 1; this.src = `${targetMonster.name}.png`; }
-          else if (this.dataset.retry === '1') { this.dataset.retry = 2; this.src = `${targetMonster.name}.jpg`; }
-          else { this.outerHTML = '<div class="no-image-badge">🌸 no image 🌸</div>'; }
-        };
       }
     }
   });
@@ -297,7 +321,7 @@ function attachDragEvents(card) {
     let isDragging = false;
 
     const img = card.querySelector('img');
-    const imgSrc = img ? img.src : '';
+    const imgSrc = (img && img.style.display !== 'none') ? img.src : '';
 
     function onPointerMove(moveEvent) {
       const dx = moveEvent.clientX - startX;
@@ -463,7 +487,11 @@ function applyState(jsonStr) {
           if (item.name) {
             card.dataset.name = item.name;
             const img = card.querySelector('img');
-            if (img) img.src = `${item.name}.webp`;
+            const badge = card.querySelector('.no-image-badge');
+            if (img) {
+              setupMonsterImage(img, badge, item.name);
+              img.src = `${item.name}.webp`;
+            }
           }
           targetRow.appendChild(card);
         }
@@ -494,7 +522,6 @@ function loadState() {
   applyState(saved);
 }
 
-// 共有URLの生成
 function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -519,7 +546,6 @@ function generateShareUrl() {
   }
 }
 
-// URLからデータ読み込み
 function loadFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const compressed = params.get('data');
@@ -569,23 +595,18 @@ function setupEvents() {
     shareBtn.addEventListener('click', generateShareUrl);
   }
 
-  // リセットボタンの修正処理
   const resetBtn = document.getElementById('resetBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       const confirmReset = confirm('全ての配置・タイトル・行設定を初期状態（5行）にリセットしますか？');
       if (!confirmReset) return;
 
-      // 保存データの削除
       localStorage.removeItem(STORAGE_KEY);
 
-      // タイトルの初期化
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
 
-      // モンスター画像を初期データ（T1等）にリセットして未配置プールへ配置
       renderMonsters();
 
-      // 既存の行を一度全てクリアして初期設定の5行（S, A, B, C, D）を再構築
       if (tierTable) {
         tierTable.innerHTML = '';
         DEFAULT_ROWS.forEach(r => {
@@ -599,7 +620,6 @@ function setupEvents() {
     });
   }
 
-  // T1~T4ボタンのイベント設定
   document.querySelectorAll('.btn-tier-switch').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetTier = e.target.dataset.tier;
