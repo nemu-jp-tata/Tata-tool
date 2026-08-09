@@ -9,6 +9,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- 既存のhtml2canvasの下あたりにこれを追記 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <!-- Discord用OGP設定 -->
+  <meta property="og:title" content="ティアリスト作成ツール" />
+  <meta property="og:description" content="自分だけのティアリストを作って共有しよう！" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
 
@@ -20,6 +25,7 @@
       </div>
       <div class="btn-group">
         <button id="addRowBtn" class="btn btn-add">＋ 行を追加</button>
+        <button id="shareBtn" class="btn btn-share" style="background-color: #4CAF50; color: #fff;">共有リンクを作成</button>
         <button id="resetBtn" class="btn btn-reset">リセット</button>
         <button id="saveImgBtn" class="btn btn-save">画像として保存</button>
       </div>
