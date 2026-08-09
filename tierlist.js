@@ -522,7 +522,7 @@ function loadState() {
   applyState(saved);
 }
 
-// 共有URLの生成（CORSプロキシ経由でis.gd短縮URLを取得）
+// 共有URLの生成（JSONPを用いた安定的な短縮URL取得）
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -540,13 +540,35 @@ async function generateShareUrl() {
   if (shareBtn) shareBtn.disabled = true;
 
   try {
-    const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(rawShareUrl)}`;
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+    // 成功率の高いJSONPメソッドで短縮URLを取得
+    const finalUrl = await new Promise((resolve, reject) => {
+      const callbackName = 'isgd_callback_' + Date.now();
+      
+      // タイムアウト設定（5秒）
+      const timer = setTimeout(() => {
+        delete window[callbackName];
+        reject('Timeout');
+      }, 5000);
 
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
+      window[callbackName] = (data) => {
+        clearTimeout(timer);
+        delete window[callbackName];
+        document.body.removeChild(script);
+        if (data && data.shorturl) {
+          resolve(data.shorturl);
+        } else {
+          reject('API Error');
+        }
+      };
 
-    const finalUrl = data.shorturl || rawShareUrl;
+      const script = document.createElement('script');
+      script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
+      script.onerror = () => {
+        clearTimeout(timer);
+        reject('Network Error');
+      };
+      document.body.appendChild(script);
+    });
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(finalUrl);
@@ -557,9 +579,10 @@ async function generateShareUrl() {
   } catch (e) {
     console.error('短縮URLの生成に失敗しました。通常のURLを使用します。', e);
     
+    // フォールバック（短縮失敗時は元のURLをコピー）
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(rawShareUrl);
-      alert('短縮に失敗したため、通常の共有用リンクをコピーしました。');
+      alert('短縮機能が一時的に使用できないため、通常の共有用リンクをコピーしました。');
     } else {
       prompt('以下のURLをコピーして共有してください:', rawShareUrl);
     }
