@@ -522,7 +522,7 @@ function loadState() {
   applyState(saved);
 }
 
-// 共有URLの生成（JSONPを用いた安定的な短縮URL取得・エラー詳細表示付き）
+// 共有URLの生成（is.gd ＋ バックアップAPI対応）
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -539,43 +539,61 @@ async function generateShareUrl() {
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.disabled = true;
 
+  // 方法1: is.gd で短縮
+  const tryIsGd = () => new Promise((resolve, reject) => {
+    const callbackName = 'isgd_callback_' + Date.now();
+    let script;
+    
+    const timer = setTimeout(() => {
+      delete window[callbackName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('is.gd タイムアウト'));
+    }, 3000);
+
+    window[callbackName] = (data) => {
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+
+      if (data && data.shorturl) {
+        resolve(data.shorturl);
+      } else {
+        reject(new Error('is.gd エラー'));
+      }
+    };
+
+    script = document.createElement('script');
+    script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('is.gd ブロックエラー'));
+    };
+    document.body.appendChild(script);
+  });
+
+  // 方法2: TinyURL で短縮（プロキシ経由でCORS回避）
+  const tryTinyUrl = async () => {
+    const targetUrl = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(rawShareUrl);
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
+    if (!res.ok) throw new Error('TinyURL エラー');
+    const text = await res.text();
+    if (text && text.startsWith('http')) return text.trim();
+    throw new Error('TinyURL 取得失敗');
+  };
+
   try {
-    // 成功率の高いJSONPメソッドで短縮URLを取得
-    const finalUrl = await new Promise((resolve, reject) => {
-      const callbackName = 'isgd_callback_' + Date.now();
-      let script;
-      
-      // タイムアウト設定（8秒に延長）
-      const timer = setTimeout(() => {
-        delete window[callbackName];
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-        reject(new Error('通信タイムアウト（is.gdからの応答がありませんでした）'));
-      }, 8000);
-
-      window[callbackName] = (data) => {
-        clearTimeout(timer);
-        delete window[callbackName];
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-
-        if (data && data.shorturl) {
-          resolve(data.shorturl);
-        } else if (data && data.errormessage) {
-          reject(new Error(`APIエラー: ${data.errormessage}`));
-        } else {
-          reject(new Error('不明な応答データです'));
-        }
-      };
-
-      script = document.createElement('script');
-      script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
-      script.onerror = () => {
-        clearTimeout(timer);
-        delete window[callbackName];
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-        reject(new Error('ネットワーク接続エラー（APIへのアクセスが拒否されました）'));
-      };
-      document.body.appendChild(script);
-    });
+    let finalUrl = '';
+    
+    // まず is.gd を試す
+    try {
+      finalUrl = await tryIsGd();
+    } catch (e) {
+      // 広告ブロック等で is.gd がブロックされた場合は TinyURL を試す
+      console.warn('is.gdでの短縮に失敗したため、バックアップAPI(TinyURL)を実行します。', e);
+      finalUrl = await tryTinyUrl();
+    }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(finalUrl);
@@ -584,15 +602,13 @@ async function generateShareUrl() {
       prompt('以下のURLをコピーして共有してください:', finalUrl);
     }
   } catch (e) {
-    console.error('短縮URLの生成に失敗しました:', e);
+    console.error('すべての短縮APIで取得に失敗しました。通常のURLを使用します。', e);
     
-    // フォールバック（短縮失敗時は元のURLをコピーし、理由を表示）
-    const reason = e.message || '不明なエラー';
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(rawShareUrl);
-      alert(`短縮に失敗したため、通常の共有用リンクをコピーしました。\n（理由: ${reason}）`);
+      alert('広告ブロック等の影響により短縮APIへの通信が遮断されたため、通常の共有リンクをコピーしました。');
     } else {
-      prompt(`短縮に失敗したため（理由: ${reason}）、以下の通常URLをコピーして共有してください:`, rawShareUrl);
+      prompt('以下の通常URLをコピーして共有してください:', rawShareUrl);
     }
   } finally {
     if (shareBtn) shareBtn.disabled = false;
