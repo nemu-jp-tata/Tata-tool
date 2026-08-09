@@ -521,6 +521,7 @@ function loadState() {
   }
   applyState(saved);
 }
+
 // 共有URLの生成（JSONPを用いた安定的な短縮URL取得・エラー詳細表示付き）
 async function generateShareUrl() {
   saveState();
@@ -542,17 +543,19 @@ async function generateShareUrl() {
     // 成功率の高いJSONPメソッドで短縮URLを取得
     const finalUrl = await new Promise((resolve, reject) => {
       const callbackName = 'isgd_callback_' + Date.now();
+      let script;
       
       // タイムアウト設定（8秒に延長）
       const timer = setTimeout(() => {
         delete window[callbackName];
+        if (script && script.parentNode) script.parentNode.removeChild(script);
         reject(new Error('通信タイムアウト（is.gdからの応答がありませんでした）'));
       }, 8000);
 
       window[callbackName] = (data) => {
         clearTimeout(timer);
         delete window[callbackName];
-        if (script.parentNode) document.body.removeChild(script);
+        if (script && script.parentNode) script.parentNode.removeChild(script);
 
         if (data && data.shorturl) {
           resolve(data.shorturl);
@@ -563,11 +566,12 @@ async function generateShareUrl() {
         }
       };
 
-      const script = document.createElement('script');
+      script = document.createElement('script');
       script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
       script.onerror = () => {
         clearTimeout(timer);
         delete window[callbackName];
+        if (script && script.parentNode) script.parentNode.removeChild(script);
         reject(new Error('ネットワーク接続エラー（APIへのアクセスが拒否されました）'));
       };
       document.body.appendChild(script);
@@ -595,7 +599,6 @@ async function generateShareUrl() {
   }
 }
 
-失敗
 function loadFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const compressed = params.get('data');
