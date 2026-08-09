@@ -521,8 +521,7 @@ function loadState() {
   }
   applyState(saved);
 }
-
-// 共有URLの生成（JSONPを用いた安定的な短縮URL取得）
+// 共有URLの生成（JSONPを用いた安定的な短縮URL取得・エラー詳細表示付き）
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -544,20 +543,23 @@ async function generateShareUrl() {
     const finalUrl = await new Promise((resolve, reject) => {
       const callbackName = 'isgd_callback_' + Date.now();
       
-      // タイムアウト設定（5秒）
+      // タイムアウト設定（8秒に延長）
       const timer = setTimeout(() => {
         delete window[callbackName];
-        reject('Timeout');
-      }, 5000);
+        reject(new Error('通信タイムアウト（is.gdからの応答がありませんでした）'));
+      }, 8000);
 
       window[callbackName] = (data) => {
         clearTimeout(timer);
         delete window[callbackName];
-        document.body.removeChild(script);
+        if (script.parentNode) document.body.removeChild(script);
+
         if (data && data.shorturl) {
           resolve(data.shorturl);
+        } else if (data && data.errormessage) {
+          reject(new Error(`APIエラー: ${data.errormessage}`));
         } else {
-          reject('API Error');
+          reject(new Error('不明な応答データです'));
         }
       };
 
@@ -565,7 +567,8 @@ async function generateShareUrl() {
       script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
       script.onerror = () => {
         clearTimeout(timer);
-        reject('Network Error');
+        delete window[callbackName];
+        reject(new Error('ネットワーク接続エラー（APIへのアクセスが拒否されました）'));
       };
       document.body.appendChild(script);
     });
@@ -577,20 +580,22 @@ async function generateShareUrl() {
       prompt('以下のURLをコピーして共有してください:', finalUrl);
     }
   } catch (e) {
-    console.error('短縮URLの生成に失敗しました。通常のURLを使用します。', e);
+    console.error('短縮URLの生成に失敗しました:', e);
     
-    // フォールバック（短縮失敗時は元のURLをコピー）
+    // フォールバック（短縮失敗時は元のURLをコピーし、理由を表示）
+    const reason = e.message || '不明なエラー';
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(rawShareUrl);
-      alert('短縮機能が一時的に使用できないため、通常の共有用リンクをコピーしました。');
+      alert(`短縮に失敗したため、通常の共有用リンクをコピーしました。\n（理由: ${reason}）`);
     } else {
-      prompt('以下のURLをコピーして共有してください:', rawShareUrl);
+      prompt(`短縮に失敗したため（理由: ${reason}）、以下の通常URLをコピーして共有してください:`, rawShareUrl);
     }
   } finally {
     if (shareBtn) shareBtn.disabled = false;
   }
 }
 
+失敗
 function loadFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const compressed = params.get('data');
