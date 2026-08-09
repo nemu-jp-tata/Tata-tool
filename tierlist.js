@@ -522,7 +522,8 @@ function loadState() {
   applyState(saved);
 }
 
-function generateShareUrl() {
+// 共有URLの生成（is.gd APIを用いた自動短縮対応）
+async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
   if (!jsonStr) return;
@@ -533,16 +534,34 @@ function generateShareUrl() {
   }
 
   const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-  const shareUrl = `${window.location.origin}${window.location.pathname}?data=${compressed}`;
+  const rawShareUrl = `${window.location.origin}${window.location.pathname}?data=${compressed}`;
 
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      alert('共有用リンクをクリップボードにコピーしました！\nDiscordやSNSにそのまま貼り付けて共有してください。');
-    }).catch(() => {
-      prompt('以下のURLをコピーして共有してください:', shareUrl);
-    });
-  } else {
-    prompt('以下のURLをコピーして共有してください:', shareUrl);
+  const shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) shareBtn.disabled = true;
+
+  try {
+    const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(rawShareUrl)}`);
+    const data = await response.json();
+
+    const finalUrl = data.shorturl || rawShareUrl;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(finalUrl);
+      alert('短縮した共有用リンクをクリップボードにコピーしました！\nDiscordやSNSにそのまま貼り付けて共有してください。');
+    } else {
+      prompt('以下のURLをコピーして共有してください:', finalUrl);
+    }
+  } catch (e) {
+    console.error('短縮URLの生成に失敗しました。通常のURLを使用します。', e);
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(rawShareUrl);
+      alert('共有用リンクをクリップボードにコピーしました！');
+    } else {
+      prompt('以下のURLをコピーして共有してください:', rawShareUrl);
+    }
+  } finally {
+    if (shareBtn) shareBtn.disabled = false;
   }
 }
 
