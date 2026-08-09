@@ -522,7 +522,7 @@ function loadState() {
   applyState(saved);
 }
 
-// 共有URLの生成（is.gd APIを用いた自動短縮対応）
+// 共有URLの生成（CORSプロキシ経由でis.gd短縮URLを取得）
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -540,7 +540,10 @@ async function generateShareUrl() {
   if (shareBtn) shareBtn.disabled = true;
 
   try {
-    const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(rawShareUrl)}`);
+    const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(rawShareUrl)}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+
+    const response = await fetch(proxyUrl);
     const data = await response.json();
 
     const finalUrl = data.shorturl || rawShareUrl;
@@ -556,7 +559,7 @@ async function generateShareUrl() {
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(rawShareUrl);
-      alert('共有用リンクをクリップボードにコピーしました！');
+      alert('短縮に失敗したため、通常の共有用リンクをコピーしました。');
     } else {
       prompt('以下のURLをコピーして共有してください:', rawShareUrl);
     }
