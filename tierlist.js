@@ -419,35 +419,37 @@ function clearHighlight() {
   }
 }
 
+// ==========================================
+// 1. 状態データの軽量化（キーを1文字にする）
+// ==========================================
 function getCurrentStateJson() {
   const rowsData = [];
   const monstersData = [];
 
-  document.querySelectorAll('.tier-row').forEach(row => {
-    const rowId = row.dataset.rowId;
+  document.querySelectorAll('.tier-row').forEach((row, index) => {
+    // データ量削減のため、長いIDではなくインデックスを使用
     const label = row.querySelector('.tier-label');
     const colorSelect = row.querySelector('.row-color-select');
 
     rowsData.push({
-      id: rowId,
-      label: label ? label.innerText : '',
-      color: colorSelect ? colorSelect.value : '#ff7f7f'
+      l: label ? label.innerText : '',             // label -> l
+      c: colorSelect ? colorSelect.value : '#ff7f7f' // color -> c
     });
 
     const cards = row.querySelectorAll('.monster-card');
     cards.forEach(card => {
       monstersData.push({
-        species: card.dataset.species,
-        rowId: rowId,
-        name: card.dataset.name
+        s: card.dataset.species, // species -> s
+        r: index,                // rowId -> r (インデックス番号で管理)
+        n: card.dataset.name     // name -> n
       });
     });
   });
 
   return JSON.stringify({
-    title: tierTableTitle ? tierTableTitle.value : DEFAULT_TITLE,
-    rows: rowsData,
-    monsters: monstersData
+    t: tierTableTitle ? tierTableTitle.value : DEFAULT_TITLE, // title -> t
+    r: rowsData,     // rows -> r
+    m: monstersData  // monsters -> m
   });
 }
 
@@ -456,6 +458,9 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, jsonStr);
 }
 
+// ==========================================
+// 2. 状態の復元（新旧両方のデータ形式に対応）
+// ==========================================
 function applyState(jsonStr) {
   if (!tierTable) return;
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
@@ -463,37 +468,63 @@ function applyState(jsonStr) {
   try {
     const state = JSON.parse(jsonStr);
 
-    if (tierTableTitle && state.title !== undefined) {
-      tierTableTitle.value = state.title;
+    // 新旧プロパティの互換性対応
+    const title = state.t !== undefined ? state.t : state.title;
+    const rows = state.r !== undefined ? state.r : state.rows;
+    const monsters = state.m !== undefined ? state.m : state.monsters;
+
+    if (tierTableTitle && title !== undefined) {
+      tierTableTitle.value = title;
     }
 
-    if (state.rows && state.rows.length >= MIN_ROWS) {
-      state.rows.forEach(r => {
-        const rowEl = createRowElement(r.id, r.label, r.color);
+    // 行の復元
+    const rowElements = [];
+    if (rows && rows.length >= MIN_ROWS) {
+      rows.forEach((r, index) => {
+        // 古いIDがある場合はそれを使い、なければインデックスベースのIDを生成
+        const rowId = r.id !== undefined ? r.id : `tier-row-${index}`;
+        const labelText = r.l !== undefined ? r.l : r.label;
+        const colorHex = r.c !== undefined ? r.c : r.color;
+        
+        const rowEl = createRowElement(rowId, labelText, colorHex);
         tierTable.appendChild(rowEl);
+        rowElements.push(rowEl);
       });
     } else {
       DEFAULT_ROWS.forEach(r => {
         const rowEl = createRowElement(r.id, r.label, r.color);
         tierTable.appendChild(rowEl);
+        rowElements.push(rowEl);
       });
     }
 
-    if (state.monsters && monsterPool) {
-      state.monsters.forEach(item => {
-        const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
-        const targetRow = document.querySelector(`.tier-row[data-row-id="${item.rowId}"] .tier-dropzone`);
-        if (card && targetRow) {
-          if (item.name) {
-            card.dataset.name = item.name;
+    // モンスターの復元
+    if (monsters && monsterPool) {
+      monsters.forEach(item => {
+        const species = item.s !== undefined ? item.s : item.species;
+        const name = item.n !== undefined ? item.n : item.name;
+        const card = monsterPool.querySelector(`[data-species="${species}"]`);
+        
+        // 旧データは文字列ID (rowId)、新データは数値インデックス (r)
+        let targetRowEl = null;
+        if (item.rowId !== undefined) {
+          targetRowEl = document.querySelector(`.tier-row[data-row-id="${item.rowId}"]`);
+        } else if (item.r !== undefined && rowElements[item.r]) {
+          targetRowEl = rowElements[item.r];
+        }
+
+        if (card && targetRowEl) {
+          const targetDropzone = targetRowEl.querySelector('.tier-dropzone');
+          if (name) {
+            card.dataset.name = name;
             const img = card.querySelector('img');
             const badge = card.querySelector('.no-image-badge');
             if (img) {
-              setupMonsterImage(img, badge, item.name);
-              img.src = `${item.name}.webp`;
+              setupMonsterImage(img, badge, name);
+              img.src = `${name}.webp`;
             }
           }
-          targetRow.appendChild(card);
+          targetDropzone.appendChild(card);
         }
       });
     }
@@ -522,7 +553,9 @@ function loadState() {
   applyState(saved);
 }
 
-// 共有URLの生成（is.gd ＋ バックアップAPI対応）
+// ==========================================
+// 3. 共有URLの生成（ロジック整理・エラーハンドリング強化）
+// ==========================================
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -536,44 +569,46 @@ async function generateShareUrl() {
   const compressed = LZString.compressToEncodedURIComponent(jsonStr);
   const rawShareUrl = `${window.location.origin}${window.location.pathname}?data=${compressed}`;
 
+  // URLが長すぎる場合は最初から短縮を諦める（目安：2000文字）
+  if (rawShareUrl.length > 2000) {
+    console.warn('URLが長すぎるため短縮APIをスキップします。');
+    copyToClipboard(rawShareUrl, 'データ量が多いため、短縮していないURLをコピーしました。');
+    return;
+  }
+
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.disabled = true;
 
-  // 方法1: is.gd で短縮
   const tryIsGd = () => new Promise((resolve, reject) => {
     const callbackName = 'isgd_callback_' + Date.now();
     let script;
     
     const timer = setTimeout(() => {
-      delete window[callbackName];
-      if (script && script.parentNode) script.parentNode.removeChild(script);
+      cleanup();
       reject(new Error('is.gd タイムアウト'));
-    }, 3000);
+    }, 4000); // タイムアウトを少し長めに設定
 
-    window[callbackName] = (data) => {
+    const cleanup = () => {
       clearTimeout(timer);
       delete window[callbackName];
       if (script && script.parentNode) script.parentNode.removeChild(script);
+    };
 
-      if (data && data.shorturl) {
-        resolve(data.shorturl);
-      } else {
-        reject(new Error('is.gd エラー'));
-      }
+    window[callbackName] = (data) => {
+      cleanup();
+      if (data && data.shorturl) resolve(data.shorturl);
+      else reject(new Error('is.gd エラー: ' + (data ? data.errormessage : '不明')));
     };
 
     script = document.createElement('script');
     script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(rawShareUrl)}`;
     script.onerror = () => {
-      clearTimeout(timer);
-      delete window[callbackName];
-      if (script && script.parentNode) script.parentNode.removeChild(script);
-      reject(new Error('is.gd ブロックエラー'));
+      cleanup();
+      reject(new Error('is.gd ネットワーク/ブロックエラー'));
     };
     document.body.appendChild(script);
   });
 
-  // 方法2: TinyURL で短縮（プロキシ経由でCORS回避）
   const tryTinyUrl = async () => {
     const targetUrl = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(rawShareUrl);
     const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
@@ -585,34 +620,34 @@ async function generateShareUrl() {
 
   try {
     let finalUrl = '';
-    
-    // まず is.gd を試す
     try {
       finalUrl = await tryIsGd();
     } catch (e) {
-      // 広告ブロック等で is.gd がブロックされた場合は TinyURL を試す
-      console.warn('is.gdでの短縮に失敗したため、バックアップAPI(TinyURL)を実行します。', e);
+      console.warn('is.gdでの短縮に失敗、TinyURLを使用:', e);
       finalUrl = await tryTinyUrl();
     }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(finalUrl);
-      alert('短縮した共有用リンクをクリップボードにコピーしました！\nDiscordやSNSにそのまま貼り付けて共有してください。');
-    } else {
-      prompt('以下のURLをコピーして共有してください:', finalUrl);
-    }
-  } catch (e) {
-    console.error('すべての短縮APIで取得に失敗しました。通常のURLを使用します。', e);
     
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(rawShareUrl);
-      alert('広告ブロック等の影響により短縮APIへの通信が遮断されたため、通常の共有リンクをコピーしました。');
-    } else {
-      prompt('以下の通常URLをコピーして共有してください:', rawShareUrl);
-    }
+    copyToClipboard(finalUrl, '短縮した共有用リンクをクリップボードにコピーしました！\nそのまま貼り付けて共有してください。');
+  } catch (e) {
+    console.error('短縮API失敗:', e);
+    copyToClipboard(rawShareUrl, '短縮APIへの通信が失敗したため、通常の共有リンクをコピーしました。');
   } finally {
     if (shareBtn) shareBtn.disabled = false;
   }
+}
+
+// クリップボードコピーの共通化関数
+async function copyToClipboard(text, successMessage) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(successMessage);
+      return;
+    } catch(err) {
+      console.warn('Clipboard API失敗', err);
+    }
+  }
+  prompt('以下のURLをコピーして共有してください:', text);
 }
 
 function loadFromUrl() {
