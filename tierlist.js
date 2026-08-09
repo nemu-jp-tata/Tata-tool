@@ -51,7 +51,14 @@ const MAX_ROWS = 8;
 
 function init() {
   renderMonsters();
-  loadState();
+
+  // URLに共有データがある場合は読み込み、無ければLocalStorageから読み込む
+  if (window.location.search.includes('data=')) {
+    loadFromUrl();
+  } else {
+    loadState();
+  }
+
   setupEvents();
 }
 
@@ -158,7 +165,7 @@ function createRowElement(id, labelText, colorHex) {
         if (monsterPool) monsterPool.appendChild(card);
       });
       row.remove();
-
+      
       updateRowControlsState();
       saveState();
     });
@@ -240,7 +247,7 @@ function getDragAfterElement(dropzone, x, y) {
         return { distance: distance, element: child };
       }
     }
-
+    
     const distance = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
     if (distance < closest.distance) {
       if (x < box.left + box.width / 2) {
@@ -274,7 +281,7 @@ function attachDragEvents(card) {
         isDragging = true;
         draggingCard = card;
         card.classList.add('dragging');
-
+        
         if (dragGhost) {
           if (imgSrc) {
             dragGhost.style.backgroundImage = `url("${imgSrc}")`;
@@ -291,14 +298,14 @@ function attachDragEvents(card) {
 
       if (isDragging) {
         updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-
+        
         const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
         const dropzone = target ? target.closest('.tier-dropzone') : null;
 
         if (dropzone) {
           highlightDropzone(dropzone);
           const afterElement = getDragAfterElement(dropzone, moveEvent.clientX, moveEvent.clientY);
-
+          
           if (afterElement == null) {
             dropzone.appendChild(placeholder);
           } else {
@@ -362,7 +369,7 @@ function clearHighlight() {
   }
 }
 
-function saveState() {
+function getCurrentStateJson() {
   const rowsData = [];
   const monstersData = [];
 
@@ -386,34 +393,24 @@ function saveState() {
     });
   });
 
-  const state = {
+  return JSON.stringify({
     title: tierTableTitle ? tierTableTitle.value : DEFAULT_TITLE,
     rows: rowsData,
     monsters: monstersData
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  });
 }
 
-function loadState() {
+function saveState() {
+  const jsonStr = getCurrentStateJson();
+  localStorage.setItem(STORAGE_KEY, jsonStr);
+}
+
+function applyState(jsonStr) {
   if (!tierTable) return;
-
-  const saved = localStorage.getItem(STORAGE_KEY);
-
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
 
-  if (!saved) {
-    if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
-    DEFAULT_ROWS.forEach(r => {
-      const rowEl = createRowElement(r.id, r.label, r.color);
-      tierTable.appendChild(rowEl);
-    });
-    updateRowControlsState();
-    return;
-  }
-
   try {
-    const state = JSON.parse(saved);
+    const state = JSON.parse(jsonStr);
 
     if (tierTableTitle && state.title !== undefined) {
       tierTableTitle.value = state.title;
@@ -451,6 +448,67 @@ function loadState() {
   updateRowControlsState();
 }
 
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
+    DEFAULT_ROWS.forEach(r => {
+      const rowEl = createRowElement(r.id, r.label, r.color);
+      tierTable.appendChild(rowEl);
+    });
+    updateRowControlsState();
+    return;
+  }
+  applyState(saved);
+}
+
+// 共有URLの生成
+function generateShareUrl() {
+  saveState();
+  const jsonStr = localStorage.getItem(STORAGE_KEY);
+  if (!jsonStr) return;
+
+  if (typeof LZString === 'undefined') {
+    alert('圧縮ライブラリの読み込みに失敗しています。');
+    return;
+  }
+
+  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
+  const shareUrl = `${window.location.origin}${window.location.pathname}?data=${compressed}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('共有用リンクをクリップボードにコピーしました！\nDiscordやSNSにそのまま貼り付けて共有してください。');
+    }).catch(() => {
+      prompt('以下のURLをコピーして共有してください:', shareUrl);
+    });
+  } else {
+    prompt('以下のURLをコピーして共有してください:', shareUrl);
+  }
+}
+
+// URLからデータ読み込み
+function loadFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const compressed = params.get('data');
+
+  if (compressed && typeof LZString !== 'undefined') {
+    try {
+      const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
+      if (decompressed) {
+        localStorage.setItem(STORAGE_KEY, decompressed);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        applyState(decompressed);
+        alert('共有されたティア表を復元・読み込みました！');
+        return;
+      }
+    } catch (e) {
+      console.error('URL解析エラー:', e);
+    }
+  }
+  loadState();
+}
+
 function setupEvents() {
   if (tierTableTitle) {
     tierTableTitle.addEventListener('input', saveState);
@@ -468,10 +526,15 @@ function setupEvents() {
       const newId = 'tier-' + Date.now();
       const newRow = createRowElement(newId, 'NEW', '#bf7fff');
       if (tierTable) tierTable.appendChild(newRow);
-
+      
       updateRowControlsState();
       saveState();
     });
+  }
+
+  const shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', generateShareUrl);
   }
 
   const resetBtn = document.getElementById('resetBtn');
@@ -489,31 +552,25 @@ function setupEvents() {
     saveImgBtn.addEventListener('click', () => {
       const tableArea = document.getElementById('tierTableArea');
 
-      document.body.classList.add('is-exporting');
       tableArea.classList.add('exporting');
 
-      setTimeout(() => {
-        html2canvas(tableArea, {
-          backgroundColor: '#000000',
-          scale: 2,
-          useCORS: true,
-          width: 1000,
-          windowWidth: 1200
-        }).then(canvas => {
-          document.body.classList.remove('is-exporting');
-          tableArea.classList.remove('exporting');
+      html2canvas(tableArea, {
+        backgroundColor: '#000000',
+        scale: 2,
+        useCORS: true,
+        windowWidth: 1200
+      }).then(canvas => {
+        tableArea.classList.remove('exporting');
 
-          const link = document.createElement('a');
-          link.download = 'tier-list.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }).catch(err => {
-          console.error('保存エラー:', err);
-          document.body.classList.remove('is-exporting');
-          tableArea.classList.remove('exporting');
-          alert('画像の保存に失敗しました。');
-        });
-      }, 100);
+        const link = document.createElement('a');
+        link.download = 'tier-list.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        console.error('保存エラー:', err);
+        tableArea.classList.remove('exporting');
+        alert('画像の保存に失敗しました。');
+      });
     });
   }
 }
