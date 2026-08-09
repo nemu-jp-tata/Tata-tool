@@ -37,13 +37,13 @@ const COLOR_PALETTE = [
   { name: '灰', hex: '#a6a6a6' }
 ];
 
+// 初期設定の行を5行（S, A, B, C, D）に変更
 const DEFAULT_ROWS = [
   { id: 'tier-1', label: 'S', color: '#ff7f7f' },
   { id: 'tier-2', label: 'A', color: '#ffbf7f' },
   { id: 'tier-3', label: 'B', color: '#ffff7f' },
   { id: 'tier-4', label: 'C', color: '#7fff7f' },
-  { id: 'tier-5', label: 'D', color: '#7fbfff' },
-  { id: 'tier-6', label: 'E', color: '#bf7fff' }
+  { id: 'tier-5', label: 'D', color: '#7fbfff' }
 ];
 
 const MIN_ROWS = 5;
@@ -86,6 +86,32 @@ function renderMonsters() {
   uniqueMonsters.forEach(m => {
     const card = createMonsterCard(m);
     monsterPool.appendChild(card);
+  });
+}
+
+// 未配置枠にあるモンスターの画像を指定したT（1~4）へ変更する関数
+function changePoolMonstersTier(targetTier) {
+  if (!monsterPool) return;
+  const poolCards = monsterPool.querySelectorAll('.monster-card');
+  
+  poolCards.forEach(card => {
+    const species = card.dataset.species;
+    // 指定されたTのモンスターデータを検索
+    const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === Number(targetTier));
+    
+    if (targetMonster) {
+      card.dataset.name = targetMonster.name;
+      const img = card.querySelector('img');
+      if (img) {
+        img.dataset.retry = '';
+        img.src = `${targetMonster.name}.webp`;
+        img.onerror = function() {
+          if (!this.dataset.retry) { this.dataset.retry = 1; this.src = `${targetMonster.name}.png`; }
+          else if (this.dataset.retry === '1') { this.dataset.retry = 2; this.src = `${targetMonster.name}.jpg`; }
+          else { this.outerHTML = '<div class="no-image-badge">🌸 no image 🌸</div>'; }
+        };
+      }
+    }
   });
 }
 
@@ -388,7 +414,8 @@ function getCurrentStateJson() {
     cards.forEach(card => {
       monstersData.push({
         species: card.dataset.species,
-        rowId: rowId
+        rowId: rowId,
+        name: card.dataset.name
       });
     });
   });
@@ -433,6 +460,11 @@ function applyState(jsonStr) {
         const card = monsterPool.querySelector(`[data-species="${item.species}"]`);
         const targetRow = document.querySelector(`.tier-row[data-row-id="${item.rowId}"] .tier-dropzone`);
         if (card && targetRow) {
+          if (item.name) {
+            card.dataset.name = item.name;
+            const img = card.querySelector('img');
+            if (img) img.src = `${item.name}.webp`;
+          }
           targetRow.appendChild(card);
         }
       });
@@ -537,15 +569,43 @@ function setupEvents() {
     shareBtn.addEventListener('click', generateShareUrl);
   }
 
+  // リセットボタンの修正処理
   const resetBtn = document.getElementById('resetBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
+      const confirmReset = confirm('全ての配置・タイトル・行設定を初期状態（5行）にリセットしますか？');
+      if (!confirmReset) return;
+
+      // 保存データの削除
       localStorage.removeItem(STORAGE_KEY);
+
+      // タイトルの初期化
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
+
+      // モンスター画像を初期データ（T1等）にリセットして未配置プールへ配置
       renderMonsters();
-      loadState();
+
+      // 既存の行を一度全てクリアして初期設定の5行（S, A, B, C, D）を再構築
+      if (tierTable) {
+        tierTable.innerHTML = '';
+        DEFAULT_ROWS.forEach(r => {
+          const rowEl = createRowElement(r.id, r.label, r.color);
+          tierTable.appendChild(rowEl);
+        });
+      }
+
+      updateRowControlsState();
+      saveState();
     });
   }
+
+  // T1~T4ボタンのイベント設定
+  document.querySelectorAll('.btn-tier-switch').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetTier = e.target.dataset.tier;
+      changePoolMonstersTier(targetTier);
+    });
+  });
 
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
