@@ -562,3 +562,28 @@ body.is-exporting .tier-container {
   transform: scale(0.95);
   background-color: #4CAF50;
 }
+
+.pool-dropzone {
+  scrollbar-width: auto; /* 'thin' から 'auto' にして太さを確保 */
+  scrollbar-color: #555 #1a1a1a; /* つまみ / 背景色 */
+}
+
+/* Chrome, Safari, Edge (WebKit系) 向けカスタムスクロールバー */
+.pool-dropzone::-webkit-scrollbar {
+  width: 14px; /* スクロールバーの幅（好みに合わせて12px〜16px程度に調整可） */
+}
+
+.pool-dropzone::-webkit-scrollbar-track {
+  background: #1a1a1a; /* スクロールバー背景 */
+  border-radius: 4px;
+}
+
+.pool-dropzone::-webkit-scrollbar-thumb {
+  background: #555555; /* スクロールバーつまみの色 */
+  border-radius: 4px;
+  border: 2px solid #1a1a1a; /* 周囲に隙間をつけて持ちやすくする */
+}
+
+.pool-dropzone::-webkit-scrollbar-thumb:hover {
+  background: #777777; /* ホバー時の色 */
+}
