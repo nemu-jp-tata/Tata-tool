@@ -45,7 +45,7 @@ const DEFAULT_ROWS = [
   { id: 'tier-5', label: 'D', color: '#7fbfff' }
 ];
 
-const MIN_ROWS = 5;
+const MIN_ROWS = 4;
 const MAX_ROWS = 8;
 
 function init() {
