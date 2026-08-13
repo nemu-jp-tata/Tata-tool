@@ -199,12 +199,26 @@ function fillCellWithMonster(cell, data) {
         }
 
         const targetIndex = cells.indexOf(targetCell);
+        
+        // 移動先セルに既に存在する画像データを取得
         const existingImg = targetCell.querySelector('img, .no-image-badge');
+        let targetCellData = null;
+        if (existingImg && existingImg.dataset) {
+          targetCellData = {
+            src: existingImg.src,
+            species: existingImg.dataset.species,
+            tier: existingImg.dataset.tier,
+            player: existingImg.dataset.player,
+            className: targetCell.className
+          };
+        }
+
         const targetSpecies = draggingItem.species;
 
+        // 同種族が元々自分自身だったか・交換対象かどうかのチェック
         let isSpeciesOnBoard = false;
         cells.forEach((c, idx) => {
-          if (idx === targetIndex) return;
+          if (idx === targetIndex || idx === sourceIndex) return; // 移動先・移動元は除外して判定
           const im = c.querySelector('img, .no-image-badge');
           if (im && im.dataset && im.dataset.species === targetSpecies) {
             if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
@@ -213,10 +227,6 @@ function fillCellWithMonster(cell, data) {
           }
         });
 
-        const isReplacingSelf = existingImg && existingImg.dataset &&
-                                existingImg.dataset.species === targetSpecies &&
-                                (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
-
         if (isSpeciesOnBoard) {
           const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
           alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
@@ -224,12 +234,7 @@ function fillCellWithMonster(cell, data) {
           return;
         }
 
-        if (existingImg && !isReplacingSelf) {
-          alert('すでにタタが配置されているセルには移動できません。');
-          revertToSourceCell();
-          return;
-        }
-
+        // 1. 移動先のセルにドラッグ要素を配置
         targetCell.className = 'cell';
         if (currentGridSize === 6) {
           targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
@@ -242,6 +247,12 @@ function fillCellWithMonster(cell, data) {
           player: draggingItem.player,
           className: targetCell.className
         });
+
+        // 2. 移動先にタタが存在していた場合、移動元（sourceCell）へそれを配置して入れ替える
+        const sourceCell = cells[sourceIndex];
+        if (targetCellData && sourceCell) {
+          fillCellWithMonster(sourceCell, targetCellData);
+        }
 
         draggingItem = null;
         saveBoardState();
@@ -569,12 +580,6 @@ function renderMonsters() {
           if (isSpeciesOnBoard) {
             const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
             alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
-            draggingItem = null;
-            return;
-          }
-
-          if (existingImg && !isReplacingSelf) {
-            alert('すでにタタが配置されているセルには移動できません。');
             draggingItem = null;
             return;
           }
