@@ -689,6 +689,39 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   const boardClone = boardFrame.cloneNode(true);
 
   // 4. 画像の正方形比率（1:1）を固定保持させる処理
+document.getElementById('saveBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  
+  const boardFrame = document.getElementById('boardFrame');
+  const titleInput = document.getElementById('appTitleInput');
+  
+  // 入力されたタイトルを取得（未入力の場合はデフォルト値）
+  const titleText = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : 'タタ配置ツール';
+
+  // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
+  const captureContainer = document.createElement('div');
+  captureContainer.style.position = 'absolute';
+  captureContainer.style.top = '-9999px';
+  captureContainer.style.left = '-9999px';
+  captureContainer.style.width = `${boardFrame.offsetWidth}px`;
+  captureContainer.style.background = '#181a29';
+  captureContainer.style.padding = '16px';
+  captureContainer.style.boxSizing = 'border-box';
+  captureContainer.style.borderRadius = '12px';
+
+  // 2. 題名（タイトル）要素の生成（画像の上にテキストとして合成）
+  const titleEl = document.createElement('div');
+  titleEl.textContent = titleText;
+  titleEl.style.fontSize = '20px';
+  titleEl.style.fontWeight = 'bold';
+  titleEl.style.color = '#f8fafc';
+  titleEl.style.textAlign = 'center';
+  titleEl.style.marginBottom = '12px';
+
+  // 3. 盤面フレームをそのままクローン
+  const boardClone = boardFrame.cloneNode(true);
+
+  // 4. 画像の正方形比率（1:1）を固定保持させる処理
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
@@ -730,6 +763,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     }
   });
 });
+
 
 btn1P.addEventListener('click', (e) => {
   e.stopPropagation();
