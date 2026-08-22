@@ -740,7 +740,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   captureContainer.appendChild(boardClone);
   document.body.appendChild(captureContainer);
 
-  // 5. 画像生成と保存処理
+    // 5. 画像生成と保存処理
   html2canvas(captureContainer, {
     backgroundColor: '#181a29',
     scale: 2,
@@ -748,10 +748,14 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   }).then(canvas => {
     document.body.removeChild(captureContainer);
 
-    const imageURL = canvas.toDataURL('image/png');
+    // MIMEタイプを 'image/webp' に変更
+    const imageURL = canvas.toDataURL('image/webp', 0.92); // 0.92は画質（0.0〜1.0）
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
-    downloadLink.download = `${titleText}-${currentGridSize}x${currentGridSize}.png`;
+    
+    // 拡張子を .webp に変更
+    downloadLink.download = `${titleText}-${currentGridSize}x${currentGridSize}.webp`;
+    
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
