@@ -4,32 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>タタ配置ツール</title>
-  <!-- 外部CSSの読み込み -->
   <link rel="stylesheet" href="./style.css">
-  <!-- html2canvasライブラリの読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
 <div class="container" id="appContainer">
- <!-- 例：タイトルを入力可能にする場合 -->
-<input type="text" class="app-title" value="タタ配置ツール" placeholder="タイトルを入力">
-  </div>
 
-  <!-- 左カラム（ボタン関係・切替・盤面をひとまとめに配置） -->
+  <!-- 左カラム（タイトル・ボタン関係・盤面） -->
   <div class="left-column">
+    <!-- タイトル入力欄 -->
+    <div class="title-container">
+      <input type="text" class="app-title-input" id="appTitleInput" value="タタ配置ツール" placeholder="タイトルを入力..." maxlength="20">
+    </div>
+
     <div class="header-tools">
       <div style="display: flex; gap: 6px; align-items: center;">
-        <!-- ティア表メーカーへの戻り・遷移ボタン -->
         <a href="./tierlist.html" class="btn btn-back" style="text-decoration: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; padding: 4px 8px; font-size: 11px;">
-  <span>← ティア表</span>
-  <span>メーカーへ</span>
-</a>
+          <span>← ティア表</span>
+          <span>メーカーへ</span>
+        </a>
         <button class="btn" id="clearBtn">盤面クリア</button>
         <button class="btn" id="saveBtn" style="background: #2563eb; border-color: #3b82f6; color: #fff;">画像保存</button>
         <span style="font-size: 11px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
       </div>
-      <!-- 三本線メニューボタン -->
+      
       <button class="menu-btn" id="menuOpenBtn" aria-label="メニューを開く">
         <span></span>
         <span></span>
@@ -37,7 +36,7 @@
       </button>
     </div>
 
-    <!-- ゾンビラッシュ時のみ表示される1P / 2P 切り替えボタン -->
+    <!-- プレイヤー切り替えボタン（ゾンビラッシュ用） -->
     <div class="player-switch-container" id="playerSwitchContainer">
       <button class="player-btn p1 active" id="btn1P">1P 視点</button>
       <button class="player-btn p2" id="btn2P">2P 視点</button>
@@ -54,7 +53,6 @@
   <div class="monster-frame" id="monsterFrame">
     <div class="monster-title">タタ選択</div>
 
-    <!-- アコーディオン（絞り込みフィルター） -->
     <details class="filter-details">
       <summary class="filter-summary">
         <span>絞り込みフィルターを開く</span>
@@ -62,7 +60,6 @@
       </summary>
       
       <div class="filter-section">
-        <!-- 1. 属性フィルター -->
         <div class="filter-row" id="attrFilterGroup">
           <span class="filter-label">属性:</span>
           <button class="filter-btn active" data-attr="all">すべて</button>
@@ -73,7 +70,6 @@
           <button class="filter-btn" data-attr="雷"><img src="雷属性.webp" alt="雷" onerror="this.style.display='none'">雷</button>
         </div>
 
-        <!-- 2. タイプ フィルター -->
         <div class="filter-row" id="typeFilterGroup">
           <span class="filter-label">タイプ:</span>
           <button class="filter-btn active" data-type="all">すべて</button>
@@ -87,15 +83,12 @@
       </div>
     </details>
 
-    <!-- モンスター一覧 -->
     <div class="monster-grid" id="monsterGrid"></div>
   </div>
 </div>
 
-<!-- ドラッグ中に指/マウスに追従するゴースト画像要素 -->
 <div id="dragGhost" class="drag-ghost"></div>
 
-<!-- 右からスライドしてくるドロワーメニュー -->
 <div class="drawer-overlay" id="drawerOverlay">
   <div class="drawer-menu" id="drawerMenu">
     <div>
@@ -103,7 +96,6 @@
       <div class="drawer-item active" id="normalStageBtn">ノーマルステージ (5×5)</div>
       <div class="drawer-item" id="zombieStageBtn">ゾンビラッシュ (6×6)</div>
 
-      <!-- 操作説明のヒント -->
       <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
         <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
         ・タタをタップ選択、または直接ドラッグして盤面に配置できます。<br>
@@ -118,7 +110,6 @@
   </div>
 </div>
 
-<!-- 外部のデータファイル・スクリプトファイルの読み込み -->
 <script src="monsters.js"></script>
 <script src="app.js"></script>
 
