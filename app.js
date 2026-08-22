@@ -650,7 +650,7 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 画像保存ボタンのイベント
+// 保存ボタン処理（正常化済み）
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -686,7 +686,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   // 3. 盤面クローン
   const boardClone = boardFrame.cloneNode(true);
 
-  // 4. 正方形比率の保持
+  // 4. 正方形比率の維持
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
