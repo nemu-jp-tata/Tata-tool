@@ -650,105 +650,19 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-document.getElementById('saveBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  
-  const boardFrame = document.getElementById('boardFrame');
-  const appTitleEl = document.querySelector('.app-title');
-  
-  // input要素の入力値、または通常の要素のテキストを取得
-  let titleText = 'タタ配置ツール';
-  if (appTitleEl) {
-    titleText = (appTitleEl.tagName === 'INPUT' || appTitleEl.tagName === 'TEXTAREA') 
-      ? appTitleEl.value.trim() 
-      : appTitleEl.textContent.trim();
-  }
-  if (!titleText) titleText = 'タタ配置ツール';
-
-  // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
-  const captureContainer = document.createElement('div');
-  captureContainer.style.position = 'absolute';
-  captureContainer.style.top = '-9999px';
-  captureContainer.style.left = '-9999px';
-  captureContainer.style.width = `${boardFrame.offsetWidth}px`;
-  captureContainer.style.background = '#181a29';
-  captureContainer.style.padding = '16px';
-  captureContainer.style.boxSizing = 'border-box';
-  captureContainer.style.borderRadius = '12px';
-
-  // 2. 題名（タイトル）要素の生成
-  const titleEl = document.createElement('div');
-  titleEl.textContent = titleText;
-  titleEl.style.fontSize = '20px';
-  titleEl.style.fontWeight = 'bold';
-  titleEl.style.color = '#f8fafc';
-  titleEl.style.textAlign = 'center';
-  titleEl.style.marginBottom = '12px';
-
-  // 3. 盤面フレームをそのままクローン
-  const boardClone = boardFrame.cloneNode(true);
-
-  // 4. 画像の正方形比率（1:1）を固定保持させる処理
+// 画像保存ボタンのイベント
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
   const boardFrame = document.getElementById('boardFrame');
   const titleInput = document.getElementById('appTitleInput');
   
-  // 入力されたタイトルを取得（未入力の場合はデフォルト値）
-  const titleText = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : 'タタ配置ツール';
-
-  // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
-  const captureContainer = document.createElement('div');
-  captureContainer.style.position = 'absolute';
-  captureContainer.style.top = '-9999px';
-  captureContainer.style.left = '-9999px';
-  captureContainer.style.width = `${boardFrame.offsetWidth}px`;
-  captureContainer.style.background = '#181a29';
-  captureContainer.style.padding = '16px';
-  captureContainer.style.boxSizing = 'border-box';
-  captureContainer.style.borderRadius = '12px';
-
-  // 2. 題名（タイトル）要素の生成（画像の上にテキストとして合成）
-  const titleEl = document.createElement('div');
-  titleEl.textContent = titleText;
-  titleEl.style.fontSize = '20px';
-  titleEl.style.fontWeight = 'bold';
-  titleEl.style.color = '#f8fafc';
-  titleEl.style.textAlign = 'center';
-  titleEl.style.marginBottom = '12px';
-
-  // 3. 盤面フレームをそのままクローン
-  const boardClone = boardFrame.cloneNode(true);
-
-  // 4. 画像の正方形比率（1:1）を固定保持させる処理
-  const cells = boardClone.querySelectorAll('.cell');
-  cells.forEach(cell => {
-    cell.style.aspectRatio = '1 / 1';
-    cell.style.width = '100%';
-    cell.style.height = '100%';
-    
-    const img = cell.querySelector('img');
-    if (img) {
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-    }
-  });
-
-document.getElementById('saveBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  
-  const boardFrame = document.getElementById('boardFrame');
-  const titleInput = document.getElementById('appTitleInput');
-  
-  // 入力フォームから値を直接取得（空文字の場合はデフォルト値）
   let titleText = 'タタ配置ツール';
   if (titleInput && titleInput.value.trim() !== '') {
     titleText = titleInput.value.trim();
   }
 
-  // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
+  // 1. キャプチャ用の一時コンテナを作成
   const captureContainer = document.createElement('div');
   captureContainer.style.position = 'absolute';
   captureContainer.style.top = '-9999px';
@@ -759,9 +673,9 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   captureContainer.style.boxSizing = 'border-box';
   captureContainer.style.borderRadius = '12px';
 
-  // 2. 入力されたタイトルを埋め込んだDOM要素を生成
+  // 2. タイトル要素の生成
   const titleEl = document.createElement('div');
-  titleEl.textContent = titleText; // ここに入力文字が入ります
+  titleEl.textContent = titleText;
   titleEl.style.fontSize = '20px';
   titleEl.style.fontWeight = 'bold';
   titleEl.style.color = '#f8fafc';
@@ -769,10 +683,10 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   titleEl.style.marginBottom = '12px';
   titleEl.style.fontFamily = 'sans-serif';
 
-  // 3. 盤面フレームをクローン
+  // 3. 盤面クローン
   const boardClone = boardFrame.cloneNode(true);
 
-  // 4. 画像の崩れ防止（正方形維持）
+  // 4. 正方形比率の保持
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
@@ -791,7 +705,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   captureContainer.appendChild(boardClone);
   document.body.appendChild(captureContainer);
 
-  // 5. WebP画像としてレンダリング＆ダウンロード
+  // 5. WebP出力・保存処理
   html2canvas(captureContainer, {
     backgroundColor: '#181a29',
     scale: 2,
@@ -799,7 +713,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   }).then(canvas => {
     document.body.removeChild(captureContainer);
 
-    // WebP形式で出力
     const imageURL = canvas.toDataURL('image/webp', 0.92);
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
@@ -816,8 +729,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     }
   });
 });
-
-
 
 btn1P.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -874,5 +785,6 @@ zombieStageBtn.addEventListener('click', () => {
   drawerOverlay.classList.remove('open');
 });
 
+// 初期化実行
 buildBoard(currentGridSize);
 renderMonsters();
