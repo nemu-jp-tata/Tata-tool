@@ -652,27 +652,60 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
 
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
-  const boardFrame = document.getElementById('boardFrame');
-  const cells = document.querySelectorAll('.cell');
   
+  const boardFrame = document.getElementById('boardFrame');
+  const appTitle = document.querySelector('.app-title');
+  const titleText = appTitle ? appTitle.textContent.trim() : 'タタ配置ツール';
+
+  // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
+  const captureContainer = document.createElement('div');
+  captureContainer.style.position = 'absolute';
+  captureContainer.style.top = '-9999px';
+  captureContainer.style.left = '-9999px';
+  captureContainer.style.width = `${boardFrame.offsetWidth}px`;
+  captureContainer.style.background = '#181a29';
+  captureContainer.style.padding = '16px';
+  captureContainer.style.boxSizing = 'border-box';
+  captureContainer.style.borderRadius = '12px';
+
+  // 2. 題名（タイトル）要素の生成
+  const titleEl = document.createElement('div');
+  titleEl.textContent = titleText;
+  titleEl.style.fontSize = '20px';
+  titleEl.style.fontWeight = 'bold';
+  titleEl.style.color = '#f8fafc';
+  titleEl.style.textAlign = 'center';
+  titleEl.style.marginBottom = '12px';
+
+  // 3. 盤面フレームをそのままクローン
+  const boardClone = boardFrame.cloneNode(true);
+
+  // 4. 画像の正方形比率（1:1）を固定保持させる処理
+  const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
-    const cellWidth = cell.getBoundingClientRect().width;
-    cell.style.height = `${cellWidth}px`;
+    cell.style.aspectRatio = '1 / 1';
+    cell.style.width = '100%';
+    cell.style.height = '100%';
+    
+    const img = cell.querySelector('img');
+    if (img) {
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+    }
   });
 
-  const rect = boardFrame.getBoundingClientRect();
-  
-  html2canvas(boardFrame, {
+  captureContainer.appendChild(titleEl);
+  captureContainer.appendChild(boardClone);
+  document.body.appendChild(captureContainer);
+
+  // 5. 画像生成と保存処理
+  html2canvas(captureContainer, {
     backgroundColor: '#181a29',
-    scale: 1.5,
-    width: rect.width,
-    height: rect.height,
-    windowWidth: document.documentElement.clientWidth,
+    scale: 2,
     useCORS: true
   }).then(canvas => {
-    cells.forEach(cell => {
-      cell.style.height = '';
-    });
+    document.body.removeChild(captureContainer);
 
     const imageURL = canvas.toDataURL('image/png');
     const downloadLink = document.createElement('a');
@@ -684,9 +717,9 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   }).catch(err => {
     console.error('画像保存エラー:', err);
     alert('画像の保存に失敗しました。');
-    cells.forEach(cell => {
-      cell.style.height = '';
-    });
+    if (document.body.contains(captureContainer)) {
+      document.body.removeChild(captureContainer);
+    }
   });
 });
 
