@@ -654,8 +654,16 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
   const boardFrame = document.getElementById('boardFrame');
-  const appTitle = document.querySelector('.app-title');
-  const titleText = appTitle ? appTitle.textContent.trim() : 'タタ配置ツール';
+  const appTitleEl = document.querySelector('.app-title');
+  
+  // input要素の入力値、または通常の要素のテキストを取得
+  let titleText = 'タタ配置ツール';
+  if (appTitleEl) {
+    titleText = (appTitleEl.tagName === 'INPUT' || appTitleEl.tagName === 'TEXTAREA') 
+      ? appTitleEl.value.trim() 
+      : appTitleEl.textContent.trim();
+  }
+  if (!titleText) titleText = 'タタ配置ツール';
 
   // 1. キャプチャ用の一時コンテナを作成（画面外に設置）
   const captureContainer = document.createElement('div');
@@ -710,7 +718,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     const imageURL = canvas.toDataURL('image/png');
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
-    downloadLink.download = `monster-board-${currentGridSize}x${currentGridSize}.png`;
+    downloadLink.download = `${titleText}-${currentGridSize}x${currentGridSize}.png`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
