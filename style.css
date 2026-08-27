@@ -166,8 +166,8 @@ body {
 }
 
 .cell.p2-cell {
-  border: 2px solid #3b4261;
-  background: rgba(59, 130, 246, 0.1);
+  border: 2px solid #3b82f6; /* #3b4261 から鮮やかな青へ変更 */
+  background: rgba(59, 130, 246, 0.15); /* 背景の青みもほんの少し強調 */
 }
 
 /* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
