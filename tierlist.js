@@ -93,7 +93,6 @@ function setupMonsterImage(img, badge, monsterName) {
       this.dataset.retry = '2';
       this.src = `${monsterName}.jpg`;
     } else {
-      // 読み込み完全失敗時：imgを非表示にし、名前入りのバッジを表示
       this.style.display = 'none';
       if (badge) {
         badge.textContent = monsterName;
@@ -119,7 +118,54 @@ function createMonsterCard(monster) {
 
   setupMonsterImage(img, badge, monster.name);
   attachDragEvents(card);
+  attachCardEvents(card);
   return card;
+}
+
+// 単一カードのTを次の段階（T1 -> T2 -> T3 -> T4 -> T1）へ切り替える処理
+function cycleSingleMonsterTier(card) {
+  const species = card.dataset.species;
+  const currentName = card.dataset.name;
+
+  const speciesVariants = rawMonsters.filter(m => m.species === species);
+  if (speciesVariants.length <= 1) return;
+
+  const currentIndex = speciesVariants.findIndex(m => m.name === currentName);
+  const nextIndex = (currentIndex + 1) % speciesVariants.length;
+  const nextMonster = speciesVariants[nextIndex];
+
+  if (nextMonster) {
+    card.dataset.name = nextMonster.name;
+    const img = card.querySelector('img');
+    const badge = card.querySelector('.no-image-badge');
+
+    if (img) {
+      setupMonsterImage(img, badge, nextMonster.name);
+      img.src = `${nextMonster.name}.webp`;
+    }
+    saveState();
+  }
+}
+
+// カードに対する個別イベントを設定（ダブルクリック／ダブルタップ）
+function attachCardEvents(card) {
+  // PC向け：ダブルクリック
+  card.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    cycleSingleMonsterTier(card);
+  });
+
+  // スマホ向け：ダブルタップ判定
+  let lastTap = 0;
+  card.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if (tapLength < 300 && tapLength > 0) {
+      e.preventDefault();
+      cycleSingleMonsterTier(card);
+    }
+    lastTap = currentTime;
+  });
 }
 
 function renderMonsters() {
@@ -131,12 +177,10 @@ function renderMonsters() {
   });
 }
 
-// 未配置枠にあるモンスターの画像を指定したT（1~4）へ変更する関数
-function changePoolMonstersTier(targetTier) {
-  if (!monsterPool) return;
-  const poolCards = monsterPool.querySelectorAll('.monster-card');
+function changeAllMonstersTier(targetTier) {
+  const allCards = document.querySelectorAll('.monster-card');
   
-  poolCards.forEach(card => {
+  allCards.forEach(card => {
     const species = card.dataset.species;
     const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === Number(targetTier));
     
@@ -151,6 +195,7 @@ function changePoolMonstersTier(targetTier) {
       }
     }
   });
+  saveState();
 }
 
 function createRowElement(id, labelText, colorHex) {
@@ -431,9 +476,6 @@ function clearHighlight() {
   }
 }
 
-// ==========================================
-// 状態データの軽量化
-// ==========================================
 function getCurrentStateJson() {
   const rowsData = [];
   const monstersData = [];
@@ -451,7 +493,8 @@ function getCurrentStateJson() {
     cards.forEach(card => {
       monstersData.push([
         card.dataset.species,
-        index
+        index,
+        card.dataset.name
       ]);
     });
   });
@@ -470,9 +513,6 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, jsonStr);
 }
 
-// ==========================================
-// 状態の復元
-// ==========================================
 function applyState(jsonStr) {
   if (!tierTable) return;
   document.querySelectorAll('.tier-row').forEach(r => r.remove());
@@ -534,6 +574,7 @@ function applyState(jsonStr) {
       monsters.forEach(item => {
         const species = Array.isArray(item) ? item[0] : (item.s !== undefined ? item.s : item.species);
         const rowIdx = Array.isArray(item) ? item[1] : (item.r !== undefined ? item.r : item.rowId);
+        const savedName = Array.isArray(item) ? item[2] : (item.n !== undefined ? item.n : item.name);
 
         const card = monsterPool.querySelector(`[data-species="${species}"]`);
 
@@ -545,7 +586,7 @@ function applyState(jsonStr) {
         }
 
         if (card && targetRowEl) {
-          let monsterName = card.dataset.name;
+          let monsterName = savedName || card.dataset.name;
           if (!monsterName && typeof rawMonsters !== 'undefined') {
             const mData = rawMonsters.find(m => m.species === species);
             if (mData) monsterName = mData.name;
@@ -591,9 +632,6 @@ function loadState() {
   applyState(saved);
 }
 
-// ==========================================
-// Supabase を使用した短縮共有URL生成
-// ==========================================
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
@@ -611,7 +649,6 @@ async function generateShareUrl() {
       ? LZString.compressToEncodedURIComponent(jsonStr) 
       : jsonStr;
 
-    // Supabaseの tier_lists テーブルに新レコード保存
     const { data, error } = await supabaseClient
       .from('tier_lists')
       .insert([{ data: dataToSave }])
@@ -619,7 +656,7 @@ async function generateShareUrl() {
 
     if (error) throw error;
 
-    const shortId = data[0].id; // 自動生成されたUUID
+    const shortId = data[0].id;
     const shareUrl = `${window.location.origin}${window.location.pathname}?id=${shortId}`;
 
     copyToClipboard(shareUrl, '短縮した共有用リンクをクリップボードにコピーしました！\nそのまま貼り付けて共有してください。');
@@ -635,9 +672,6 @@ async function generateShareUrl() {
   }
 }
 
-// ==========================================
-// URLからの復元（Supabase ＆ 過去URL互換）
-// ==========================================
 async function loadFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const shortId = params.get('id');
@@ -688,7 +722,6 @@ async function loadFromUrl() {
   loadState();
 }
 
-// クリップボードコピーの共通化関数
 async function copyToClipboard(text, successMessage) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
@@ -758,11 +791,10 @@ function setupEvents() {
   document.querySelectorAll('.btn-tier-switch').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetTier = e.target.dataset.tier;
-      changePoolMonstersTier(targetTier);
+      changeAllMonstersTier(targetTier);
     });
   });
 
-  // 画像保存処理（現在画面に表示されている画像をそのまま読み込んで保存）
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
