@@ -795,6 +795,7 @@ function setupEvents() {
     });
   });
 
+  // 画像保存処理（WebP形式での保存 ＆ 右側コントロールエリアの除外）
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
@@ -804,11 +805,12 @@ function setupEvents() {
         backgroundColor: '#000000',
         scale: 2,
         useCORS: true,
-        windowWidth: 1200
+        windowWidth: 1200,
+        ignoreElements: (element) => element.classList.contains('tier-row-controls') // 右側の操作エリアを除外
       }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'tier-list.png';
-        link.href = canvas.toDataURL('image/png');
+        link.download = 'tier-list.webp';
+        link.href = canvas.toDataURL('image/webp', 0.95);
         link.click();
       }).catch(err => {
         console.error('保存エラー:', err);
