@@ -15,6 +15,7 @@ const tierTableTitle = document.getElementById('tierTableTitle');
 
 let draggingCard = null;
 let currentHoveredDropzone = null;
+let currentSelectedTier = 1; // 現在選択されているT段階を保持
 
 // リアルタイムな隙間を作るプレースホルダー要素
 const placeholder = document.createElement('div');
@@ -125,14 +126,14 @@ function renderMonsters() {
   });
 }
 
-// 未配置枠にあるモンスターの画像を指定したT（1~4）へ変更する関数
-function changePoolMonstersTier(targetTier) {
-  if (!monsterPool) return;
-  const poolCards = monsterPool.querySelectorAll('.monster-card');
+// 画面全体のすべてのモンスターカード（プール＋ティア表内）を指定したT（1~4）の画像に変更する関数
+function changeAllMonstersTier(targetTier) {
+  currentSelectedTier = Number(targetTier);
+  const allCards = document.querySelectorAll('.monster-card');
   
-  poolCards.forEach(card => {
+  allCards.forEach(card => {
     const species = card.dataset.species;
-    const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === Number(targetTier));
+    const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === currentSelectedTier);
     
     if (targetMonster) {
       card.dataset.name = targetMonster.name;
@@ -541,26 +542,13 @@ function applyState(jsonStr) {
         }
 
         if (card && targetRowEl) {
-          let monsterName = card.dataset.name;
-          if (!monsterName && typeof rawMonsters !== 'undefined') {
-            const mData = rawMonsters.find(m => m.species === species);
-            if (mData) monsterName = mData.name;
-          }
-
-          if (monsterName) {
-            card.dataset.name = monsterName;
-            const img = card.querySelector('img');
-            const badge = card.querySelector('.no-image-badge');
-            if (img) {
-              setupMonsterImage(img, badge, monsterName);
-              img.src = `${monsterName}.webp`;
-            }
-          }
-
           const targetDropzone = targetRowEl.querySelector('.tier-dropzone');
           if (targetDropzone) targetDropzone.appendChild(card);
         }
       });
+
+      // 配置完了後、現在選択されているT設定を全カードに反映
+      changeAllMonstersTier(currentSelectedTier);
     }
   } catch (e) {
     console.error('復元エラー:', e);
@@ -754,7 +742,7 @@ function setupEvents() {
   document.querySelectorAll('.btn-tier-switch').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetTier = e.target.dataset.tier;
-      changePoolMonstersTier(targetTier);
+      changeAllMonstersTier(targetTier);
     });
   });
 
@@ -763,25 +751,31 @@ function setupEvents() {
     saveImgBtn.addEventListener('click', () => {
       const tableArea = document.getElementById('tierTableArea');
 
+      // キャプチャ直前に選択中のT画像へ確実に同期させる
+      changeAllMonstersTier(currentSelectedTier);
+
       tableArea.classList.add('exporting');
 
-      html2canvas(tableArea, {
-        backgroundColor: '#000000',
-        scale: 2,
-        useCORS: true,
-        windowWidth: 1200
-      }).then(canvas => {
-        tableArea.classList.remove('exporting');
+      // 画像読み込み完了を少し待ってからhtml2canvasを実行
+      setTimeout(() => {
+        html2canvas(tableArea, {
+          backgroundColor: '#000000',
+          scale: 2,
+          useCORS: true,
+          windowWidth: 1200
+        }).then(canvas => {
+          tableArea.classList.remove('exporting');
 
-        const link = document.createElement('a');
-        link.download = 'tier-list.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(err => {
-        console.error('保存エラー:', err);
-        tableArea.classList.remove('exporting');
-        alert('画像の保存に失敗しました。');
-      });
+          const link = document.createElement('a');
+          link.download = 'tier-list.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }).catch(err => {
+          console.error('保存エラー:', err);
+          tableArea.classList.remove('exporting');
+          alert('画像の保存に失敗しました。');
+        });
+      }, 100);
     });
   }
 }
