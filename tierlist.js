@@ -44,18 +44,13 @@ const COLOR_PALETTE = [
   { name: '灰', hex: '#a6a6a6' }
 ];
 
+// 初期表示を S, A, B, C, D の 5行に設定
 const DEFAULT_ROWS = [
-  { id: 'tier-1', label: 'S+', color: '#ff7f7f' },
-  { id: 'tier-2', label: 'S', color: '#ffbf7f' },
-  { id: 'tier-3', label: 'A+', color: '#ffff7f' },
-  { id: 'tier-4', label: 'A', color: '#bfff7f' },
-  { id: 'tier-5', label: 'B+', color: '#7fff7f' },
-  { id: 'tier-6', label: 'B', color: '#7fbfff' },
-  { id: 'tier-7', label: 'C+', color: '#7f7fff' },
-  { id: 'tier-8', label: 'C', color: '#bf7fff' },
-  { id: 'tier-9', label: 'D+', color: '#ff7fff' },
-  { id: 'tier-10', label: 'D', color: '#a6a6a6' },
-  { id: 'tier-11', label: 'E', color: '#a6a6a6' }
+  { id: 'tier-1', label: 'S', color: '#ff7f7f' },
+  { id: 'tier-2', label: 'A', color: '#ffbf7f' },
+  { id: 'tier-3', label: 'B', color: '#ffff7f' },
+  { id: 'tier-4', label: 'C', color: '#7fff7f' },
+  { id: 'tier-5', label: 'D', color: '#a6a6a6' }
 ];
 
 const MIN_ROWS = 4;
@@ -795,7 +790,6 @@ function setupEvents() {
     });
   });
 
-  // 画像保存処理（WebP形式での保存 ＆ 右側コントロールエリアの除外）
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
@@ -806,7 +800,7 @@ function setupEvents() {
         scale: 2,
         useCORS: true,
         windowWidth: 1200,
-        ignoreElements: (element) => element.classList.contains('tier-row-controls') // 右側の操作エリアを除外
+        ignoreElements: (element) => element.classList.contains('tier-row-controls')
       }).then(canvas => {
         const link = document.createElement('a');
         link.download = 'tier-list.webp';
