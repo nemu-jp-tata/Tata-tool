@@ -53,13 +53,13 @@ function updateChipsetAreaVisibility(isZombieStage) {
   }
 }
 
-// チップ一覧を描画する関数（アクションエリアのレイアウトとボタンのはみ出しを修正）
+// チップ一覧を描画する関数（アクションエリアのレイアウト改善 ＆ チップ画像上でのスクロール有効化）
 function renderChips() {
   monsterGrid.innerHTML = '';
 
   const selectedChips = selectedChipsMap[currentPlayer];
 
-  // セットボタン用のコンテナを作成・配置（flex-wrapや余白を調整して文字が見切れないように修正）
+  // セットボタン用のコンテナを作成・配置
   const actionArea = document.createElement('div');
   actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%;';
   actionArea.innerHTML = `
@@ -73,7 +73,7 @@ function renderChips() {
     applyChipsToSlots();
   });
 
-  // 全49種のチップを描画（pointer-events: none を指定して画像上でのスクロールを妨げないように改善）
+  // 全49種のチップを描画（pointer-events: none と touch-action: pan-y を指定して画像上でのスクロールを完全に許可）
   chipsetList.forEach(chip => {
     const isSelected = selectedChips.some(c => c.id === chip.id);
     const item = document.createElement('div');
@@ -81,7 +81,7 @@ function renderChips() {
     item.style.position = 'relative';
 
     item.innerHTML = `
-      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; touch-action: pan-y;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
     `;
 
     item.addEventListener('click', (e) => {
