@@ -1,7 +1,10 @@
 // 選択中のモード（'monster' または 'chip'）
 let currentSelectionMode = 'monster';
-// 選択されたチップのリスト（最大3枚）
-let selectedChips = [];
+// プレイヤーごとの選択されたチップのリスト（最大3枚）
+let selectedChipsMap = {
+  '1P': [],
+  '2P': []
+};
 
 // チップセットエリアの表示・非表示を切り替える関数を更新
 function updateChipsetAreaVisibility(isZombieStage) {
@@ -50,15 +53,17 @@ function updateChipsetAreaVisibility(isZombieStage) {
   }
 }
 
-// チップ一覧を描画する関数
+// チップ一覧を描画する関数（スクロール改善のため pointerdown の伝搬やタッチ操作を最適化）
 function renderChips() {
   monsterGrid.innerHTML = '';
+
+  const selectedChips = selectedChipsMap[currentPlayer];
 
   // セットボタン用のコンテナを作成・配置
   const actionArea = document.createElement('div');
   actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #1e293b; padding: 8px; border-radius: 6px;';
   actionArea.innerHTML = `
-    <span style="font-size: 12px; color: #cbd5e1;">選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
+    <span style="font-size: 12px; color: #cbd5e1;">[${currentPlayer}] 選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
     <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 4px 12px; font-size: 12px; cursor: pointer;">セットする</button>
   `;
   monsterGrid.appendChild(actionArea);
@@ -80,6 +85,7 @@ function renderChips() {
       <div class="monster-name" style="font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${chip.name}</div>
     `;
 
+    // タッチスクロールを阻害しないよう、クリック（タップ）イベントのみで選択・解除を行う
     item.addEventListener('click', (e) => {
       e.stopPropagation();
       const index = selectedChips.findIndex(c => c.id === chip.id);
@@ -101,13 +107,14 @@ function renderChips() {
 
 // 選択した3枚のチップをスロットに反映する関数
 function applyChipsToSlots() {
+  const selectedChips = selectedChipsMap[currentPlayer];
   const slots = document.querySelectorAll('.chipset-slot');
   slots.forEach((slot, index) => {
     slot.innerHTML = '';
     if (selectedChips[index]) {
       const chip = selectedChips[index];
       slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+        <img src="${chip.img}" alt="${chip.name}" title="[${currentPlayer}] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
       `;
     }
   });
@@ -206,6 +213,7 @@ function saveBoardState() {
   });
   localStorage.setItem('monsterBoard_size', currentGridSize);
   localStorage.setItem('monsterBoard_cells', JSON.stringify(cellsData));
+  localStorage.setItem('monsterBoard_chips', JSON.stringify(selectedChipsMap));
 }
 
 // ローカルストレージから盤面状態を復元する関数
@@ -217,6 +225,12 @@ function loadBoardState() {
       fillCellWithMonster(cell, data);
     }
   });
+
+  const savedChips = JSON.parse(localStorage.getItem('monsterBoard_chips') || 'null');
+  if (savedChips) {
+    selectedChipsMap = savedChips;
+  }
+  applyChipsToSlots();
 }
 
 // セルにモンスター画像を設定し、ポインターイベントを付与する
@@ -287,27 +301,23 @@ function fillCellWithMonster(cell, data) {
         clearHoverHighlight();
 
         if (!isDragging) {
-          // タップされた場合：盤面から削除
           cell.innerHTML = '';
           cell.className = 'cell';
           saveBoardState();
           return;
         }
 
-        // ドラッグ終了時の処理
         dragGhost.style.display = 'none';
         const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
         const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
         const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
 
-        // モンスター選択ボックスの上でドロップされた場合 → 元に戻さず削除する
         if (isOverMonsterFrame) {
           draggingItem = null;
           saveBoardState();
           return;
         }
 
-        // 盤面外にドロップされた場合 → 元の位置に戻す
         if (!targetCell || !mainGrid.contains(targetCell)) {
           revertToSourceCell();
           return;
@@ -315,7 +325,6 @@ function fillCellWithMonster(cell, data) {
 
         const targetIndex = cells.indexOf(targetCell);
         
-        // 移動先セルに既に存在する画像データを取得
         const existingImg = targetCell.querySelector('img, .no-image-badge');
         let targetCellData = null;
         if (existingImg && existingImg.dataset) {
@@ -330,10 +339,9 @@ function fillCellWithMonster(cell, data) {
 
         const targetSpecies = draggingItem.species;
 
-        // 同種族が元々自分自身だったか・交換対象かどうかのチェック
         let isSpeciesOnBoard = false;
         cells.forEach((c, idx) => {
-          if (idx === targetIndex || idx === sourceIndex) return; // 移動先・移動元は除外して判定
+          if (idx === targetIndex || idx === sourceIndex) return;
           const im = c.querySelector('img, .no-image-badge');
           if (im && im.dataset && im.dataset.species === targetSpecies) {
             if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
@@ -349,7 +357,6 @@ function fillCellWithMonster(cell, data) {
           return;
         }
 
-        // 1. 移動先のセルにドラッグ要素を配置
         targetCell.className = 'cell';
         if (currentGridSize === 6) {
           targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
@@ -363,7 +370,6 @@ function fillCellWithMonster(cell, data) {
           className: targetCell.className
         });
 
-        // 2. 移動先にタタが存在していた場合、移動元（sourceCell）へそれを配置して入れ替える
         const sourceCell = cells[sourceIndex];
         if (targetCellData && sourceCell) {
           fillCellWithMonster(sourceCell, targetCellData);
@@ -423,7 +429,6 @@ function buildBoard(size) {
     const cell = document.createElement('div');
     cell.className = 'cell';
     
-    // 空セルをクリックして新規配置する処理
     cell.addEventListener('click', (e) => {
       e.stopPropagation();
 
@@ -769,6 +774,9 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
     cell.className = 'cell';
   });
   localStorage.removeItem('monsterBoard_cells');
+  localStorage.removeItem('monsterBoard_chips');
+  selectedChipsMap = { '1P': [], '2P': [] };
+  applyChipsToSlots();
   renderMonsters();
 });
 
@@ -785,11 +793,9 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     titleText = titleInput.value.trim();
   }
 
-  // キャプチャ時の一時非表示切り替え（1P/2Pボタンのみ非表示に）
   const originalPlayerSwitchDisplay = playerSwitchContainer.style.display;
   playerSwitchContainer.style.display = 'none';
 
-  // 1. キャプチャ用の一時コンテナを作成
   const captureContainer = document.createElement('div');
   captureContainer.style.position = 'absolute';
   captureContainer.style.top = '-9999px';
@@ -800,7 +806,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   captureContainer.style.boxSizing = 'border-box';
   captureContainer.style.borderRadius = '12px';
 
-  // 2. タイトル要素の生成
   const titleEl = document.createElement('div');
   titleEl.textContent = titleText;
   titleEl.style.fontSize = '20px';
@@ -810,10 +815,8 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   titleEl.style.marginBottom = '12px';
   titleEl.style.fontFamily = 'sans-serif';
 
-  // 3. 盤面クローン
   const boardClone = boardFrame.cloneNode(true);
 
-  // 4. 正方形比率の維持
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
@@ -831,7 +834,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   captureContainer.appendChild(titleEl);
   captureContainer.appendChild(boardClone);
 
-  // ゾンビラッシュ時はチップセットスロット部分も含めて一緒にキャプチャに含める
   if (currentGridSize === 6) {
     const chipsetContainer = document.getElementById('chipsetContainer');
     if (chipsetContainer && chipsetContainer.style.display !== 'none') {
@@ -842,7 +844,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   document.body.appendChild(captureContainer);
 
-  // 5. WebP出力・保存処理
   html2canvas(captureContainer, {
     backgroundColor: '#181a29',
     scale: 2,
@@ -874,6 +875,11 @@ btn1P.addEventListener('click', (e) => {
   currentPlayer = "1P";
   btn1P.classList.add('active');
   btn2P.classList.remove('active');
+  if (currentSelectionMode === 'chip') {
+    renderChips();
+  } else {
+    applyChipsToSlots();
+  }
 });
 
 btn2P.addEventListener('click', (e) => {
@@ -881,6 +887,11 @@ btn2P.addEventListener('click', (e) => {
   currentPlayer = "2P";
   btn2P.classList.add('active');
   btn1P.classList.remove('active');
+  if (currentSelectionMode === 'chip') {
+    renderChips();
+  } else {
+    applyChipsToSlots();
+  }
 });
 
 const menuOpenBtn = document.getElementById('menuOpenBtn');
@@ -905,6 +916,7 @@ drawerMenu.addEventListener('click', (e) => {
 normalStageBtn.addEventListener('click', () => {
   if (currentGridSize !== 5) {
     localStorage.removeItem('monsterBoard_cells');
+    localStorage.removeItem('monsterBoard_chips');
   }
   currentSelected = null;
   selectedNameEl.textContent = 'なし';
@@ -916,11 +928,13 @@ normalStageBtn.addEventListener('click', () => {
 zombieStageBtn.addEventListener('click', () => {
   if (currentGridSize !== 6) {
     localStorage.removeItem('monsterBoard_cells');
+    localStorage.removeItem('monsterBoard_chips');
   }
   currentSelected = null;
   selectedNameEl.textContent = 'なし';
   buildBoard(6);
   renderMonsters();
+  drawerOverlay.classList.min?.('open'); // 安全対策
   drawerOverlay.classList.remove('open');
 });
 
