@@ -292,26 +292,27 @@ function updateRowControlsState() {
   });
 }
 
+// 判定ロジックの改善：ドラッグ中のカードおよびプレースホルダーを除外してスムーズに計算
 function getDragAfterElement(dropzone, x, y) {
-  const draggableElements = Array.from(dropzone.querySelectorAll('.monster-card:not(.dragging)'));
+  const draggableElements = Array.from(
+    dropzone.querySelectorAll('.monster-card:not(.dragging)')
+  );
 
   return draggableElements.reduce((closest, child) => {
     const box = child.getBoundingClientRect();
-    const offsetX = x - (box.left + box.width / 2);
-    const offsetY = y - (box.top + box.height / 2);
+    const centerX = box.left + box.width / 2;
+    const centerY = box.top + box.height / 2;
 
-    if (offsetY < 0 && offsetX < 0) {
-      const distance = Math.hypot(offsetX, offsetY);
+    // カーソルとカード中心の距離（2次元座標での絶対距離）
+    const distance = Math.hypot(x - centerX, y - centerY);
+
+    // X軸の位置で前後判定（カーソルがカードの中心より左側ならその前に配置）
+    if (x < centerX) {
       if (distance < closest.distance) {
         return { distance: distance, element: child };
       }
-    }
-    
-    const distance = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
-    if (distance < closest.distance) {
-      if (x < box.left + box.width / 2) {
-        return { distance: distance, element: child };
-      } else {
+    } else {
+      if (distance < closest.distance) {
         return { distance: distance, element: child.nextElementSibling };
       }
     }
@@ -367,7 +368,7 @@ function attachDragEvents(card) {
           
           if (afterElement == null) {
             dropzone.appendChild(placeholder);
-          } else {
+          } else if (afterElement !== placeholder && afterElement !== placeholder.nextElementSibling) {
             dropzone.insertBefore(placeholder, afterElement);
           }
         } else {
