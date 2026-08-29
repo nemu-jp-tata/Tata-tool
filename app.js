@@ -1,3 +1,118 @@
+// 選択中のモード（'monster' または 'chip'）
+let currentSelectionMode = 'monster';
+// 選択されたチップのリスト（最大3枚）
+let selectedChips = [];
+
+// チップセットエリアの表示・非表示を切り替える関数を更新
+function updateChipsetAreaVisibility(isZombieStage) {
+  const chipsetContainer = document.getElementById('chipsetContainer');
+  const monsterTitle = document.querySelector('.monster-title');
+  
+  if (chipsetContainer) {
+    chipsetContainer.style.display = isZombieStage ? 'block' : 'none';
+  }
+
+  // ゾンビラッシュ時のみ、モンスター選択エリアにタブ（切り替えボタン）を挿入・表示する
+  let modeSwitch = document.getElementById('selectionModeSwitch');
+  if (isZombieStage) {
+    if (!modeSwitch) {
+      modeSwitch = document.createElement('div');
+      modeSwitch.id = 'selectionModeSwitch';
+      modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
+      modeSwitch.innerHTML = `
+        <button id="modeMonsterBtn" class="filter-btn active" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">タタ選択</button>
+        <button id="modeChipBtn" class="filter-btn" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">チップ選択</button>
+      `;
+      monsterTitle.after(modeSwitch);
+
+      document.getElementById('modeMonsterBtn').addEventListener('click', () => {
+        currentSelectionMode = 'monster';
+        document.getElementById('modeMonsterBtn').classList.add('active');
+        document.getElementById('modeChipBtn').classList.remove('active');
+        document.querySelector('.filter-details').style.display = 'block';
+        renderMonsters();
+      });
+
+      document.getElementById('modeChipBtn').addEventListener('click', () => {
+        currentSelectionMode = 'chip';
+        document.getElementById('modeChipBtn').classList.add('active');
+        document.getElementById('modeMonsterBtn').classList.remove('active');
+        document.querySelector('.filter-details').style.display = 'none';
+        renderChips();
+      });
+    } else {
+      modeSwitch.style.display = 'flex';
+    }
+  } else {
+    if (modeSwitch) modeSwitch.style.display = 'none';
+    currentSelectionMode = 'monster';
+    document.querySelector('.filter-details').style.display = 'block';
+  }
+}
+
+// チップ一覧を描画する関数
+function renderChips() {
+  monsterGrid.innerHTML = '';
+
+  // セットボタン用のコンテナを作成・配置
+  const actionArea = document.createElement('div');
+  actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #1e293b; padding: 8px; border-radius: 6px;';
+  actionArea.innerHTML = `
+    <span style="font-size: 12px; color: #cbd5e1;">選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
+    <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 4px 12px; font-size: 12px; cursor: pointer;">セットする</button>
+  `;
+  monsterGrid.appendChild(actionArea);
+
+  document.getElementById('setChipsBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    applyChipsToSlots();
+  });
+
+  // 全49種のチップを描画
+  chipsetList.forEach(chip => {
+    const isSelected = selectedChips.some(c => c.id === chip.id);
+    const item = document.createElement('div');
+    item.className = `monster-item ${isSelected ? 'active' : ''}`;
+    item.style.position = 'relative';
+
+    item.innerHTML = `
+      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+      <div class="monster-name" style="font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${chip.name}</div>
+    `;
+
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = selectedChips.findIndex(c => c.id === chip.id);
+      if (index > -1) {
+        selectedChips.splice(index, 1);
+      } else {
+        if (selectedChips.length >= 3) {
+          alert('チップは最大3枚までしか選択できません。');
+          return;
+        }
+        selectedChips.push(chip);
+      }
+      renderChips();
+    });
+
+    monsterGrid.appendChild(item);
+  });
+}
+
+// 選択した3枚のチップをスロットに反映する関数
+function applyChipsToSlots() {
+  const slots = document.querySelectorAll('.chipset-slot');
+  slots.forEach((slot, index) => {
+    slot.innerHTML = '';
+    if (selectedChips[index]) {
+      const chip = selectedChips[index];
+      slot.innerHTML = `
+        <img src="${chip.img}" alt="${chip.name}" title="${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+      `;
+    }
+  });
+}
+
 // 全データをマッピング
 const allMonsters = rawMonstersData.map(m => ({
   name: m.name,
@@ -294,11 +409,13 @@ function buildBoard(size) {
     playerSwitchContainer.classList.add('show');
     zombieStageBtn.classList.add('active');
     normalStageBtn.classList.remove('active');
+    updateChipsetAreaVisibility(true);
   } else {
     playerSwitchContainer.classList.remove('show');
     normalStageBtn.classList.add('active');
     zombieStageBtn.classList.remove('active');
     currentPlayer = "1P";
+    updateChipsetAreaVisibility(false);
   }
 
   mainGrid.innerHTML = '';
@@ -397,6 +514,11 @@ function buildBoard(size) {
 const monsterGrid = document.getElementById('monsterGrid');
 
 function renderMonsters() {
+  if (currentSelectionMode === 'chip' && currentGridSize === 6) {
+    renderChips();
+    return;
+  }
+
   monsterGrid.innerHTML = '';
 
   const filtered = monstersData.filter(m => {
