@@ -15,7 +15,6 @@ const tierTableTitle = document.getElementById('tierTableTitle');
 
 let draggingCard = null;
 let currentHoveredDropzone = null;
-let currentSelectedTier = 1; // 現在選択されているT段階を保持
 
 // リアルタイムな隙間を作るプレースホルダー要素
 const placeholder = document.createElement('div');
@@ -46,15 +45,21 @@ const COLOR_PALETTE = [
 ];
 
 const DEFAULT_ROWS = [
-  { id: 'tier-1', label: 'S', color: '#ff7f7f' },
-  { id: 'tier-2', label: 'A', color: '#ffbf7f' },
-  { id: 'tier-3', label: 'B', color: '#ffff7f' },
-  { id: 'tier-4', label: 'C', color: '#7fff7f' },
-  { id: 'tier-5', label: 'D', color: '#7fbfff' }
+  { id: 'tier-1', label: 'S+', color: '#ff7f7f' },
+  { id: 'tier-2', label: 'S', color: '#ffbf7f' },
+  { id: 'tier-3', label: 'A+', color: '#ffff7f' },
+  { id: 'tier-4', label: 'A', color: '#bfff7f' },
+  { id: 'tier-5', label: 'B+', color: '#7fff7f' },
+  { id: 'tier-6', label: 'B', color: '#7fbfff' },
+  { id: 'tier-7', label: 'C+', color: '#7f7fff' },
+  { id: 'tier-8', label: 'C', color: '#bf7fff' },
+  { id: 'tier-9', label: 'D+', color: '#ff7fff' },
+  { id: 'tier-10', label: 'D', color: '#a6a6a6' },
+  { id: 'tier-11', label: 'E', color: '#a6a6a6' }
 ];
 
 const MIN_ROWS = 4;
-const MAX_ROWS = 8;
+const MAX_ROWS = 15;
 
 function init() {
   renderMonsters();
@@ -126,14 +131,14 @@ function renderMonsters() {
   });
 }
 
-// 画面全体のすべてのモンスターカード（プール＋ティア表内）を指定したT（1~4）の画像に変更する関数
-function changeAllMonstersTier(targetTier) {
-  currentSelectedTier = Number(targetTier);
-  const allCards = document.querySelectorAll('.monster-card');
+// 未配置枠にあるモンスターの画像を指定したT（1~4）へ変更する関数
+function changePoolMonstersTier(targetTier) {
+  if (!monsterPool) return;
+  const poolCards = monsterPool.querySelectorAll('.monster-card');
   
-  allCards.forEach(card => {
+  poolCards.forEach(card => {
     const species = card.dataset.species;
-    const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === currentSelectedTier);
+    const targetMonster = rawMonsters.find(m => m.species === species && Number(m.T) === Number(targetTier));
     
     if (targetMonster) {
       card.dataset.name = targetMonster.name;
@@ -292,7 +297,6 @@ function updateRowControlsState() {
   });
 }
 
-// 判定ロジックの改善：ドラッグ中のカードおよびプレースホルダーを除外してスムーズに計算
 function getDragAfterElement(dropzone, x, y) {
   const draggableElements = Array.from(
     dropzone.querySelectorAll('.monster-card:not(.dragging)')
@@ -303,10 +307,8 @@ function getDragAfterElement(dropzone, x, y) {
     const centerX = box.left + box.width / 2;
     const centerY = box.top + box.height / 2;
 
-    // カーソルとカード中心の距離（2次元座標での絶対距離）
     const distance = Math.hypot(x - centerX, y - centerY);
 
-    // X軸の位置で前後判定（カーソルがカードの中心より左側ならその前に配置）
     if (x < centerX) {
       if (distance < closest.distance) {
         return { distance: distance, element: child };
@@ -543,13 +545,26 @@ function applyState(jsonStr) {
         }
 
         if (card && targetRowEl) {
+          let monsterName = card.dataset.name;
+          if (!monsterName && typeof rawMonsters !== 'undefined') {
+            const mData = rawMonsters.find(m => m.species === species);
+            if (mData) monsterName = mData.name;
+          }
+
+          if (monsterName) {
+            card.dataset.name = monsterName;
+            const img = card.querySelector('img');
+            const badge = card.querySelector('.no-image-badge');
+            if (img) {
+              setupMonsterImage(img, badge, monsterName);
+              img.src = `${monsterName}.webp`;
+            }
+          }
+
           const targetDropzone = targetRowEl.querySelector('.tier-dropzone');
           if (targetDropzone) targetDropzone.appendChild(card);
         }
       });
-
-      // 配置完了後、現在選択されているT設定を全カードに反映
-      changeAllMonstersTier(currentSelectedTier);
     }
   } catch (e) {
     console.error('復元エラー:', e);
@@ -718,7 +733,7 @@ function setupEvents() {
   const resetBtn = document.getElementById('resetBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      const confirmReset = confirm('全ての配置・タイトル・行設定を初期状態（5行）にリセットしますか？');
+      const confirmReset = confirm('全ての配置・タイトル・行設定を初期状態にリセットしますか？');
       if (!confirmReset) return;
 
       localStorage.removeItem(STORAGE_KEY);
@@ -743,40 +758,30 @@ function setupEvents() {
   document.querySelectorAll('.btn-tier-switch').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetTier = e.target.dataset.tier;
-      changeAllMonstersTier(targetTier);
+      changePoolMonstersTier(targetTier);
     });
   });
 
+  // 画像保存処理（現在画面に表示されている画像をそのまま読み込んで保存）
   const saveImgBtn = document.getElementById('saveImgBtn');
   if (saveImgBtn) {
     saveImgBtn.addEventListener('click', () => {
       const tableArea = document.getElementById('tierTableArea');
 
-      // キャプチャ直前に選択中のT画像へ確実に同期させる
-      changeAllMonstersTier(currentSelectedTier);
-
-      tableArea.classList.add('exporting');
-
-      // 画像読み込み完了を少し待ってからhtml2canvasを実行
-      setTimeout(() => {
-        html2canvas(tableArea, {
-          backgroundColor: '#000000',
-          scale: 2,
-          useCORS: true,
-          windowWidth: 1200
-        }).then(canvas => {
-          tableArea.classList.remove('exporting');
-
-          const link = document.createElement('a');
-          link.download = 'tier-list.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }).catch(err => {
-          console.error('保存エラー:', err);
-          tableArea.classList.remove('exporting');
-          alert('画像の保存に失敗しました。');
-        });
-      }, 100);
+      html2canvas(tableArea, {
+        backgroundColor: '#000000',
+        scale: 2,
+        useCORS: true,
+        windowWidth: 1200
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'tier-list.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        console.error('保存エラー:', err);
+        alert('画像の保存に失敗しました。');
+      });
     });
   }
 }
