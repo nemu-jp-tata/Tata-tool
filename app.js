@@ -772,17 +772,22 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 保存ボタン処理（正常化済み）
+// 保存ボタン処理（画像保存時は1P/2Pボタンを一時的に隠し、チップセットは保持する）
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
   const boardFrame = document.getElementById('boardFrame');
   const titleInput = document.getElementById('appTitleInput');
+  const playerSwitchContainer = document.getElementById('playerSwitchContainer');
   
   let titleText = 'タタ配置ツール';
   if (titleInput && titleInput.value.trim() !== '') {
     titleText = titleInput.value.trim();
   }
+
+  // キャプチャ時の一時非表示切り替え（1P/2Pボタンのみ非表示に）
+  const originalPlayerSwitchDisplay = playerSwitchContainer.style.display;
+  playerSwitchContainer.style.display = 'none';
 
   // 1. キャプチャ用の一時コンテナを作成
   const captureContainer = document.createElement('div');
@@ -825,6 +830,16 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   captureContainer.appendChild(titleEl);
   captureContainer.appendChild(boardClone);
+
+  // ゾンビラッシュ時はチップセットスロット部分も含めて一緒にキャプチャに含める
+  if (currentGridSize === 6) {
+    const chipsetContainer = document.getElementById('chipsetContainer');
+    if (chipsetContainer && chipsetContainer.style.display !== 'none') {
+      const chipsetClone = chipsetContainer.cloneNode(true);
+      captureContainer.appendChild(chipsetClone);
+    }
+  }
+
   document.body.appendChild(captureContainer);
 
   // 5. WebP出力・保存処理
@@ -834,6 +849,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     useCORS: true
   }).then(canvas => {
     document.body.removeChild(captureContainer);
+    playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
 
     const imageURL = canvas.toDataURL('image/webp', 0.92);
     const downloadLink = document.createElement('a');
@@ -846,6 +862,7 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   }).catch(err => {
     console.error('画像保存エラー:', err);
     alert('画像の保存に失敗しました。');
+    playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
     if (document.body.contains(captureContainer)) {
       document.body.removeChild(captureContainer);
     }
