@@ -21,8 +21,15 @@ const placeholder = document.createElement('div');
 placeholder.className = 'drop-placeholder';
 
 const STORAGE_KEY = 'tierList_save_data_v7';
-
 const DEFAULT_TITLE = '○○ティア表';
+
+// ==========================================
+// Supabase の初期化
+// ==========================================
+const SUPABASE_URL = 'https://vtvlocbzbejslbrpubfr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dmxvY2J6YmVqc2xicnB1YmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5Nzc0MDksImV4cCI6MjEwMzU1MzQwOX0.W9t-qkr0CE7JSbgjXmzE3KUKkDSNqJ7nhbC8HKCKG-E';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const COLOR_PALETTE = [
   { name: '赤', hex: '#ff7f7f' },
@@ -51,7 +58,8 @@ const MAX_ROWS = 8;
 function init() {
   renderMonsters();
 
-  if (window.location.search.includes('data=')) {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('id') || params.has('data')) {
     loadFromUrl();
   } else {
     loadState();
@@ -420,7 +428,7 @@ function clearHighlight() {
 }
 
 // ==========================================
-// 1. 状態データの軽量化（3と4を適用：FLAT化 ＆ name削除）
+// 状態データの軽量化
 // ==========================================
 function getCurrentStateJson() {
   const rowsData = [];
@@ -430,7 +438,6 @@ function getCurrentStateJson() {
     const label = row.querySelector('.tier-label');
     const colorSelect = row.querySelector('.row-color-select');
 
-    // [ラベル文字, 色コード] の配列にする
     rowsData.push([
       label ? label.innerText : '',
       colorSelect ? colorSelect.value : '#ff7f7f'
@@ -438,7 +445,6 @@ function getCurrentStateJson() {
 
     const cards = row.querySelectorAll('.monster-card');
     cards.forEach(card => {
-      // nameを含めず、[species, 行インデックス] のみ保存
       monstersData.push([
         card.dataset.species,
         index
@@ -448,7 +454,6 @@ function getCurrentStateJson() {
 
   const title = tierTableTitle ? tierTableTitle.value : DEFAULT_TITLE;
 
-  // 全体を配列 [タイトル, 行データ配列, モンスターデータ配列] にしてキー名を排除
   return JSON.stringify([
     title,
     rowsData,
@@ -462,7 +467,7 @@ function saveState() {
 }
 
 // ==========================================
-// 2. 状態の復元（新配列形式 ＆ 過去の旧オブジェクト形式に対応）
+// 状態の復元
 // ==========================================
 function applyState(jsonStr) {
   if (!tierTable) return;
@@ -475,13 +480,11 @@ function applyState(jsonStr) {
     let rows = [];
     let monsters = [];
 
-    // 新形式 (配列構造) か 旧形式 (オブジェクト構造) かの判定
     if (Array.isArray(data)) {
       title = data[0] !== undefined ? data[0] : DEFAULT_TITLE;
       rows = data[1] || [];
       monsters = data[2] || [];
     } else {
-      // 旧JSONオブジェクト形式 (互換性維持)
       title = (data.t !== undefined ? data.t : data.title) || DEFAULT_TITLE;
       const rawRows = data.r !== undefined ? data.r : data.rows;
       const rawMonsters = data.m !== undefined ? data.m : data.monsters;
@@ -501,12 +504,10 @@ function applyState(jsonStr) {
       }
     }
 
-    // タイトル復元
     if (tierTableTitle) {
       tierTableTitle.value = title;
     }
 
-    // 行の復元
     const rowElements = [];
     if (rows && rows.length >= MIN_ROWS) {
       rows.forEach((r, index) => {
@@ -525,10 +526,8 @@ function applyState(jsonStr) {
       });
     }
 
-    // モンスターの復元
     if (monsters && monsterPool) {
       monsters.forEach(item => {
-        // 新形式: [species, rowIndex] / 旧形式対応
         const species = Array.isArray(item) ? item[0] : (item.s !== undefined ? item.s : item.species);
         const rowIdx = Array.isArray(item) ? item[1] : (item.r !== undefined ? item.r : item.rowId);
 
@@ -542,7 +541,6 @@ function applyState(jsonStr) {
         }
 
         if (card && targetRowEl) {
-          // nameがデータになくても rawMonsters から種族キーで復元
           let monsterName = card.dataset.name;
           if (!monsterName && typeof rawMonsters !== 'undefined') {
             const mData = rawMonsters.find(m => m.species === species);
@@ -590,27 +588,12 @@ function loadState() {
 }
 
 // ==========================================
-// 3. 共有URLの生成（corsproxy.io経由の超安定通信）
+// Supabase を使用した短縮共有URL生成
 // ==========================================
 async function generateShareUrl() {
   saveState();
   const jsonStr = localStorage.getItem(STORAGE_KEY);
   if (!jsonStr) return;
-
-  if (typeof LZString === 'undefined') {
-    alert('圧縮ライブラリの読み込みに失敗しています。');
-    return;
-  }
-
-  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-  const rawShareUrl = `${window.location.origin}${window.location.pathname}?data=${compressed}`;
-
-  // URLが長すぎる場合は最初から短縮をスキップ（目安：2000文字）
-  if (rawShareUrl.length > 2000) {
-    console.warn('URLが長すぎるため短縮APIをスキップします。');
-    copyToClipboard(rawShareUrl, 'データ量が多いため、短縮していないURLをコピーしました。');
-    return;
-  }
 
   const shareBtn = document.getElementById('shareBtn');
   const originalBtnText = shareBtn ? shareBtn.innerText : '';
@@ -619,52 +602,86 @@ async function generateShareUrl() {
     shareBtn.innerText = 'URL生成中...';
   }
 
-  // 1st 候補: is.gd (corsproxy.io経由)
-  const tryIsGdProxy = async () => {
-    const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(rawShareUrl)}`;
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-
-    const res = await fetch(proxyUrl, { method: 'GET' });
-    if (!res.ok) throw new Error('is.gd proxy response not ok');
-    const data = await res.json();
-    if (data && data.shorturl) return data.shorturl;
-    throw new Error('is.gd error');
-  };
-
-  // 2nd 候補: CleanURI API (corsproxy.io経由)
-  const tryCleanUri = async () => {
-    const apiUrl = 'https://cleanuri.com/api/v1/shorten';
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-
-    const res = await fetch(proxyUrl, {
-      method: 'POST',
-      body: new URLSearchParams({ url: rawShareUrl })
-    });
-    if (!res.ok) throw new Error('CleanURI response not ok');
-    const data = await res.json();
-    if (data && data.result_url) return data.result_url;
-    throw new Error('CleanURI error');
-  };
-
   try {
-    let finalUrl = '';
-    try {
-      finalUrl = await tryIsGdProxy();
-    } catch (e) {
-      console.warn('is.gdでの短縮に失敗、CleanURIを使用:', e);
-      finalUrl = await tryCleanUri();
-    }
+    const dataToSave = typeof LZString !== 'undefined' 
+      ? LZString.compressToEncodedURIComponent(jsonStr) 
+      : jsonStr;
 
-    copyToClipboard(finalUrl, '短縮した共有用リンクをクリップボードにコピーしました！\nそのまま貼り付けて共有してください。');
+    // Supabaseの tier_lists テーブルに新レコード保存
+    const { data, error } = await supabaseClient
+      .from('tier_lists')
+      .insert([{ data: dataToSave }])
+      .select('id');
+
+    if (error) throw error;
+
+    const shortId = data[0].id; // 自動生成されたUUID
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${shortId}`;
+
+    copyToClipboard(shareUrl, '短縮した共有用リンクをクリップボードにコピーしました！\nそのまま貼り付けて共有してください。');
+
   } catch (e) {
-    console.error('すべての短縮APIに失敗:', e);
-    copyToClipboard(rawShareUrl, '短縮APIへの接続が失敗したため、通常の共有リンクをコピーしました。');
+    console.error('Supabase保存エラー:', e);
+    alert('共有URLの作成に失敗しました。');
   } finally {
     if (shareBtn) {
       shareBtn.disabled = false;
       shareBtn.innerText = originalBtnText || '共有URL生成';
     }
   }
+}
+
+// ==========================================
+// URLからの復元（Supabase ＆ 過去URL互換）
+// ==========================================
+async function loadFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const shortId = params.get('id');
+  const legacyData = params.get('data');
+
+  if (shortId) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('tier_lists')
+        .select('data')
+        .eq('id', shortId)
+        .single();
+
+      if (error || !data) throw new Error('データが見つかりません');
+
+      const savedData = data.data;
+
+      const decompressed = typeof LZString !== 'undefined' && !savedData.startsWith('[') && !savedData.startsWith('{')
+        ? LZString.decompressFromEncodedURIComponent(savedData) 
+        : savedData;
+
+      localStorage.setItem(STORAGE_KEY, decompressed);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      applyState(decompressed);
+      alert('共有されたティア表を復元・読み込みました！');
+      return;
+
+    } catch (e) {
+      console.error('読み込みエラー:', e);
+      alert('共有データの読み込みに失敗しました。URLが間違っているか、データが存在しません。');
+    }
+  } else if (legacyData && typeof LZString !== 'undefined') {
+    try {
+      const decompressed = LZString.decompressFromEncodedURIComponent(legacyData);
+      if (decompressed) {
+        localStorage.setItem(STORAGE_KEY, decompressed);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        applyState(decompressed);
+        alert('共有されたティア表を復元・読み込みました！');
+        return;
+      }
+    } catch (e) {
+      console.error('旧URL解析エラー:', e);
+    }
+  }
+  
+  loadState();
 }
 
 // クリップボードコピーの共通化関数
@@ -679,27 +696,6 @@ async function copyToClipboard(text, successMessage) {
     }
   }
   prompt('以下のURLをコピーして共有してください:', text);
-}
-
-function loadFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const compressed = params.get('data');
-
-  if (compressed && typeof LZString !== 'undefined') {
-    try {
-      const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
-      if (decompressed) {
-        localStorage.setItem(STORAGE_KEY, decompressed);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        applyState(decompressed);
-        alert('共有されたティア表を復元・読み込みました！');
-        return;
-      }
-    } catch (e) {
-      console.error('URL解析エラー:', e);
-    }
-  }
-  loadState();
 }
 
 function setupEvents() {
