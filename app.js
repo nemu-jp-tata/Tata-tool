@@ -1,15 +1,70 @@
-// チップ一覧を描画する関数（画像の上でも快適にスクロールできるように pointer-events を調整）
+// 選択中のモード（'monster' または 'chip'）
+let currentSelectionMode = 'monster';
+// プレイヤーごとの選択されたチップのリスト（最大3枚）
+let selectedChipsMap = {
+  '1P': [],
+  '2P': []
+};
+
+// チップセットエリアの表示・非表示を切り替える関数を更新
+function updateChipsetAreaVisibility(isZombieStage) {
+  const chipsetContainer = document.getElementById('chipsetContainer');
+  const monsterTitle = document.querySelector('.monster-title');
+  
+  if (chipsetContainer) {
+    chipsetContainer.style.display = isZombieStage ? 'block' : 'none';
+  }
+
+  // ゾンビラッシュ時のみ、モンスター選択エリアにタブ（切り替えボタン）を挿入・表示する
+  let modeSwitch = document.getElementById('selectionModeSwitch');
+  if (isZombieStage) {
+    if (!modeSwitch) {
+      modeSwitch = document.createElement('div');
+      modeSwitch.id = 'selectionModeSwitch';
+      modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
+      modeSwitch.innerHTML = `
+        <button id="modeMonsterBtn" class="filter-btn active" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">タタ選択</button>
+        <button id="modeChipBtn" class="filter-btn" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">チップ選択</button>
+      `;
+      monsterTitle.after(modeSwitch);
+
+      document.getElementById('modeMonsterBtn').addEventListener('click', () => {
+        currentSelectionMode = 'monster';
+        document.getElementById('modeMonsterBtn').classList.add('active');
+        document.getElementById('modeChipBtn').classList.remove('active');
+        document.querySelector('.filter-details').style.display = 'block';
+        renderMonsters();
+      });
+
+      document.getElementById('modeChipBtn').addEventListener('click', () => {
+        currentSelectionMode = 'chip';
+        document.getElementById('modeChipBtn').classList.add('active');
+        document.getElementById('modeMonsterBtn').classList.remove('active');
+        document.querySelector('.filter-details').style.display = 'none';
+        renderChips();
+      });
+    } else {
+      modeSwitch.style.display = 'flex';
+    }
+  } else {
+    if (modeSwitch) modeSwitch.style.display = 'none';
+    currentSelectionMode = 'monster';
+    document.querySelector('.filter-details').style.display = 'block';
+  }
+}
+
+// チップ一覧を描画する関数（アクションエリアのレイアウトとボタンのはみ出しを修正）
 function renderChips() {
   monsterGrid.innerHTML = '';
 
   const selectedChips = selectedChipsMap[currentPlayer];
 
-  // セットボタン用のコンテナを作成・配置
+  // セットボタン用のコンテナを作成・配置（flex-wrapや余白を調整して文字が見切れないように修正）
   const actionArea = document.createElement('div');
-  actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #1e293b; padding: 8px; border-radius: 6px;';
+  actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%;';
   actionArea.innerHTML = `
-    <span style="font-size: 12px; color: #cbd5e1;">[${currentPlayer}] 選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
-    <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 4px 12px; font-size: 12px; cursor: pointer;">セットする</button>
+    <span style="font-size: 12px; color: #cbd5e1; white-space: nowrap;">[${currentPlayer}] 選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
+    <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 6px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;">セットする</button>
   `;
   monsterGrid.appendChild(actionArea);
 
