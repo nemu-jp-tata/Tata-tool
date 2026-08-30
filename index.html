@@ -12,11 +12,11 @@
 <div class="container" id="appContainer">
 
   <!-- 左カラム（タイトル・ボタン関係・盤面） -->
- <div class="left-column">
-  <!-- タイトル入力欄 -->
-  <div class="title-container">
-    <input type="text" class="app-title-input" id="appTitleInput" value="タタ配置ツール" placeholder="タイトルを入力..." maxlength="20">
-  </div>
+  <div class="left-column">
+    <!-- タイトル入力欄 -->
+    <div class="title-container">
+      <input type="text" class="app-title-input" id="appTitleInput" value="タタ配置ツール" placeholder="タイトルを入力..." maxlength="20">
+    </div>
 
     <div class="header-tools">
       <div style="display: flex; gap: 6px; align-items: center;">
@@ -44,18 +44,17 @@
 
     <!-- チップセットエリア（ゾンビラッシュ時のみ表示） -->
     <div class="chipset-container" id="chipsetContainer" style="display: none;">
-  <div class="chipset-title">チップセット</div>
-  <div class="chipset-slots">
-    <!-- 1P用 3つ -->
-    <div class="chipset-slot p1-slot"></div>
-    <div class="chipset-slot p1-slot"></div>
-    <div class="chipset-slot p1-slot"></div>
-    <!-- 2P用 3つ -->
-    <div class="chipset-slot p2-slot"></div>
-    <div class="chipset-slot p2-slot"></div>
-    <div class="chipset-slot p2-slot"></div>
-  </div>
-</div>
+      <div class="chipset-title">チップセット</div>
+      <div class="chipset-slots">
+        <!-- 1P用 3つ -->
+        <div class="chipset-slot p1-slot"></div>
+        <div class="chipset-slot p1-slot"></div>
+        <div class="chipset-slot p1-slot"></div>
+        <!-- 2P用 3つ -->
+        <div class="chipset-slot p2-slot"></div>
+        <div class="chipset-slot p2-slot"></div>
+        <div class="chipset-slot p2-slot"></div>
+      </div>
     </div>
 
     <!-- 盤面フレーム -->
@@ -63,7 +62,7 @@
       <div class="board-notice">こちらからゾンビが来ます ▼</div>
       <div id="mainGrid"></div>
     </div>
-  </div>
+  </div><!-- /left-column (正しい位置に修正) -->
 
   <!-- 右カラム：モンスター選択エリア -->
   <div class="monster-frame" id="monsterFrame">
