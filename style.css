@@ -593,7 +593,7 @@ body {
   font-weight: normal;
 }
 
-/* チップセットエリア（左右6つ横並び対応） */
+/* チップセットエリア（左右に分かれて合計6つ横並び） */
 .chipset-container {
   margin: 10px 0;
   background: rgba(255, 255, 255, 0.03);
@@ -612,14 +612,22 @@ body {
 
 .chipset-slots {
   display: flex;
+  justify-content: space-between; /* 左右に大きく離して配置する場合 */
+  align-items: center;
+  gap: 12px; /* 1P側グループと2P側グループの間隔 */
+}
+
+/* 1P側・2P側の3つずつの塊をまとめるコンテナ用（必要に応じてHTML側にラッパーを追加してください） */
+.chipset-group {
+  display: flex;
   gap: 6px;
   flex-wrap: nowrap;
 }
 
 .chipset-slot {
-  flex: 1;
+  flex: 0 0 45px;
+  width: 45px;
   aspect-ratio: 1 / 1;
-  max-width: 50px;
   background: #1e293b;
   border: 2px dashed #475569;
   border-radius: 6px;
