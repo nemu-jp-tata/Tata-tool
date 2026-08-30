@@ -875,10 +875,9 @@ btn1P.addEventListener('click', (e) => {
   currentPlayer = "1P";
   btn1P.classList.add('active');
   btn2P.classList.remove('active');
+  applyChipsToSlots();
   if (currentSelectionMode === 'chip') {
     renderChips();
-  } else {
-    applyChipsToSlots();
   }
 });
 
@@ -887,10 +886,9 @@ btn2P.addEventListener('click', (e) => {
   currentPlayer = "2P";
   btn2P.classList.add('active');
   btn1P.classList.remove('active');
+  applyChipsToSlots();
   if (currentSelectionMode === 'chip') {
     renderChips();
-  } else {
-    applyChipsToSlots();
   }
 });
 
