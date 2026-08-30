@@ -246,9 +246,10 @@ function loadBoardState() {
   applyChipsToSlots();
 }
 
-// セルにモンスター画像を設定し、ポインターイベントを付与する
+// セルにモンスター画像を設定し、ポインターイベントを付与する（歪み防止スタイル修正）
 function fillCellWithMonster(cell, data) {
   cell.className = data.className;
+  // 画像がセル内で潰れたり歪んだりしないよう object-fit: contain を明示
   cell.innerHTML = `
     <img src="${data.src}" 
          alt="" 
@@ -256,7 +257,7 @@ function fillCellWithMonster(cell, data) {
          data-tier="${data.tier}"
          data-player="${data.player}"
          draggable="false"
-         style="pointer-events: auto; touch-action: none;"
+         style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; pointer-events: auto; touch-action: none; display: block; margin: auto;"
          onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
   `;
 
@@ -793,7 +794,7 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 保存ボタン処理（高画質WebPかつ縦横比を歪ませずにキャプチャ保存）
+// 保存ボタン処理（画像のアスペクト比・縦横比補正版）
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -830,18 +831,23 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   const boardClone = boardFrame.cloneNode(true);
 
-  // 縦横比（アスペクト比）が崩れないようにアスペクト比固定処理を明示
+  // セル及び内部の画像が引き伸ばされたり変形しないようスタイルの補正を行う
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
-    cell.style.width = '100%';
-    cell.style.height = 'auto';
+    cell.style.display = 'flex';
+    cell.style.alignItems = 'center';
+    cell.style.justifyContent = 'center';
     
     const img = cell.querySelector('img');
     if (img) {
-      img.style.width = '100%';
-      img.style.height = '100%';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
       img.style.objectFit = 'contain';
+      img.style.display = 'block';
+      img.style.margin = 'auto';
     }
   });
 
@@ -858,7 +864,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   document.body.appendChild(captureContainer);
 
-  // 高画質化のために scale: 3 (または DevicePixelRatio) を設定
   html2canvas(captureContainer, {
     backgroundColor: '#181a29',
     scale: 3, 
@@ -868,7 +873,6 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     document.body.removeChild(captureContainer);
     playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
 
-    // WebPでのクオリティ（圧縮率）を最高に近い 0.98 に設定
     const imageURL = canvas.toDataURL('image/webp', 0.98);
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
