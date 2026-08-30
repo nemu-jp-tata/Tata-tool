@@ -1,3 +1,4 @@
+/* style.css 全文 */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -166,8 +167,8 @@ body {
 }
 
 .cell.p2-cell {
-  border: 2px solid #3b82f6; /* #3b4261 から鮮やかな青へ変更 */
-  background: rgba(59, 130, 246, 0.15); /* 背景の青みもほんの少し強調 */
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
 }
 
 /* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
@@ -287,7 +288,7 @@ body {
   border-color: #3b82f6;
 }
 
-/* モンスター一覧 */
+/* モンスター一覧（Flexbox内で正常に縦スクロールできるように修正） */
 .monster-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -295,6 +296,9 @@ body {
   max-height: 320px;
   overflow-y: auto;
   padding-right: 2px;
+  flex: 1;
+  min-height: 0;
+  align-content: start;
 }
 
 .monster-item {
@@ -470,20 +474,28 @@ body {
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
+    height: 92vh;
+    max-height: 850px;
   }
   .left-column {
     display: flex;
     flex-direction: column;
     width: 540px;
     flex: 0 0 540px;
+    height: 100%;
   }
   .board-frame {
     width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
   .monster-frame {
     width: 450px;
-    min-height: 615px;
-    overflow-y: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     margin-top: 0 !important;
   }
 }
@@ -503,15 +515,18 @@ body {
     padding: 2px !important;
   }
 }
+
 /* タッチ操作の遅延を防止 */
 .cell, .monster-item, #mainGrid img, #dragGhost {
   touch-action: none;
 }
+
 @media (min-width: 768px) {
   .monster-grid {
     max-height: 520px;
   }
 }
+
 .no-image-badge {
   display: flex;
   align-items: center;
@@ -545,6 +560,7 @@ body {
   0%, 100% { opacity: 0.85; transform: scale(1); }
   50% { opacity: 1; transform: scale(0.97); }
 }
+
 /* タイトル入力エリアのスタイリング */
 .title-container {
   width: 100%;
