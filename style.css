@@ -593,7 +593,7 @@ body {
   font-weight: normal;
 }
 
-/* チップセットエリア */
+/* チップセットエリア（左右6つ横並び対応） */
 .chipset-container {
   margin: 10px 0;
   background: rgba(255, 255, 255, 0.03);
@@ -612,16 +612,30 @@ body {
 
 .chipset-slots {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .chipset-slot {
-  width: 50px;
-  height: 50px;
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  max-width: 50px;
   background: #1e293b;
   border: 2px dashed #475569;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+/* プレイヤー別のチップセットスロット色分け用クラス */
+.chipset-slot.p1-slot {
+  border: 2px solid #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.chipset-slot.p2-slot {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
 }
