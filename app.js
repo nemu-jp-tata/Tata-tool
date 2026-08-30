@@ -105,16 +105,30 @@ function renderChips() {
   });
 }
 
-// 選択した3枚のチップをスロットに反映する関数
+// 1P・2P両方の選択したチップを各専用スロットに反映する関数
 function applyChipsToSlots() {
-  const selectedChips = selectedChipsMap[currentPlayer];
-  const slots = document.querySelectorAll('.chipset-slot');
-  slots.forEach((slot, index) => {
+  // 1Pのチップを反映
+  const p1Chips = selectedChipsMap['1P'] || [];
+  const p1Slots = document.querySelectorAll('.chipset-slot.p1-slot');
+  p1Slots.forEach((slot, index) => {
     slot.innerHTML = '';
-    if (selectedChips[index]) {
-      const chip = selectedChips[index];
+    if (p1Chips[index]) {
+      const chip = p1Chips[index];
       slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="[${currentPlayer}] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+        <img src="${chip.img}" alt="${chip.name}" title="[1P] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+      `;
+    }
+  });
+
+  // 2Pのチップを反映
+  const p2Chips = selectedChipsMap['2P'] || [];
+  const p2Slots = document.querySelectorAll('.chipset-slot.p2-slot');
+  p2Slots.forEach((slot, index) => {
+    slot.innerHTML = '';
+    if (p2Chips[index]) {
+      const chip = p2Chips[index];
+      slot.innerHTML = `
+        <img src="${chip.img}" alt="${chip.name}" title="[2P] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
       `;
     }
   });
