@@ -636,6 +636,8 @@ body {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
 /* プレイヤー別のチップセットスロット色分け用クラス */
@@ -647,4 +649,56 @@ body {
 .chipset-slot.p2-slot {
   border: 2px solid #3b82f6;
   background: rgba(59, 130, 246, 0.15);
+}
+
+/* --------------------------------------------------
+   選択状態 (active / selected) の強調スタイル
+   -------------------------------------------------- */
+
+/* モンスター・チップが選択されている場合のハイライト */
+.monster-item.active,
+.chipset-slot.active,
+.chipset-slot.selected {
+  border: 2px solid #4ade80 !important;
+  background: #1e293b !important;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.6), inset 0 0 6px rgba(74, 222, 128, 0.3) !important;
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+/* プレイヤー1専用の選択状態（赤系発光） */
+.chipset-slot.p1-slot.active,
+.chipset-slot.p1-slot.selected {
+  border-color: #ff4d4d !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), inset 0 0 8px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* プレイヤー2専用の選択状態（青系発光） */
+.chipset-slot.p2-slot.active,
+.chipset-slot.p2-slot.selected {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.8), inset 0 0 8px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* 選択されたチップに表示される「✓」チェックバッジ */
+.monster-item.active::after,
+.chipset-slot.active::after,
+.chipset-slot.selected::after {
+  content: "✓";
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10;
 }
