@@ -1,3 +1,4 @@
+// app.js 全文
 // 選択中のモード（'monster' または 'chip'）
 let currentSelectionMode = 'monster';
 // プレイヤーごとの選択されたチップのリスト（最大3枚）
@@ -21,7 +22,7 @@ function updateChipsetAreaVisibility(isZombieStage) {
     if (!modeSwitch) {
       modeSwitch = document.createElement('div');
       modeSwitch.id = 'selectionModeSwitch';
-      modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px;';
+      modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px; flex-shrink: 0;';
       modeSwitch.innerHTML = `
         <button id="modeMonsterBtn" class="filter-btn active" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">タタ選択</button>
         <button id="modeChipBtn" class="filter-btn" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">チップ選択</button>
@@ -56,8 +57,6 @@ function updateChipsetAreaVisibility(isZombieStage) {
 // チップ一覧を描画する関数（スクロール対応版）
 function renderChips() {
   monsterGrid.innerHTML = '';
-  // スクロールが確実に発生するように、グリッドのスタイルと高さを明示的に設定
-  monsterGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; overflow-y: auto; max-height: 420px; align-content: start; box-sizing: border-box;';
 
   const selectedChips = selectedChipsMap[currentPlayer];
 
@@ -81,7 +80,7 @@ function renderChips() {
     const item = document.createElement('div');
     item.className = `monster-item ${isSelected ? 'active' : ''}`;
     // タッチやホイールでのスクロール操作が阻害されないよう touch-action を指定
-    item.style.cssText = 'position: relative; aspect-ratio: 1 / 1; background: #2a2d3d; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y;';
+    item.style.cssText = 'position: relative; aspect-ratio: 1 / 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y;';
 
     item.innerHTML = `
       <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
@@ -525,8 +524,7 @@ function renderMonsters() {
     return;
   }
 
-  // タタ選択画面に戻る際は標準のグリッドスタイルにリセット
-  monsterGrid.style.cssText = '';
+  monsterGrid.innerHTML = '';
 
   const filtered = monstersData.filter(m => {
     const matchAttr = (currentAttr === 'all' || m.attr === currentAttr);
