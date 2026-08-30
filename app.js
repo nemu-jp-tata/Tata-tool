@@ -10,6 +10,7 @@ let selectedChipsMap = {
 function updateChipsetAreaVisibility(isZombieStage) {
   const chipsetContainer = document.getElementById('chipsetContainer');
   const monsterTitle = document.querySelector('.monster-title');
+  const filterDetails = document.querySelector('.filter-details');
   
   if (chipsetContainer) {
     chipsetContainer.style.display = isZombieStage ? 'block' : 'none';
@@ -19,37 +20,54 @@ function updateChipsetAreaVisibility(isZombieStage) {
   let modeSwitch = document.getElementById('selectionModeSwitch');
   if (isZombieStage) {
     if (!modeSwitch) {
-      modeSwitch = document.createElement('div');
-      modeSwitch.id = 'selectionModeSwitch';
-      modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px; flex-shrink: 0;';
-      modeSwitch.innerHTML = `
-        <button id="modeMonsterBtn" class="filter-btn active" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">タタ選択</button>
-        <button id="modeChipBtn" class="filter-btn" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">チップ選択</button>
-      `;
-      monsterTitle.after(modeSwitch);
+      if (monsterTitle) {
+        modeSwitch = document.createElement('div');
+        modeSwitch.id = 'selectionModeSwitch';
+        modeSwitch.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px; flex-shrink: 0;';
+        modeSwitch.innerHTML = `
+          <button id="modeMonsterBtn" class="filter-btn ${currentSelectionMode === 'monster' ? 'active' : ''}" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">タタ選択</button>
+          <button id="modeChipBtn" class="filter-btn ${currentSelectionMode === 'chip' ? 'active' : ''}" style="flex: 1; padding: 6px; text-align: center; cursor: pointer;">チップ選択</button>
+        `;
+        monsterTitle.after(modeSwitch);
 
-      document.getElementById('modeMonsterBtn').addEventListener('click', () => {
-        currentSelectionMode = 'monster';
-        document.getElementById('modeMonsterBtn').classList.add('active');
-        document.getElementById('modeChipBtn').classList.remove('active');
-        document.querySelector('.filter-details').style.display = 'block';
-        renderMonsters();
-      });
+        document.getElementById('modeMonsterBtn').addEventListener('click', () => {
+          currentSelectionMode = 'monster';
+          document.getElementById('modeMonsterBtn').classList.add('active');
+          document.getElementById('modeChipBtn').classList.remove('active');
+          const fd = document.querySelector('.filter-details');
+          if (fd) fd.style.display = 'block';
+          renderMonsters();
+        });
 
-      document.getElementById('modeChipBtn').addEventListener('click', () => {
-        currentSelectionMode = 'chip';
-        document.getElementById('modeChipBtn').classList.add('active');
-        document.getElementById('modeMonsterBtn').classList.remove('active');
-        document.querySelector('.filter-details').style.display = 'none';
-        renderChips();
-      });
+        document.getElementById('modeChipBtn').addEventListener('click', () => {
+          currentSelectionMode = 'chip';
+          document.getElementById('modeChipBtn').classList.add('active');
+          document.getElementById('modeMonsterBtn').classList.remove('active');
+          const fd = document.querySelector('.filter-details');
+          if (fd) fd.style.display = 'none';
+          renderChips();
+        });
+      }
     } else {
       modeSwitch.style.display = 'flex';
+      const monsterBtn = document.getElementById('modeMonsterBtn');
+      const chipBtn = document.getElementById('modeChipBtn');
+      if (monsterBtn && chipBtn) {
+        if (currentSelectionMode === 'monster') {
+          monsterBtn.classList.add('active');
+          chipBtn.classList.remove('active');
+          if (filterDetails) filterDetails.style.display = 'block';
+        } else {
+          chipBtn.classList.add('active');
+          monsterBtn.classList.remove('active');
+          if (filterDetails) filterDetails.style.display = 'none';
+        }
+      }
     }
   } else {
     if (modeSwitch) modeSwitch.style.display = 'none';
     currentSelectionMode = 'monster';
-    document.querySelector('.filter-details').style.display = 'block';
+    if (filterDetails) filterDetails.style.display = 'block';
   }
 }
 
@@ -266,7 +284,6 @@ function fillCellWithMonster(cell, data) {
     targetEl.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
       if (e.button !== 0 && e.pointerType === 'mouse') return;
-      if (e.cancelable) e.preventDefault();
 
       const startX = e.clientX;
       const startY = e.clientY;
@@ -282,27 +299,39 @@ function fillCellWithMonster(cell, data) {
       function onMove(moveEvent) {
         const dx = moveEvent.clientX - startX;
         const dy = moveEvent.clientY - startY;
-        if (!isDragging && Math.hypot(dx, dy) > 5) {
-          isDragging = true;
-          draggingItem = {
-            type: 'board',
-            src: data.src,
-            species: species,
-            tier: tier,
-            player: player,
-            sourceIndex: sourceIndex,
-            sourceClassName: cell.className
-          };
 
-          dragGhost.style.backgroundImage = `url(${data.src})`;
-          dragGhost.style.display = 'block';
-          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+        if (!isDragging) {
+          // タッチ操作時、縦方向(Y)の移動が横方向(X)より大きく、かつ一定以上動いたらスクロールとみなしてドラッグをキャンセル
+          if (moveEvent.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            return;
+          }
 
-          cell.innerHTML = '';
-          cell.className = 'cell';
+          // ドラッグ開始の閾値を 10px に設定
+          if (Math.hypot(dx, dy) > 10) {
+            isDragging = true;
+            draggingItem = {
+              type: 'board',
+              src: data.src,
+              species: species,
+              tier: tier,
+              player: player,
+              sourceIndex: sourceIndex,
+              sourceClassName: cell.className
+            };
+
+            dragGhost.style.backgroundImage = `url(${data.src})`;
+            dragGhost.style.display = 'block';
+            updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+
+            cell.innerHTML = '';
+            cell.className = 'cell';
+          }
         }
 
         if (isDragging) {
+          if (moveEvent.cancelable) moveEvent.preventDefault();
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
           updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
         }
@@ -323,7 +352,7 @@ function fillCellWithMonster(cell, data) {
         dragGhost.style.display = 'none';
         const dropTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
         const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
-        const isOverMonsterFrame = dropTarget && monsterFrame.contains(dropTarget);
+        const isOverMonsterFrame = dropTarget && monsterFrame && monsterFrame.contains(dropTarget);
 
         if (isOverMonsterFrame) {
           draggingItem = null;
@@ -425,14 +454,14 @@ function buildBoard(size) {
   mainGrid.className = `grid-${size}x${size}`;
   
   if (size === 6) {
-    playerSwitchContainer.classList.add('show');
-    zombieStageBtn.classList.add('active');
-    normalStageBtn.classList.remove('active');
+    if (playerSwitchContainer) playerSwitchContainer.classList.add('show');
+    if (zombieStageBtn) zombieStageBtn.classList.add('active');
+    if (normalStageBtn) normalStageBtn.classList.remove('active');
     updateChipsetAreaVisibility(true);
   } else {
-    playerSwitchContainer.classList.remove('show');
-    normalStageBtn.classList.add('active');
-    zombieStageBtn.classList.remove('active');
+    if (playerSwitchContainer) playerSwitchContainer.classList.remove('show');
+    if (normalStageBtn) normalStageBtn.classList.add('active');
+    if (zombieStageBtn) zombieStageBtn.classList.remove('active');
     currentPlayer = "1P";
     updateChipsetAreaVisibility(false);
   }
@@ -518,7 +547,7 @@ function buildBoard(size) {
       });
       
       currentSelected = null;
-      selectedNameEl.textContent = 'なし';
+      if (selectedNameEl) selectedNameEl.textContent = 'なし';
       saveBoardState();
       renderMonsters();
     });
@@ -564,6 +593,7 @@ function renderMonsters() {
     const item = document.createElement('div');
     item.className = 'monster-item';
     item.dataset.attr = baseM.attr;
+    item.style.touchAction = 'pan-y'; // タッチによる縦スクロールをブラウザに許可
     
     if (currentSelected && currentSelected.species === species) {
       item.classList.add('active');
@@ -607,22 +637,34 @@ function renderMonsters() {
       function onMove(moveEvent) {
         const dx = moveEvent.clientX - startX;
         const dy = moveEvent.clientY - startY;
-        if (!isDragging && Math.hypot(dx, dy) > 5) {
-          isDragging = true;
-          draggingItem = {
-            type: 'palette',
-            src: paletteItemData.imgUrl,
-            species: paletteItemData.species,
-            tier: paletteItemData.tierNum,
-            player: currentGridSize === 6 ? currentPlayer : '1P'
-          };
 
-          dragGhost.style.backgroundImage = `url(${paletteItemData.imgUrl})`;
-          dragGhost.style.display = 'block';
-          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+        if (!isDragging) {
+          // タッチ操作時、縦方向(Y)の移動が横方向(X)より大きく、かつ一定以上動いたらスクロールとみなしてドラッグをキャンセル
+          if (moveEvent.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            return;
+          }
+
+          // ドラッグ開始の閾値を 10px に設定
+          if (Math.hypot(dx, dy) > 10) {
+            isDragging = true;
+            draggingItem = {
+              type: 'palette',
+              src: paletteItemData.imgUrl,
+              species: paletteItemData.species,
+              tier: paletteItemData.tierNum,
+              player: currentGridSize === 6 ? currentPlayer : '1P'
+            };
+
+            dragGhost.style.backgroundImage = `url(${paletteItemData.imgUrl})`;
+            dragGhost.style.display = 'block';
+            updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          }
         }
 
         if (isDragging) {
+          if (moveEvent.cancelable) moveEvent.preventDefault();
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
           updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
         }
@@ -652,10 +694,12 @@ function renderMonsters() {
           }
 
           renderMonsters();
-          if (currentSelected) {
-            selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
-          } else {
-            selectedNameEl.textContent = 'なし';
+          if (selectedNameEl) {
+            if (currentSelected) {
+              selectedNameEl.textContent = `${currentSelected.name} (T${currentSelected.tierNum})`;
+            } else {
+              selectedNameEl.textContent = 'なし';
+            }
           }
           return;
         }
@@ -750,13 +794,12 @@ function renderMonsters() {
     monsterGrid.appendChild(item);
   });
 }
-
 // 選択解除機能
-document.getElementById('appContainer').addEventListener('click', (e) => {
+document.getElementById('appContainer')?.addEventListener('click', (e) => {
   if (!e.target.closest('.cell, .board-slot') && !e.target.closest('.monster-item')) {
     if (currentSelected) {
       currentSelected = null;
-      selectedNameEl.textContent = 'なし';
+      if (selectedNameEl) selectedNameEl.textContent = 'なし';
       renderMonsters();
     }
   }
@@ -778,10 +821,10 @@ function setupFilter(groupId, attrName, callback) {
 setupFilter('attrFilterGroup', 'attr', val => currentAttr = val);
 setupFilter('typeFilterGroup', 'type', val => currentType = val);
 
-document.getElementById('clearBtn').addEventListener('click', (e) => {
+document.getElementById('clearBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   currentSelected = null;
-  selectedNameEl.textContent = 'なし';
+  if (selectedNameEl) selectedNameEl.textContent = 'なし';
   document.querySelectorAll('.cell').forEach(cell => {
     cell.innerHTML = '';
     cell.className = 'cell';
@@ -794,20 +837,27 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
 });
 
 // 保存ボタン処理（キャプチャ時のチップ画像のアスペクト比維持補正含む）
-document.getElementById('saveBtn').addEventListener('click', (e) => {
+document.getElementById('saveBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   
   const boardFrame = document.getElementById('boardFrame');
   const titleInput = document.getElementById('appTitleInput');
   const playerSwitchContainer = document.getElementById('playerSwitchContainer');
   
+  if (!boardFrame) {
+    alert('盤面が見つかりません。');
+    return;
+  }
+  
   let titleText = 'タタ配置ツール';
   if (titleInput && titleInput.value.trim() !== '') {
     titleText = titleInput.value.trim();
   }
 
-  const originalPlayerSwitchDisplay = playerSwitchContainer.style.display;
-  playerSwitchContainer.style.display = 'none';
+  const originalPlayerSwitchDisplay = playerSwitchContainer ? playerSwitchContainer.style.display : '';
+  if (playerSwitchContainer) {
+    playerSwitchContainer.style.display = 'none';
+  }
 
   const captureContainer = document.createElement('div');
   captureContainer.style.position = 'absolute';
@@ -883,7 +933,9 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     logging: false
   }).then(canvas => {
     document.body.removeChild(captureContainer);
-    playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+    if (playerSwitchContainer) {
+      playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+    }
 
     const imageURL = canvas.toDataURL('image/webp', 0.98);
     const downloadLink = document.createElement('a');
@@ -896,29 +948,31 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
   }).catch(err => {
     console.error('画像保存エラー:', err);
     alert('画像の保存に失敗しました。');
-    playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+    if (playerSwitchContainer) {
+      playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+    }
     if (document.body.contains(captureContainer)) {
       document.body.removeChild(captureContainer);
     }
   });
 });
 
-btn1P.addEventListener('click', (e) => {
+btn1P?.addEventListener('click', (e) => {
   e.stopPropagation();
   currentPlayer = "1P";
   btn1P.classList.add('active');
-  btn2P.classList.remove('active');
+  btn2P?.classList.remove('active');
   applyChipsToSlots();
   if (currentSelectionMode === 'chip') {
     renderChips();
   }
 });
 
-btn2P.addEventListener('click', (e) => {
+btn2P?.addEventListener('click', (e) => {
   e.stopPropagation();
   currentPlayer = "2P";
   btn2P.classList.add('active');
-  btn1P.classList.remove('active');
+  btn1P?.classList.remove('active');
   applyChipsToSlots();
   if (currentSelectionMode === 'chip') {
     renderChips();
@@ -929,43 +983,45 @@ const menuOpenBtn = document.getElementById('menuOpenBtn');
 const drawerOverlay = document.getElementById('drawerOverlay');
 const drawerMenu = document.getElementById('drawerMenu');
 
-menuOpenBtn.addEventListener('click', (e) => {
+menuOpenBtn?.addEventListener('click', (e) => {
   e.stopPropagation();
-  drawerOverlay.classList.add('open');
+  drawerOverlay?.classList.add('open');
 });
 
-drawerOverlay.addEventListener('click', (e) => {
+drawerOverlay?.addEventListener('click', (e) => {
   if (e.target === drawerOverlay) {
     drawerOverlay.classList.remove('open');
   }
 });
 
-drawerMenu.addEventListener('click', (e) => {
+drawerMenu?.addEventListener('click', (e) => {
   e.stopPropagation();
 });
 
-normalStageBtn.addEventListener('click', () => {
+normalStageBtn?.addEventListener('click', () => {
   if (currentGridSize !== 5) {
     localStorage.removeItem('monsterBoard_cells');
     localStorage.removeItem('monsterBoard_chips');
+    selectedChipsMap = { '1P': [], '2P': [] };
   }
   currentSelected = null;
-  selectedNameEl.textContent = 'なし';
+  if (selectedNameEl) selectedNameEl.textContent = 'なし';
   buildBoard(5);
   renderMonsters();
-  drawerOverlay.classList.remove('open');
+  drawerOverlay?.classList.remove('open');
 });
 
-zombieStageBtn.addEventListener('click', () => {
+zombieStageBtn?.addEventListener('click', () => {
   if (currentGridSize !== 6) {
     localStorage.removeItem('monsterBoard_cells');
     localStorage.removeItem('monsterBoard_chips');
+    selectedChipsMap = { '1P': [], '2P': [] };
   }
   currentSelected = null;
-  selectedNameEl.textContent = 'なし';
+  if (selectedNameEl) selectedNameEl.textContent = 'なし';
   buildBoard(6);
   renderMonsters();
-  drawerOverlay.classList.remove('open');
+  drawerOverlay?.classList.remove('open');
 });
 
 // 初期化実行
