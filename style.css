@@ -593,13 +593,15 @@ body {
   font-weight: normal;
 }
 
-/* チップセットエリア（左右に分かれて合計6つ横並び） */
+/* チップセットエリア（左右に分かれて合計6つ横並び・1行に収める修正版） */
 .chipset-container {
   margin: 10px 0;
   background: rgba(255, 255, 255, 0.03);
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #334155;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chipset-title {
@@ -612,22 +614,25 @@ body {
 
 .chipset-slots {
   display: flex;
-  justify-content: space-between; /* 左右に大きく離して配置する場合 */
+  justify-content: space-between;
   align-items: center;
-  gap: 12px; /* 1P側グループと2P側グループの間隔 */
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* 1P側・2P側の3つずつの塊をまとめるコンテナ用（必要に応じてHTML側にラッパーを追加してください） */
 .chipset-group {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: nowrap;
+  flex: 1;
 }
 
 .chipset-slot {
-  flex: 0 0 45px;
-  width: 45px;
+  flex: 1;
+  width: 100%;
   aspect-ratio: 1 / 1;
+  max-width: none;
   background: #1e293b;
   border: 2px dashed #475569;
   border-radius: 6px;
