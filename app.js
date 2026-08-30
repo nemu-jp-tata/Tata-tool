@@ -1,4 +1,3 @@
-// app.js 全文
 // 選択中のモード（'monster' または 'chip'）
 let currentSelectionMode = 'monster';
 // プレイヤーごとの選択されたチップのリスト（最大3枚）
@@ -794,7 +793,7 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 保存ボタン処理（画像保存時は1P/2Pボタンを一時的に隠し、チップセットは保持する）
+// 保存ボタン処理（高画質WebPかつ縦横比を歪ませずにキャプチャ保存）
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -831,11 +830,12 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   const boardClone = boardFrame.cloneNode(true);
 
+  // 縦横比（アスペクト比）が崩れないようにアスペクト比固定処理を明示
   const cells = boardClone.querySelectorAll('.cell');
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
     cell.style.width = '100%';
-    cell.style.height = '100%';
+    cell.style.height = 'auto';
     
     const img = cell.querySelector('img');
     if (img) {
@@ -858,15 +858,18 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
 
   document.body.appendChild(captureContainer);
 
+  // 高画質化のために scale: 3 (または DevicePixelRatio) を設定
   html2canvas(captureContainer, {
     backgroundColor: '#181a29',
-    scale: 2,
-    useCORS: true
+    scale: 3, 
+    useCORS: true,
+    logging: false
   }).then(canvas => {
     document.body.removeChild(captureContainer);
     playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
 
-    const imageURL = canvas.toDataURL('image/webp', 0.92);
+    // WebPでのクオリティ（圧縮率）を最高に近い 0.98 に設定
+    const imageURL = canvas.toDataURL('image/webp', 0.98);
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
     downloadLink.download = `${titleText}-${currentGridSize}x${currentGridSize}.webp`;
