@@ -53,7 +53,7 @@ function updateChipsetAreaVisibility(isZombieStage) {
   }
 }
 
-// チップ一覧を描画する関数（スクロール対応版）
+// チップ一覧を描画する関数（画像歪み防止スタイル修正版）
 function renderChips() {
   monsterGrid.innerHTML = '';
 
@@ -79,10 +79,10 @@ function renderChips() {
     const item = document.createElement('div');
     item.className = `monster-item ${isSelected ? 'active' : ''}`;
     // タッチやホイールでのスクロール操作が阻害されないよう touch-action を指定
-    item.style.cssText = 'position: relative; aspect-ratio: 1 / 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y;';
+    item.style.cssText = 'position: relative; aspect-ratio: 1 / 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y; padding: 2px; box-sizing: border-box;';
 
     item.innerHTML = `
-      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; pointer-events: none; display: block; margin: auto;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
     `;
 
     item.addEventListener('click', (e) => {
@@ -104,7 +104,7 @@ function renderChips() {
   });
 }
 
-// 1P・2P両方の選択したチップを各専用スロットに反映する関数
+// 1P・2P両方の選択したチップを各専用スロットに反映する関数（画像歪み防止スタイル修正版）
 function applyChipsToSlots() {
   // 1Pのチップを反映
   const p1Chips = selectedChipsMap['1P'] || [];
@@ -114,7 +114,7 @@ function applyChipsToSlots() {
     if (p1Chips[index]) {
       const chip = p1Chips[index];
       slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="[1P] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+        <img src="${chip.img}" alt="${chip.name}" title="[1P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
       `;
     }
   });
@@ -127,7 +127,7 @@ function applyChipsToSlots() {
     if (p2Chips[index]) {
       const chip = p2Chips[index];
       slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="[2P] ${chip.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
+        <img src="${chip.img}" alt="${chip.name}" title="[2P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
       `;
     }
   });
@@ -246,10 +246,9 @@ function loadBoardState() {
   applyChipsToSlots();
 }
 
-// セルにモンスター画像を設定し、ポインターイベントを付与する（歪み防止スタイル修正）
+// セルにモンスター画像を設定し、ポインターイベントを付与する
 function fillCellWithMonster(cell, data) {
   cell.className = data.className;
-  // 画像がセル内で潰れたり歪んだりしないよう object-fit: contain を明示
   cell.innerHTML = `
     <img src="${data.src}" 
          alt="" 
@@ -794,7 +793,7 @@ document.getElementById('clearBtn').addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 保存ボタン処理（画像のアスペクト比・縦横比補正版）
+// 保存ボタン処理（キャプチャ時のチップ画像のアスペクト比維持補正含む）
 document.getElementById('saveBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -858,6 +857,19 @@ document.getElementById('saveBtn').addEventListener('click', (e) => {
     const chipsetContainer = document.getElementById('chipsetContainer');
     if (chipsetContainer && chipsetContainer.style.display !== 'none') {
       const chipsetClone = chipsetContainer.cloneNode(true);
+
+      // キャプチャ内のチップスロット画像の比率歪みを防止
+      const slotImgs = chipsetClone.querySelectorAll('.chipset-slot img');
+      slotImgs.forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        img.style.objectFit = 'contain';
+        img.style.display = 'block';
+        img.style.margin = 'auto';
+      });
+
       captureContainer.appendChild(chipsetClone);
     }
   }
