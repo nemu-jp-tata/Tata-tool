@@ -264,7 +264,6 @@ function loadBoardState() {
   applyChipsToSlots();
 }
 
-// セルにモンスター画像を設定し、ポインターイベントを付与する
 function fillCellWithMonster(cell, data) {
   cell.className = data.className;
   cell.innerHTML = `
@@ -276,6 +275,7 @@ function fillCellWithMonster(cell, data) {
          draggable="false"
          style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; pointer-events: auto; touch-action: none; display: block; margin: auto;"
          onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+    ${data.tier ? `<div class="tier-badge">T${data.tier}</div>` : ''}
   `;
 
   const targetEl = cell.querySelector('img') || cell.querySelector('.no-image-badge');
