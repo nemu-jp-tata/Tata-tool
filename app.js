@@ -53,15 +53,17 @@ function updateChipsetAreaVisibility(isZombieStage) {
   }
 }
 
-// チップ一覧を描画する関数（アクションエリアのレイアウト改善 ＆ チップ画像上でのスクロール有効化）
+// チップ一覧を描画する関数（スクロール対応版）
 function renderChips() {
   monsterGrid.innerHTML = '';
+  // スクロールが確実に発生するように、グリッドのスタイルと高さを明示的に設定
+  monsterGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; overflow-y: auto; max-height: 420px; align-content: start; box-sizing: border-box;';
 
   const selectedChips = selectedChipsMap[currentPlayer];
 
-  // セットボタン用のコンテナを作成・配置
+  // セットボタン用のコンテナを作成・配置（スクロール時に上部に追従するsticky配置）
   const actionArea = document.createElement('div');
-  actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%;';
+  actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 10;';
   actionArea.innerHTML = `
     <span style="font-size: 12px; color: #cbd5e1; white-space: nowrap;">[${currentPlayer}] 選択中: <strong id="selectedChipCount" style="color: #4ade80;">${selectedChips.length}</strong> / 3枚</span>
     <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 6px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;">セットする</button>
@@ -73,15 +75,16 @@ function renderChips() {
     applyChipsToSlots();
   });
 
-  // 全49種のチップを描画（pointer-events: none と touch-action: pan-y を指定して画像上でのスクロールを完全に許可）
+  // 全49種のチップを描画
   chipsetList.forEach(chip => {
     const isSelected = selectedChips.some(c => c.id === chip.id);
     const item = document.createElement('div');
     item.className = `monster-item ${isSelected ? 'active' : ''}`;
-    item.style.position = 'relative';
+    // タッチやホイールでのスクロール操作が阻害されないよう touch-action を指定
+    item.style.cssText = 'position: relative; aspect-ratio: 1 / 1; background: #2a2d3d; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y;';
 
     item.innerHTML = `
-      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; touch-action: pan-y;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
     `;
 
     item.addEventListener('click', (e) => {
@@ -522,7 +525,8 @@ function renderMonsters() {
     return;
   }
 
-  monsterGrid.innerHTML = '';
+  // タタ選択画面に戻る際は標準のグリッドスタイルにリセット
+  monsterGrid.style.cssText = '';
 
   const filtered = monstersData.filter(m => {
     const matchAttr = (currentAttr === 'all' || m.attr === currentAttr);
