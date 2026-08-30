@@ -453,7 +453,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* パソコン版（画面幅900px以上）の左右レイアウト対応 */
+/* パソコン版（画面幅900px以上）の左右レイアウト対応・幅を拡張 */
 @media (min-width: 900px) {
   body {
     display: flex;
@@ -470,7 +470,7 @@ body {
     justify-content: center;
     gap: 24px;
     width: 100%;
-    max-width: 1250px !important;
+    max-width: 1350px !important; /* 全体の最大幅を広げました */
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
@@ -480,8 +480,8 @@ body {
   .left-column {
     display: flex;
     flex-direction: column;
-    width: 540px;
-    flex: 0 0 540px;
+    width: 600px; /* 左カラムの幅を広げて盤面が縦に折れないように調整 */
+    flex: 0 0 600px;
     height: 100%;
   }
   .board-frame {
@@ -491,7 +491,7 @@ body {
     flex-direction: column;
   }
   .monster-frame {
-    width: 450px;
+    width: 480px;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -593,7 +593,7 @@ body {
   font-weight: normal;
 }
 
-/* チップセットエリア（左右に分かれて合計6つ横並び・1行に収める修正版） */
+/* チップセットエリア */
 .chipset-container {
   margin: 10px 0;
   background: rgba(255, 255, 255, 0.03);
