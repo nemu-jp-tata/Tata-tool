@@ -369,7 +369,7 @@ function checkSubProgress() {
   }
 }
 
-// 属性の偏りによる最終診断ロジック（T2ルート用・パターン3反映）
+// 属性の偏りによる最終診断ロジック（T2ルート用）
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
@@ -412,7 +412,7 @@ function diagnoseAttributeBalance() {
         現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
         特定属性のステージで手詰まりしやすいため、<b>不足している属性の強力なアタッカーを優先してT2育成</b>しましょう！
         <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「道場3」が解放されます！まずは手薄な属性から育てて道場3の解放を目指しましょう！
+          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
         </div>
       </div>
     `;
@@ -426,7 +426,7 @@ function diagnoseAttributeBalance() {
         手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
         1つの属性に偏りすぎると不利属性で詰まりやすくなるため、手薄な他の属性のアタッカーも並行して育てていきましょう。
         <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「道場3」が解放されます！まずは手薄な属性から育てて道場3の解放を目指しましょう！
+          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
         </div>
       </div>
     `;
@@ -440,7 +440,7 @@ function diagnoseAttributeBalance() {
         全属性にバランス良くT2タタが育っており、攻略準備は万全です！<br><br>
         次は幅広く育てるのを休止し、<b>エースアタッカーから集中してT3（最終進化）へ育成を進めましょう！</b>
         <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
+          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
         </div>
       </div>
     `;
@@ -625,6 +625,9 @@ function diagnoseT3() {
     </div>
     <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
       ${recommendationSections.join('')}
+      <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+        💡 各属性のT3を5体揃えると「その属性の道場5」が解放されます！長期的な目標として各属性のT3を5体揃えることを目指しましょう！
+      </div>
     </div>
   `;
 
