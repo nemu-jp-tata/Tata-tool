@@ -457,10 +457,6 @@ function diagnoseT3() {
   const userList = Array.from(selectedT3Monsters);
   const myT3Monsters = rawMonstersData.filter(m => userList.includes(m.name));
 
-  const ownedT3Tanks = myT3Monsters.filter(m => isTankRole(m));
-  const hasHinomushiT3 = myT3Monsters.some(m => m.name.includes('ヒノムシ') || m.species.includes('ヒノムシ'));
-  const hasPurabiT3 = myT3Monsters.some(m => m.name.includes('プラビ') || m.species.includes('プラビ'));
-
   const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
   myT3Monsters.forEach(m => {
     if (attrCounts[m.type] !== undefined) {
@@ -469,7 +465,31 @@ function diagnoseT3() {
   });
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
-  
+
+  // ★ 各属性すべてでT3が5体以上揃っているかチェック ★
+  const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 5);
+
+  if (isMasterPlayer) {
+    const outputHTML = `
+      <div style="text-align:center;">
+        <span style="background: linear-gradient(135deg, #a855f7, #ec4899); color:#fff; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🏆 殿堂入り級の攻略者</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">素晴らしい育成状況です！</h3>
+      </div>
+      <div style="font-size:13px; color:#334155; line-height:1.7; background:#fff; padding:16px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+        全属性でT3タタが5体以上揃っており、すべての「道場5」も解放されています！<br>
+        正直なところ、<b>あなたにはもうこの育成診断ツールは必要ないかもしれません…！</b>✨<br><br>
+        ここからは育成効率などを気にする段階を終え、<b>大好きな推しタタをT4にして自慢の限界突破パーティを作り上げていきましょう！</b>🔥
+      </div>
+    `;
+    document.getElementById('diag-output').innerHTML = outputHTML;
+    nextStep(3);
+    return;
+  }
+
+  const ownedT3Tanks = myT3Monsters.filter(m => isTankRole(m));
+  const hasHinomushiT3 = myT3Monsters.some(m => m.name.includes('ヒノムシ') || m.species.includes('ヒノムシ'));
+  const hasPurabiT3 = myT3Monsters.some(m => m.name.includes('プラビ') || m.species.includes('プラビ'));
+
   let mostAttr = allAttrs[0];
   let maxCount = 0;
   allAttrs.forEach(a => {
