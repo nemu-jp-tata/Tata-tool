@@ -35,8 +35,9 @@
     
     #diag-output { padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
     
-    .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; display: flex; align-items: center; gap: 12px; }
-    .rec-card img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    /* 診断結果用のおすすめカード用スタイル */
+    .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
+    .rec-card img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -171,21 +172,22 @@ function diagnose() {
       }
     });
 
-    // 不足属性ごとに候補となる壁タタを1体ずつピックアップ
+    // 不足している全属性の壁役タタをすべて取得してカード化
     let candidateCardsHTML = "";
     missingTankAttrs.forEach(attr => {
-      const candidate = allTankT1.find(m => m.type === attr);
-      if (candidate) {
+      // 該当属性の壁役タタをすべて取得
+      const candidates = allTankT1.filter(m => m.type === attr);
+      candidates.forEach(candidate => {
         candidateCardsHTML += `
           <div class="rec-card">
-            <img src="./${encodeURIComponent(candidate.name)}.webp" alt="${candidate.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/50?text=${encodeURIComponent(candidate.name)}';">
+            <img src="./${encodeURIComponent(candidate.name)}.webp" alt="${candidate.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(candidate.name)}';">
             <div>
-              <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${attr}属性】のおすすめ壁役</div>
+              <div style="font-size:11px; color:#dc2626; font-weight:bold;">【${attr}属性】の壁役</div>
               <div style="font-size:14px; font-weight:bold; color:#1e293b;">${candidate.name}</div>
             </div>
           </div>
         `;
-      }
+      });
     });
 
     outputHTML = `
@@ -194,7 +196,6 @@ function diagnose() {
         <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">「壁役（前衛）」の補強が必要です！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        現在、<b style="color:#dc2626;">[ ${missingTankAttrs.join('・')} ]</b> 属性で頼れる前衛・壁役が不足しています。<br>
         アタッカーが倒されて攻略が止まるのを防ぐため、<b>最低でもこの中から1体育成しましょう！</b>
       </div>
       <div style="margin-top:10px;">
