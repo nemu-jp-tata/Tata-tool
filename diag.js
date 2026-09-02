@@ -4,7 +4,7 @@ const GITHUB_IMG_BASE = "https://cdn.jsdelivr.net/gh/nemu-jp-tata/Tata-tool@main
 function diagnoseWithGitHubData() {
   // rawMonstersData (monsters.js) が読み込まれているか確認
   if (typeof rawMonstersData === 'undefined') {
-    alert("モンスターデータの読み込みに失敗しました。ファイルパスまたは通信状況を確認してください。");
+    alert("モンスターデータ（monsters.js）の読み込みに失敗しています。");
     return;
   }
 
@@ -49,3 +49,21 @@ function diagnoseWithGitHubData() {
     ${recommendHTML}
   `;
 }
+
+// 画面ロード時およびボタン要素の存在確認時にクリックイベントをバインド
+document.addEventListener("DOMContentLoaded", function() {
+  const btn = document.getElementById('diag-btn');
+  if (btn) {
+    btn.onclick = diagnoseWithGitHubData;
+  }
+});
+
+// DOMContentLoaded後にスクリプトが読み込まれた場合の保険処理
+(function bindButton() {
+  const btn = document.getElementById('diag-btn');
+  if (btn) {
+    btn.onclick = diagnoseWithGitHubData;
+  } else {
+    setTimeout(bindButton, 200);
+  }
+})();
