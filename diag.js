@@ -16,6 +16,23 @@ function diagnoseWithGitHubData() {
     return;
   }
 
+  // 1. 全データを使いやすい形式にマッピング
+  const allMonsters = rawMonstersData.map(m => ({
+    name: m.name,
+    species: m.species,
+    attr: m.type,
+    tierNum: m.T,
+    role: m.role
+  }));
+
+  // 2. 各種族（species）ごとの最小Tier（初期形態）のデータを抽出するマップを作成
+  const baseMonstersMap = new Map();
+  allMonsters.forEach(m => {
+    if (!baseMonstersMap.has(m.species) || m.tierNum < baseMonstersMap.get(m.species).tierNum) {
+      baseMonstersMap.set(m.species, m);
+    }
+  });
+
   const tier = parseInt(tierElement.value, 10);
   const checkedAttrs = Array.from(document.querySelectorAll('.user-attr:checked')).map(cb => cb.value);
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
@@ -26,21 +43,27 @@ function diagnoseWithGitHubData() {
   let recommendHTML = "";
 
   if (missingAttrs.length > 0) {
-    // 不足している属性からランダムに1つ対象に選ぶ
+    // 不足している属性から1つランダムに選ぶ
     const targetAttr = missingAttrs[Math.floor(Math.random() * missingAttrs.length)];
-    // 不足属性のT4タタを全データから検索
-    const candidates = rawMonstersData.filter(m => m.type === targetAttr && m.T === 4);
+    
+    // 不足属性に該当する高Tier（T3〜T4）のタタを検索
+    const candidates = allMonsters.filter(m => m.attr === targetAttr && m.tierNum >= 3);
     
     if (candidates.length > 0) {
-      const rec = candidates[Math.floor(Math.random() * candidates.length)];
-      
+      // 目標となる最終進化タタを決定
+      const targetMonster = candidates[Math.floor(Math.random() * candidates.length)];
+      // そのタタの種族（species）の初期形態（最小Tier）を取得
+      const baseMonster = baseMonstersMap.get(targetMonster.species) || targetMonster;
+
       recommendHTML = `
         <div style="margin-top:15px; background:#f8fafc; padding:12px; border-radius:6px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:12px;">
-          <img src="${GITHUB_IMG_BASE}${encodeURIComponent(rec.name)}.webp" width="60" height="60" style="border-radius:6px; object-fit:cover; background:#e2e8f0; flex-shrink:0;" alt="${rec.name}" onerror="this.style.display='none'">
+          <img src="${GITHUB_IMG_BASE}${encodeURIComponent(baseMonster.name)}.webp" width="60" height="60" style="border-radius:6px; object-fit:cover; background:#e2e8f0; flex-shrink:0;" alt="${baseMonster.name}" onerror="this.style.display='none'">
           <div>
             <div style="font-size:12px; color:#2563eb; font-weight:bold;">【おすすめ補強タタ】</div>
-            <strong style="font-size:16px; color:#1e293b;">${rec.name} （${rec.type}属性 / ${rec.role}）</strong>
-            <div style="font-size:12px; color:#475569; margin-top:4px;">${targetAttr}属性の戦力を補うため、<b>${rec.species}</b>（T1〜）の育成を目指すのがおすすめです！</div>
+            <strong style="font-size:16px; color:#1e293b;">${baseMonster.name} （${baseMonster.attr}属性 / T${baseMonster.tierNum}）</strong>
+            <div style="font-size:12px; color:#475569; margin-top:4px;">
+              ${targetAttr}属性の戦力を補うため、まずは <b>${baseMonster.name}</b> を育成して <b>${targetMonster.name}（T${targetMonster.tierNum}）</b> を目指すのがおすすめです！
+            </div>
           </div>
         </div>
       `;
@@ -58,7 +81,7 @@ function diagnoseWithGitHubData() {
   `;
 }
 
-// ボタンクリックのイベントListenerを確実にバインドする（即時・遅延監視付き）
+// ボタンのクリックイベント登録（即時・遅延監視）
 (function initDiagTool() {
   function attachEvent() {
     const btn = document.getElementById('diag-btn');
