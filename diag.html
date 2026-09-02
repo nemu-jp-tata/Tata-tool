@@ -45,46 +45,76 @@
 <div class="card">
   <h2>🔰 次に育てるタタ診断</h2>
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: Q1 -->
   <div id="step-1" class="step-panel active">
     <div class="section-title">Q1. 今の攻略状況は？</div>
     <div class="radio-group">
       <label class="radio-label">
-        <input type="radio" name="progress" value="early" checked>
-        序盤攻略中<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(まずは土台作り)</span>
+        <input type="radio" name="progress" value="t2" checked>
+        T2が増え始めた<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(序盤〜中盤の土台作り)</span>
       </label>
       <label class="radio-label">
-        <input type="radio" name="progress" value="mid">
-        中盤で詰まり気味<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(敵の攻撃が痛い)</span>
+        <input type="radio" name="progress" value="t3">
+        T3を少し持っている<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(更なるステップアップ)</span>
       </label>
     </div>
-    <button class="btn" onclick="nextStep(2)">次へ進む ➔</button>
+    <button class="btn" onclick="handleQ1Next()">次へ進む ➔</button>
   </div>
 
-  <!-- STEP 2 -->
-  <div id="step-2" class="step-panel">
+  <!-- STEP 2-A-1: T2が増え始めた場合（壁役チェック） -->
+  <div id="step-2-a-1" class="step-panel">
     <div class="section-title">Q2. 手持ちで「T2（第2進化）以上」まで育てているタタを選んでください</div>
     <div class="sub-text">※現在パーティで使っている・育成済みのタタをタップ（複数選択可）</div>
-    <div id="monster-grid" class="grid-container"></div>
+    <div id="monster-grid-tank" class="grid-container"></div>
 
     <div class="btn-group">
       <button class="btn btn-sub" onclick="nextStep(1)">← 戻る</button>
-      <button class="btn" onclick="diagnose()">診断結果を見る！</button>
+      <button class="btn" onclick="checkTankProgress()">次へ進む ➔</button>
     </div>
   </div>
 
-  <!-- STEP 3 (診断結果) -->
+  <!-- STEP 2-A-2: 壁役が全属性揃っている場合の追加チェック（ヒノムシ・プラビ） -->
+  <div id="step-2-a-2" class="step-panel">
+    <div class="section-title">Q3. 以下のタタは「T2以上」まで育てていますか？</div>
+    <div class="sub-text">※育成済みのタタをタップして選択してください</div>
+    <div id="monster-grid-sub" class="grid-container" style="grid-template-columns: repeat(2, 1fr);"></div>
+
+    <div class="btn-group">
+      <button class="btn btn-sub" onclick="nextStep('step-2-a-1')">← 戻る</button>
+      <button class="btn" onclick="checkSubProgress()">診断結果を見る！</button>
+    </div>
+  </div>
+
+  <!-- STEP 2-B: T3を少し持っている場合（プレースホルダー） -->
+  <div id="step-2-b" class="step-panel">
+    <div class="section-title">Q2. T3所持者向けの質問</div>
+    <div class="sub-text">※ここにT3所持者向けの設問・選択肢を配置できます</div>
+    
+    <div style="padding: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 13px;">
+      （質問内容をご指定いただければ、ここに配置します）
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-sub" onclick="nextStep(1)">← 戻る</button>
+      <button class="btn" onclick="diagnoseT3()">診断結果を見る！</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 診断結果表示 -->
   <div id="step-3" class="step-panel">
     <div id="diag-output"></div>
     <div class="btn-group" style="margin-top: 20px;">
-      <button class="btn btn-sub" onclick="nextStep(2)">← 選択をやり直す</button>
+      <button class="btn btn-sub" onclick="backToPrevStep()">← 選択をやり直す</button>
     </div>
   </div>
 </div>
 
 <script src="monsters.js"></script>
 <script>
-const selectedMonsters = new Set();
+const selectedTanks = new Set();
+const selectedSubMonsters = new Set();
+let currentBranch = 't2'; // 't2' または 't3'
+let lastStepBeforeResult = 'step-2-a-1'; // 直前のステップを記憶用
 
 // サポート枠だが壁になれる特例タタ
 const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
@@ -98,22 +128,40 @@ function isTankRole(monster) {
   return false;
 }
 
-function nextStep(stepNum) {
+function nextStep(step) {
   document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
-  document.getElementById(`step-${stepNum}`).classList.add('active');
+  
+  if (typeof step === 'string') {
+    document.getElementById(step).classList.add('active');
+  } else {
+    document.getElementById(`step-${step}`).classList.add('active');
+  }
+}
+
+function handleQ1Next() {
+  const selectedProgress = document.querySelector('input[name="progress"]:checked').value;
+  currentBranch = selectedProgress;
+
+  if (selectedProgress === 't2') {
+    nextStep('step-2-a-1');
+  } else {
+    nextStep('step-2-b');
+  }
+}
+
+function backToPrevStep() {
+  nextStep(lastStepBeforeResult);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   if (typeof rawMonstersData === 'undefined') return;
 
-  const grid = document.getElementById('monster-grid');
-
-  // T3以上が存在する「種族」を抽出
+  // --- 1. 壁役グリッドの生成 ---
+  const tankGrid = document.getElementById('monster-grid-tank');
   const validSpecies = new Set(
     rawMonstersData.filter(m => m.T >= 3).map(m => m.species)
   );
 
-  // 種族ごとのベース（T1形態）を取得
   const targetT1Monsters = [];
   validSpecies.forEach(sp => {
     const speciesForms = rawMonstersData.filter(m => m.species === sp);
@@ -121,7 +169,6 @@ window.addEventListener('DOMContentLoaded', () => {
     targetT1Monsters.push(baseForm);
   });
 
-  // グリッド生成（壁役適性のあるタタ一覧）
   const tankMonsters = targetT1Monsters.filter(m => isTankRole(m));
 
   tankMonsters.forEach(m => {
@@ -135,33 +182,65 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
 
     item.addEventListener('click', () => {
-      if (selectedMonsters.has(m.name)) {
-        selectedMonsters.delete(m.name);
+      if (selectedTanks.has(m.name)) {
+        selectedTanks.delete(m.name);
         item.classList.remove('selected');
       } else {
-        selectedMonsters.add(m.name);
+        selectedTanks.add(m.name);
         item.classList.add('selected');
       }
     });
 
-    grid.appendChild(item);
+    tankGrid.appendChild(item);
+  });
+
+  // --- 2. ヒノムシ・プラビ用グリッドの生成 ---
+  const subGrid = document.getElementById('monster-grid-sub');
+  const subNames = ['ヒノムシ', 'プラビ'];
+
+  subNames.forEach(name => {
+    // データ群からベースまたは一致する名称を取得
+    const monster = rawMonstersData.find(m => m.name.includes(name) || m.species.includes(name));
+    const displayName = monster ? monster.name : name;
+
+    const item = document.createElement('div');
+    item.className = 'monster-item';
+    item.dataset.name = displayName;
+    
+    item.innerHTML = `
+      <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(displayName)}';">
+      <div class="monster-name">${displayName}</div>
+    `;
+
+    item.addEventListener('click', () => {
+      if (selectedSubMonsters.has(name)) {
+        selectedSubMonsters.delete(name);
+        item.classList.remove('selected');
+      } else {
+        selectedSubMonsters.add(name);
+        item.classList.add('selected');
+      }
+    });
+
+    subGrid.appendChild(item);
   });
 });
 
-function diagnose() {
-  const userList = Array.from(selectedMonsters);
+// Q2（壁役）チェック判定
+function checkTankProgress() {
+  const userList = Array.from(selectedTanks);
   const myTanks = rawMonstersData.filter(m => userList.includes(m.name));
   
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
   const tankAttrs = new Set(myTanks.map(m => m.type));
   
-  // T2壁役が足りていない属性
+  // 不足属性
   const missingTankAttrs = allAttrs.filter(a => !tankAttrs.has(a));
 
-  let outputHTML = "";
-
   if (missingTankAttrs.length > 0) {
-    // 全データから、T3以上に育つ壁役（T1ベース形態）を取得
+    // 壁役が不足している場合 ➔ 診断終了メッセージを表示
+    lastStepBeforeResult = 'step-2-a-1';
+
     const validSpecies = new Set(rawMonstersData.filter(m => m.T >= 3).map(m => m.species));
     const allTankT1 = [];
     validSpecies.forEach(sp => {
@@ -172,10 +251,8 @@ function diagnose() {
       }
     });
 
-    // 不足している全属性の壁役タタをすべて取得してカード化
     let candidateCardsHTML = "";
     missingTankAttrs.forEach(attr => {
-      // 該当属性の壁役タタをすべて取得
       const candidates = allTankT1.filter(m => m.type === attr);
       candidates.forEach(candidate => {
         candidateCardsHTML += `
@@ -190,34 +267,102 @@ function diagnose() {
       });
     });
 
-    outputHTML = `
+    const outputHTML = `
       <div style="text-align:center;">
         <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
         <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">「壁役（前衛）」の補強が必要です！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        アタッカーが倒されて攻略が止まるのを防ぐため、<b>最低でもこの中から1体育成しましょう！</b>
+        アタッカーが倒されて攻略が止まるのを防ぐため、<b>最低でもこの中から1体育成して壁を作りましょう！</b>
       </div>
       <div style="margin-top:10px;">
         ${candidateCardsHTML}
       </div>
     `;
+
+    document.getElementById('diag-output').innerHTML = outputHTML;
+    nextStep(3);
   } else {
+    // 全属性の壁役を持っている場合 ➔ 次の質問（ヒノムシ・プラビ）へ進む
+    nextStep('step-2-a-2');
+  }
+}
+
+// Q3（ヒノムシ・プラビ）チェック判定
+function checkSubProgress() {
+  lastStepBeforeResult = 'step-2-a-2';
+
+  const hasHinomushi = selectedSubMonsters.has('ヒノムシ');
+  const hasPurabi = selectedSubMonsters.has('プラビ');
+
+  let outputHTML = "";
+
+  if (hasHinomushi && hasPurabi) {
+    // 両方持っている ➔ 次のステップへのメッセージ
     outputHTML = `
       <div style="text-align:center;">
         <span style="background:#16a34a; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">前衛の土台はバッチリです！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">素晴らしい！土台はバッチリです！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        全属性でしっかり前衛（壁役）になれるタタが育っています！<br><br>
-        次はこれらのタタを<b>T3/T4へ最終進化</b>させるか、主力アタッカー・ヒーラーの育成にシフトしていきましょう。
+        全属性の壁役に加え、必須のサポートタタもT2までしっかり育成できています。<br><br>
+        <b>次のステップへ進みましょう！</b>（主力アタッカーのT3進化やパーティの特化育成に移れます）
+      </div>
+    `;
+  } else {
+    // 片方または両方不足 ➔ 選ばれなかった方を提示して診断終了
+    const unselected = [];
+    if (!hasHinomushi) unselected.push('ヒノムシ');
+    if (!hasPurabi) unselected.push('プラビ');
+
+    let candidateCardsHTML = "";
+    unselected.forEach(name => {
+      const monster = rawMonstersData.find(m => m.name.includes(name) || m.species.includes(name));
+      const displayName = monster ? monster.name : name;
+
+      candidateCardsHTML += `
+        <div class="rec-card">
+          <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+          <div>
+            <div style="font-size:11px; color:#dc2626; font-weight:bold;">優先育成ターゲット</div>
+            <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    outputHTML = `
+      <div style="text-align:center;">
+        <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">重要タタのT2育成を目指しましょう！</h3>
+      </div>
+      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+        パーティのサポート力と攻略の安定感を高めるため、まずは以下のタタを<b>T2まで育てましょう！</b>
+      </div>
+      <div style="margin-top:10px;">
+        ${candidateCardsHTML}
       </div>
     `;
   }
 
-  const output = document.getElementById('diag-output');
-  output.innerHTML = outputHTML;
-  
+  document.getElementById('diag-output').innerHTML = outputHTML;
+  nextStep(3);
+}
+
+// T3を少し持っている場合の診断ロジック（仮）
+function diagnoseT3() {
+  lastStepBeforeResult = 'step-2-b';
+  const outputHTML = `
+    <div style="text-align:center;">
+      <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">T3所持者向けの診断結果</h3>
+    </div>
+    <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+      （ここにメッセージ）
+    </div>
+  `;
+
+  document.getElementById('diag-output').innerHTML = outputHTML;
   nextStep(3);
 }
 </script>
