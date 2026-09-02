@@ -8,11 +8,15 @@
     body { font-family: sans-serif; background: #f1f5f9; padding: 15px; margin: 0; }
     .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 20px; }
+    
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
     .section-title { font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 15px; border-left: 4px solid #2563eb; padding-left: 8px; }
     .sub-text { font-size: 12px; color: #64748b; margin-bottom: 12px; }
     
     .radio-group { display: flex; gap: 10px; margin-bottom: 20px; }
-    .radio-label { flex: 1; text-align: center; padding: 10px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; color: #475569; }
+    .radio-label { flex: 1; text-align: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; color: #475569; }
     .radio-label input { display: none; }
     .radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
 
@@ -23,12 +27,14 @@
     .monster-item.selected::after { content: "✓"; position: absolute; top: 2px; right: 2px; background: #2563eb; color: #fff; font-size: 10px; font-weight: bold; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
     .monster-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; text-align: center; padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .btn { width: 100%; padding: 14px; background: #2563eb; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { flex: 1; padding: 14px; background: #2563eb; color: #fff; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; text-align: center; }
     .btn:hover { background: #1d4ed8; }
+    .btn-sub { background: #94a3b8; }
+    .btn-sub:hover { background: #64748b; }
     
-    #diag-output { display: none; margin-top: 20px; padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
+    #diag-output { padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
     
-    /* 診断結果用のおすすめカード用スタイル */
     .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; display: flex; align-items: center; gap: 12px; }
     .rec-card img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
   </style>
@@ -38,25 +44,41 @@
 <div class="card">
   <h2>🔰 次に育てるタタ診断</h2>
 
-  <div class="section-title">Q1. 今の攻略状況は？</div>
-  <div class="radio-group">
-    <label class="radio-label">
-      <input type="radio" name="progress" value="early" checked>
-      序盤攻略中<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(まずは土台作り)</span>
-    </label>
-    <label class="radio-label">
-      <input type="radio" name="progress" value="mid">
-      中盤で詰まり気味<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(敵の攻撃が痛い)</span>
-    </label>
+  <!-- STEP 1 -->
+  <div id="step-1" class="step-panel active">
+    <div class="section-title">Q1. 今の攻略状況は？</div>
+    <div class="radio-group">
+      <label class="radio-label">
+        <input type="radio" name="progress" value="early" checked>
+        序盤攻略中<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(まずは土台作り)</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="progress" value="mid">
+        中盤で詰まり気味<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(敵の攻撃が痛い)</span>
+      </label>
+    </div>
+    <button class="btn" onclick="nextStep(2)">次へ進む ➔</button>
   </div>
 
-  <div class="section-title">Q2. 手持ちで「T2（第2進化）以上」まで育てているタタを選んでください</div>
-  <div class="sub-text">※現在パーティで使っている・育成済みのタタをタップ（複数選択可）</div>
-  <div id="monster-grid" class="grid-container"></div>
+  <!-- STEP 2 -->
+  <div id="step-2" class="step-panel">
+    <div class="section-title">Q2. 手持ちで「T2（第2進化）以上」まで育てているタタを選んでください</div>
+    <div class="sub-text">※現在パーティで使っている・育成済みのタタをタップ（複数選択可）</div>
+    <div id="monster-grid" class="grid-container"></div>
 
-  <button class="btn" onclick="diagnose()">次に育てるべきタタを診断！</button>
+    <div class="btn-group">
+      <button class="btn btn-sub" onclick="nextStep(1)">← 戻る</button>
+      <button class="btn" onclick="diagnose()">診断結果を見る！</button>
+    </div>
+  </div>
 
-  <div id="diag-output"></div>
+  <!-- STEP 3 (診断結果) -->
+  <div id="step-3" class="step-panel">
+    <div id="diag-output"></div>
+    <div class="btn-group" style="margin-top: 20px;">
+      <button class="btn btn-sub" onclick="nextStep(2)">← 選択をやり直す</button>
+    </div>
+  </div>
 </div>
 
 <script src="monsters.js"></script>
@@ -73,6 +95,11 @@ function isTankRole(monster) {
   if (role === 'タンク' || role === '壁' || role === 'ファイター') return true;
   if (specialSupportTankNames.some(name => monster.name.includes(name) || monster.species.includes(name))) return true;
   return false;
+}
+
+function nextStep(stepNum) {
+  document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
+  document.getElementById(`step-${stepNum}`).classList.add('active');
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -188,8 +215,9 @@ function diagnose() {
   }
 
   const output = document.getElementById('diag-output');
-  output.style.display = 'block';
   output.innerHTML = outputHTML;
+  
+  nextStep(3);
 }
 </script>
 </body>
