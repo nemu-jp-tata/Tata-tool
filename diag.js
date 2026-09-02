@@ -1,5 +1,5 @@
-// jsDelivrを経由した画像参照ベースパス
-const GITHUB_IMG_BASE = "https://cdn.jsdelivr.net/gh/nemu-jp-tata/Tata-tool@main/images/";
+// 同一階層の画像を参照するベースパス
+const GITHUB_IMG_BASE = "https://cdn.jsdelivr.net/gh/nemu-jp-tata/Tata-tool@main/";
 
 function diagnoseWithGitHubData() {
   // rawMonstersData (monsters.js) が読み込まれているか確認
