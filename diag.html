@@ -27,6 +27,10 @@
     .btn:hover { background: #1d4ed8; }
     
     #diag-output { display: none; margin-top: 20px; padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
+    
+    /* 診断結果用のおすすめカード用スタイル */
+    .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; display: flex; align-items: center; gap: 12px; }
+    .rec-card img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -46,8 +50,8 @@
     </label>
   </div>
 
-  <div class="section-title">Q2. 以下の「壁役になれるタタ」で、すでにT2まで進化済みのタタを選んでください</div>
-  <div class="sub-text">※持っていない場合は何も選ばずに診断ボタンを押してください</div>
+  <div class="section-title">Q2. 手持ちで「T2（第2進化）以上」まで育てているタタを選んでください</div>
+  <div class="sub-text">※現在パーティで使っている・育成済みのタタをタップ（複数選択可）</div>
   <div id="monster-grid" class="grid-container"></div>
 
   <button class="btn" onclick="diagnose()">次に育てるべきタタを診断！</button>
@@ -62,7 +66,7 @@ const selectedMonsters = new Set();
 // サポート枠だが壁になれる特例タタ
 const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
 
-// 壁役判定関数
+// 裏側で壁役（前衛適性）かどうかを判定する関数
 function isTankRole(monster) {
   if (!monster) return false;
   const role = monster.role || '';
@@ -89,10 +93,9 @@ window.addEventListener('DOMContentLoaded', () => {
     targetT1Monsters.push(baseForm);
   });
 
-  // ★「壁役になれるタタ」のみにフィルター！
+  // グリッド生成（壁役適性のあるタタ一覧）
   const tankMonsters = targetT1Monsters.filter(m => isTankRole(m));
 
-  // グリッド生成（壁役のみ表示）
   tankMonsters.forEach(m => {
     const item = document.createElement('div');
     item.className = 'monster-item';
@@ -130,27 +133,56 @@ function diagnose() {
   let outputHTML = "";
 
   if (missingTankAttrs.length > 0) {
-    // 壁役が不足している属性がある場合
+    // 全データから、T3以上に育つ壁役（T1ベース形態）を取得
+    const validSpecies = new Set(rawMonstersData.filter(m => m.T >= 3).map(m => m.species));
+    const allTankT1 = [];
+    validSpecies.forEach(sp => {
+      const speciesForms = rawMonstersData.filter(m => m.species === sp);
+      const baseForm = speciesForms.reduce((prev, curr) => (prev.T < curr.T ? prev : curr));
+      if (isTankRole(baseForm)) {
+        allTankT1.push(baseForm);
+      }
+    });
+
+    // 不足属性ごとに候補となる壁タタを1体ずつピックアップ
+    let candidateCardsHTML = "";
+    missingTankAttrs.forEach(attr => {
+      const candidate = allTankT1.find(m => m.type === attr);
+      if (candidate) {
+        candidateCardsHTML += `
+          <div class="rec-card">
+            <img src="./${encodeURIComponent(candidate.name)}.webp" alt="${candidate.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/50?text=${encodeURIComponent(candidate.name)}';">
+            <div>
+              <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${attr}属性】のおすすめ壁役</div>
+              <div style="font-size:14px; font-weight:bold; color:#1e293b;">${candidate.name}</div>
+            </div>
+          </div>
+        `;
+      }
+    });
+
     outputHTML = `
       <div style="text-align:center;">
-        <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">アドバイス</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">壁役（タンク/ファイター）の補強が必要です！</h3>
+        <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">「壁役（前衛）」の補強が必要です！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        現在、<b style="color:#dc2626;">[ ${missingTankAttrs.join('・')} ]</b> 属性の前衛・壁役がT2まで育っていません。<br><br>
-        パーティの全滅を防ぎストーリーを進めるため、まずは上記属性の<b>タンク</b>や<b>ファイター</b>を優先してT2へ育成しましょう！
+        現在、<b style="color:#dc2626;">[ ${missingTankAttrs.join('・')} ]</b> 属性で頼れる前衛・壁役が不足しています。<br>
+        アタッカーが倒されて攻略が止まるのを防ぐため、<b>最低でもこの中から1体育成しましょう！</b>
+      </div>
+      <div style="margin-top:10px;">
+        ${candidateCardsHTML}
       </div>
     `;
   } else {
-    // 全属性の壁役がT2で揃っている場合
     outputHTML = `
       <div style="text-align:center;">
         <span style="background:#16a34a; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">前衛の土台は完璧です！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">前衛の土台はバッチリです！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        全属性の前衛・壁役（T2）がしっかり確保できています！<br><br>
-        次はこれらの壁役を<b>T3/T4へ進化</b>させるか、主力アタッカーやヒーラーの育成にシフトしていきましょう。
+        全属性でしっかり前衛（壁役）になれるタタが育っています！<br><br>
+        次はこれらのタタを<b>T3/T4へ最終進化</b>させるか、主力アタッカー・ヒーラーの育成にシフトしていきましょう。
       </div>
     `;
   }
