@@ -46,8 +46,8 @@
     </label>
   </div>
 
-  <div class="section-title">Q2. あなたの手持ちにいるタタ（タップで選択）</div>
-  <div class="sub-text">※育成済み、またはBOXにいるタタをすべて選んでください</div>
+  <div class="section-title">Q2. 次のタタでT2まで進化しているタタを選択してください</div>
+  <div class="sub-text">※すでにT2以上へ進化させている（または手持ちに用意できている）タタをタップしてください</div>
   <div id="monster-grid" class="grid-container"></div>
 
   <button class="btn" onclick="diagnose()">次に育てるべきタタを診断！</button>
@@ -72,7 +72,7 @@ window.addEventListener('DOMContentLoaded', () => {
     rawMonstersData.filter(m => m.T >= 3).map(m => m.species)
   );
 
-  // 種族ごとのベース（T1形態）を取得
+  // 種族ごとのベース（T1形態）を取得して一覧に並べる
   const targetT1Monsters = [];
   validSpecies.forEach(sp => {
     const speciesForms = rawMonstersData.filter(m => m.species === sp);
@@ -121,20 +121,20 @@ function isTankRole(monster) {
 
 function diagnose() {
   if (selectedMonsters.size === 0) {
-    alert("手持ちのタタを1体以上タップして選んでください！");
+    alert("T2まで進化しているタタを1体以上タップして選んでください！");
     return;
   }
 
   const userList = Array.from(selectedMonsters);
   const myMonsters = rawMonstersData.filter(m => userList.includes(m.name));
 
-  // 手持ちの中で「壁役」になれるタタ（タンク＋ファイター＋特例）
+  // T2まで育成済みの中で「壁役」になれるタタ（タンク＋ファイター＋特例）
   const myTanks = myMonsters.filter(m => isTankRole(m));
   
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
   const tankAttrs = new Set(myTanks.map(m => m.type));
   
-  // 壁役が不足している属性
+  // T2壁役がまだ育っていない属性
   const missingTankAttrs = allAttrs.filter(a => !tankAttrs.has(a));
 
   let recommendMonster = null;
@@ -152,11 +152,11 @@ function diagnose() {
         const role = tankCandidate.role || '';
         
         if (role === 'ファイター') {
-          reasonText = `<b>${attr}属性の前衛・壁役</b>が不足しています。<br><b>${tankCandidate.name}</b> はファイターですが耐久も高く、優秀な壁役として前線を支えてくれます！最優先で進化させましょう。`;
+          reasonText = `<b>${attr}属性の前衛・壁役（T2以上）</b>が不足しています。<br><b>${tankCandidate.name}</b> はファイターですが耐久も高く、優秀な壁役として前線を支えてくれます！最優先で次の進化（T3/T4）を目指しましょう。`;
         } else if (specialSupportTankNames.some(name => tankCandidate.name.includes(name))) {
-          reasonText = `<b>${attr}属性の前衛・壁役</b>が不足しています。<br><b>${tankCandidate.name}</b> はサポート表記ですが実質的に非常に優秀な壁役として活躍します！最優先で育てましょう。`;
+          reasonText = `<b>${attr}属性の前衛・壁役（T2以上）</b>が不足しています。<br><b>${tankCandidate.name}</b> はサポート表記ですが実質的に非常に優秀な壁役として活躍します！最優先で育てましょう。`;
         } else {
-          reasonText = `<b>${attr}属性のタンク（壁役）</b>が不足しています。<br>パーティの全滅を防ぐため、まずは <b>${tankCandidate.name}</b> を集中的に育てるのがおすすめです！`;
+          reasonText = `<b>${attr}属性のタンク（壁役）</b>が不足しています。<br>パーティの全滅を防ぐため、まずは <b>${tankCandidate.name}</b> を集中的に次の段階へ進化させるのがおすすめです！`;
         }
         break;
       }
@@ -167,7 +167,7 @@ function diagnose() {
   if (!recommendMonster) {
     const targetName = userList[Math.floor(Math.random() * userList.length)];
     recommendMonster = rawMonstersData.find(m => m.name === targetName);
-    reasonText = `各属性の前衛・壁役はしっかり確保できています！次は主力火力・サポートとして <b>${recommendMonster.name}</b> を強化して攻略速度を上げていきましょう。`;
+    reasonText = `各属性の前衛・壁役はしっかり確保できています！次は主力火力・サポートとして <b>${recommendMonster.name}</b> を優先的に進化させて攻略速度を上げていきましょう。`;
   }
 
   const finalForm = rawMonstersData.find(m => m.species === recommendMonster.species && m.T >= 3) || recommendMonster;
@@ -177,7 +177,7 @@ function diagnose() {
   output.innerHTML = `
     <div style="text-align:center;">
       <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">今最優先で育てるべきは…</h3>
+      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">今最優先でT3/T4へ育てるべきは…</h3>
       <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:12px;">【 ${recommendMonster.name} 】</div>
     </div>
 
