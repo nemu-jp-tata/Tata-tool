@@ -369,7 +369,7 @@ function checkSubProgress() {
   }
 }
 
-// 属性の偏りによる最終診断ロジック（T2ルート用）
+// 属性の偏りによる最終診断ロジック（T2ルート用・パターン3反映）
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
@@ -411,6 +411,9 @@ function diagnoseAttributeBalance() {
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
         特定属性のステージで手詰まりしやすいため、<b>不足している属性の強力なアタッカーを優先してT2育成</b>しましょう！
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+          💡 各属性のT2を5体揃えると「道場3」が解放されます！まずは手薄な属性から育てて道場3の解放を目指しましょう！
+        </div>
       </div>
     `;
   } else if (maxCount >= 4) {
@@ -422,6 +425,9 @@ function diagnoseAttributeBalance() {
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
         1つの属性に偏りすぎると不利属性で詰まりやすくなるため、手薄な他の属性のアタッカーも並行して育てていきましょう。
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+          💡 各属性のT2を5体揃えると「道場3」が解放されます！まずは手薄な属性から育てて道場3の解放を目指しましょう！
+        </div>
       </div>
     `;
   } else {
@@ -433,6 +439,9 @@ function diagnoseAttributeBalance() {
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         全属性にバランス良くT2タタが育っており、攻略準備は万全です！<br><br>
         次は幅広く育てるのを休止し、<b>エースアタッカーから集中してT3（最終進化）へ育成を進めましょう！</b>
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+          💡 各属性のT2を5体揃えると「道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
+        </div>
       </div>
     `;
   }
@@ -448,12 +457,10 @@ function diagnoseT3() {
   const userList = Array.from(selectedT3Monsters);
   const myT3Monsters = rawMonstersData.filter(m => userList.includes(m.name));
 
-  // 所有するT3タタの役割・属性を判定
   const ownedT3Tanks = myT3Monsters.filter(m => isTankRole(m));
   const hasHinomushiT3 = myT3Monsters.some(m => m.name.includes('ヒノムシ') || m.species.includes('ヒノムシ'));
   const hasPurabiT3 = myT3Monsters.some(m => m.name.includes('プラビ') || m.species.includes('プラビ'));
 
-  // 属性別の集計
   const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
   myT3Monsters.forEach(m => {
     if (attrCounts[m.type] !== undefined) {
@@ -463,9 +470,8 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
   
-  // 手持ちの中で一番偏っている（多い）属性と、手薄な（少ない）属性を判定
   let mostAttr = allAttrs[0];
-  let maxCount = -1;
+  let maxCount = 0;
   allAttrs.forEach(a => {
     if (attrCounts[a] > maxCount) {
       maxCount = attrCounts[a];
@@ -473,14 +479,12 @@ function diagnoseT3() {
     }
   });
 
-  // 0体の属性、または一番少ない属性を提案ターゲットにする
   let zeroAttrs = allAttrs.filter(a => attrCounts[a] === 0);
   let attrTarget = '';
 
   if (zeroAttrs.length > 0) {
     attrTarget = zeroAttrs[0];
   } else {
-    // 0体がなければ最小数の属性を取得
     let minCount = 999;
     allAttrs.forEach(a => {
       if (attrCounts[a] < minCount) {
@@ -492,9 +496,7 @@ function diagnoseT3() {
 
   let recommendationSections = [];
 
-  // ==========================================
   // 1. 壁役のT3化チェック
-  // ==========================================
   if (ownedT3Tanks.length === 0) {
     recommendationSections.push(`
       <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;">
@@ -519,9 +521,7 @@ function diagnoseT3() {
     }
   }
 
-  // ==========================================
   // 2. 必須級サポート（ヒノムシ / プラビ）チェック
-  // ==========================================
   if (!hasHinomushiT3 || !hasPurabiT3) {
     const missingSupport = [];
     if (!hasHinomushiT3) missingSupport.push('ヒノムシ');
@@ -554,23 +554,17 @@ function diagnoseT3() {
     `);
   }
 
-  // ==========================================
-  // 3. 属性偏りの解消・手薄な属性のおすすめアタッカー提案（画像カード付き）
-  // ==========================================
+  // 3. 属性偏りの解消・手薄な属性のおすすめアタッカー提案
   let attrReasonHeader = "";
 
   if (myT3Monsters.length > 0 && maxCount >= 2) {
-    // 偏りがある場合
     attrReasonHeader = `手持ちのT3が【${mostAttr}属性】に偏っているため、手薄な<b>【${attrTarget}属性】</b>を補強するのがおすすめです！以下のタタを優先してT3に育てましょう。`;
   } else if (zeroAttrs.length > 0) {
-    // まだ持っていない属性がある場合
     attrReasonHeader = `まだT3を持っていない<b>【${attrTarget}属性】</b>を補強し、パーティの対応力を高めるのがおすすめです！`;
   } else {
-    // 全体的に分散している場合
     attrReasonHeader = `次に補強すべき<b>【${attrTarget}属性】</b>のおすすめタタはこちらです！T3化をご検討ください。`;
   }
 
-  // 各属性のおすすめタタと解説文の設定
   const attrDataMap = {
     '水': [
       { nameKey: 'シズクジ', comment: 'ウミミT3とのコンボが非常に強力！' },
