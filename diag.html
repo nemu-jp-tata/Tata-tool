@@ -409,7 +409,7 @@ function diagnoseAttributeBalance() {
         <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">苦手属性の補強が課題です！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        土台はしっかりしていますが、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
+        現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
         特定属性のステージで手詰まりしやすいため、<b>不足している属性の強力なアタッカーを優先してT2育成</b>しましょう！
       </div>
     `;
@@ -417,11 +417,11 @@ function diagnoseAttributeBalance() {
     outputHTML = `
       <div style="text-align:center;">
         <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">【${maxAttr}属性】特化編成が強力です！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">他属性への拡張を意識しましょう！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
-        全体的な底上げはもちろん、得意な ${maxAttr} 属性パーティを軸に攻略を押し進めるのがおすすめです。
+        1つの属性に偏りすぎると不利属性で詰まりやすくなるため、手薄な他の属性のアタッカーも並行して育てていきましょう。
       </div>
     `;
   } else {
@@ -463,17 +463,32 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
   
-  // 手持ちの中で一番多い属性または未育成属性を判定
-  let highestAttr = allAttrs[0];
+  // 手持ちの中で一番偏っている（多い）属性と、手薄な（少ない）属性を判定
+  let mostAttr = allAttrs[0];
   let maxCount = -1;
   allAttrs.forEach(a => {
     if (attrCounts[a] > maxCount) {
       maxCount = attrCounts[a];
-      highestAttr = a;
+      mostAttr = a;
     }
   });
 
-  const zeroAttrs = allAttrs.filter(a => attrCounts[a] === 0);
+  // 0体の属性、または一番少ない属性を提案ターゲットにする
+  let zeroAttrs = allAttrs.filter(a => attrCounts[a] === 0);
+  let attrTarget = '';
+
+  if (zeroAttrs.length > 0) {
+    attrTarget = zeroAttrs[0];
+  } else {
+    // 0体がなければ最小数の属性を取得
+    let minCount = 999;
+    allAttrs.forEach(a => {
+      if (attrCounts[a] < minCount) {
+        minCount = attrCounts[a];
+        attrTarget = a;
+      }
+    });
+  }
 
   let recommendationSections = [];
 
@@ -540,18 +555,19 @@ function diagnoseT3() {
   }
 
   // ==========================================
-  // 3. 属性の偏り・おすすめアタッカー提案（画像カード付き）
+  // 3. 属性偏りの解消・手薄な属性のおすすめアタッカー提案（画像カード付き）
   // ==========================================
-  let attrTarget = highestAttr;
   let attrReasonHeader = "";
 
-  if (zeroAttrs.length > 0 && maxCount > 0) {
-    attrTarget = zeroAttrs[0];
-    attrReasonHeader = `手薄な<b>【${attrTarget}属性】</b>を補強するため、以下の強力なタタのT3育成がお勧めです！`;
-  } else if (maxCount >= 2) {
-    attrReasonHeader = `手持ちで充実している<b>【${attrTarget}属性】</b>の強力なシナジーを活かすため、以下のおすすめタタのT3化が強力です！`;
+  if (myT3Monsters.length > 0 && maxCount >= 2) {
+    // 偏りがある場合
+    attrReasonHeader = `手持ちのT3が【${mostAttr}属性】に偏っているため、手薄な<b>【${attrTarget}属性】</b>を補強するのがおすすめです！以下のタタを優先してT3に育てましょう。`;
+  } else if (zeroAttrs.length > 0) {
+    // まだ持っていない属性がある場合
+    attrReasonHeader = `まだT3を持っていない<b>【${attrTarget}属性】</b>を補強し、パーティの対応力を高めるのがおすすめです！`;
   } else {
-    attrReasonHeader = `次のステップとして、<b>【${attrTarget}属性】</b>のおすすめタタのT3育成をご検討ください！`;
+    // 全体的に分散している場合
+    attrReasonHeader = `次に補強すべき<b>【${attrTarget}属性】</b>のおすすめタタはこちらです！T3化をご検討ください。`;
   }
 
   // 各属性のおすすめタタと解説文の設定
@@ -598,7 +614,7 @@ function diagnoseT3() {
 
   recommendationSections.push(`
     <div>
-      <div style="font-size:12px; color:#2563eb; font-weight:bold;">【3. 属性別おすすめタタ】</div>
+      <div style="font-size:12px; color:#2563eb; font-weight:bold;">【3. 不足属性の補強おすすめ】</div>
       <div style="font-size:13px; color:#1e293b; margin-top:2px;">
         ${attrReasonHeader}
       </div>
