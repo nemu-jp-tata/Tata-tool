@@ -5,107 +5,193 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>タタ手持ち育成診断</title>
   <style>
-    body { font-family: sans-serif; background: #f1f5f9; padding: 20px; margin: 0; }
-    .card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 15px; }
-    label { font-weight: bold; display: block; margin-bottom: 8px; color: #1e293b; }
-    select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-    .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    .checkbox-label { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    .btn { width: 100%; padding: 12px; background: #2563eb; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+    body { font-family: sans-serif; background: #f1f5f9; padding: 15px; margin: 0; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 20px; }
+    .section-title { font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 15px; border-left: 4px solid #2563eb; padding-left: 8px; }
+    .sub-text { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+    
+    .radio-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .radio-label { flex: 1; text-align: center; padding: 10px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; color: #475569; }
+    .radio-label input { display: none; }
+    .radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+
+    .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+    .monster-item { position: relative; border: 2px solid transparent; border-radius: 8px; overflow: hidden; cursor: pointer; background: #e2e8f0; aspect-ratio: 1; }
+    .monster-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .monster-item.selected { border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
+    .monster-item.selected::after { content: "✓"; position: absolute; top: 2px; right: 2px; background: #2563eb; color: #fff; font-size: 10px; font-weight: bold; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+    .monster-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; text-align: center; padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .btn { width: 100%; padding: 14px; background: #2563eb; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
     .btn:hover { background: #1d4ed8; }
-    #diag-output { display: none; margin-top: 20px; padding: 15px; background: #eff6ff; border-radius: 8px; border: 2px solid #3b82f6; }
+    
+    #diag-output { display: none; margin-top: 20px; padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2 style="margin-top:0; text-align:center; color:#1e293b;">🔰 初心者向け タタ手持ち育成診断</h2>
-  
-  <div class="form-group">
-    <label>Q1. 手持ちで一番多い進化段階は？（ノーマル除く）</label>
-    <select id="user-tier">
-      <option value="1">未進化 (T1)</option>
-      <option value="2">第2進化 (T2)</option>
-      <option value="3">第3進化 (T3)</option>
-      <option value="4">第4進化 (T4)</option>
-    </select>
+  <h2>🔰 次に育てるタタ診断</h2>
+
+  <div class="section-title">Q1. 今の攻略状況は？</div>
+  <div class="radio-group">
+    <label class="radio-label">
+      <input type="radio" name="progress" value="early" checked>
+      序盤攻略中<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(まずは土台作り)</span>
+    </label>
+    <label class="radio-label">
+      <input type="radio" name="progress" value="mid">
+      中盤で詰まり気味<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(敵の攻撃が痛い)</span>
+    </label>
   </div>
 
-  <div class="form-group">
-    <label>Q2. 育成済み・主力の「T3〜T4タタ」がいる属性を選んでください</label>
-    <div class="checkbox-group">
-      <label class="checkbox-label" style="background:#ffe6e6;"><input type="checkbox" class="user-attr" value="炎"> 炎属性</label>
-      <label class="checkbox-label" style="background:#e6f2ff;"><input type="checkbox" class="user-attr" value="水"> 水属性</label>
-      <label class="checkbox-label" style="background:#e6ffe6;"><input type="checkbox" class="user-attr" value="草"> 草属性</label>
-      <label class="checkbox-label" style="background:#ffffd9;"><input type="checkbox" class="user-attr" value="雷"> 雷属性</label>
-      <label class="checkbox-label" style="background:#f5f0e6;"><input type="checkbox" class="user-attr" value="岩"> 岩属性</label>
-    </div>
-  </div>
+  <div class="section-title">Q2. あなたの手持ちにいるタタ（タップで選択）</div>
+  <div class="sub-text">※育成済み、またはBOXにいるタタをすべて選んでください</div>
+  <div id="monster-grid" class="grid-container"></div>
 
-  <button class="btn" onclick="diagnose()">診断する</button>
+  <button class="btn" onclick="diagnose()">次に育てるべきタタを診断！</button>
 
   <div id="diag-output"></div>
 </div>
 
-<!-- 同階層の monsters.js を読み込む -->
 <script src="monsters.js"></script>
 <script>
+const selectedMonsters = new Set();
+
+// サポート枠だが壁になれる特例タタ
+const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof rawMonstersData === 'undefined') return;
+
+  const grid = document.getElementById('monster-grid');
+
+  // T3以上が存在する「種族」を抽出（ノーマル/T2止まりを除外）
+  const validSpecies = new Set(
+    rawMonstersData.filter(m => m.T >= 3).map(m => m.species)
+  );
+
+  // 種族ごとのベース（T1形態）を取得
+  const targetT1Monsters = [];
+  validSpecies.forEach(sp => {
+    const speciesForms = rawMonstersData.filter(m => m.species === sp);
+    const baseForm = speciesForms.reduce((prev, curr) => (prev.T < curr.T ? prev : curr));
+    targetT1Monsters.push(baseForm);
+  });
+
+  // アイコン生成
+  targetT1Monsters.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'monster-item';
+    item.dataset.name = m.name;
+    
+    item.innerHTML = `
+      <img src="./${encodeURIComponent(m.name)}.webp" alt="${m.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(m.name)}';">
+      <div class="monster-name">${m.name}</div>
+    `;
+
+    item.addEventListener('click', () => {
+      if (selectedMonsters.has(m.name)) {
+        selectedMonsters.delete(m.name);
+        item.classList.remove('selected');
+      } else {
+        selectedMonsters.add(m.name);
+        item.classList.add('selected');
+      }
+    });
+
+    grid.appendChild(item);
+  });
+});
+
+// 壁役かどうかを判定する共通関数
+function isTankRole(monster) {
+  if (!monster) return false;
+  const role = monster.role || '';
+  
+  // 1. 公式ロールが「タンク」「壁」「ファイター」
+  if (role === 'タンク' || role === '壁' || role === 'ファイター') return true;
+  
+  // 2. 特例サポート枠（ガオデン、ホネギョなど）
+  if (specialSupportTankNames.some(name => monster.name.includes(name) || monster.species.includes(name))) return true;
+  
+  return false;
+}
+
 function diagnose() {
-  if (typeof rawMonstersData === 'undefined') {
-    alert("データが読み込めませんでした。");
+  if (selectedMonsters.size === 0) {
+    alert("手持ちのタタを1体以上タップして選んでください！");
     return;
   }
 
-  const tier = parseInt(document.getElementById('user-tier').value, 10);
-  const checkedAttrs = Array.from(document.querySelectorAll('.user-attr:checked')).map(cb => cb.value);
-  const missingAttrs = ['炎', '水', '草', '雷', '岩'].filter(a => !checkedAttrs.includes(a));
+  const userList = Array.from(selectedMonsters);
+  const myMonsters = rawMonstersData.filter(m => userList.includes(m.name));
 
-  const allMonsters = rawMonstersData.map(m => ({
-    name: m.name, species: m.species, attr: m.type, tierNum: m.T, role: m.role
-  }));
+  // 手持ちの中で「壁役」になれるタタ（タンク＋ファイター＋特例）
+  const myTanks = myMonsters.filter(m => isTankRole(m));
+  
+  const allAttrs = ['炎', '水', '草', '雷', '岩'];
+  const tankAttrs = new Set(myTanks.map(m => m.type));
+  
+  // 壁役が不足している属性
+  const missingTankAttrs = allAttrs.filter(a => !tankAttrs.has(a));
 
-  const baseMonstersMap = new Map();
-  allMonsters.forEach(m => {
-    if (!baseMonstersMap.has(m.species) || m.tierNum < baseMonstersMap.get(m.species).tierNum) {
-      baseMonstersMap.set(m.species, m);
-    }
-  });
+  let recommendMonster = null;
+  let reasonText = "";
 
-  let recommendHTML = "";
-  if (missingAttrs.length > 0) {
-    const targetAttr = missingAttrs[Math.floor(Math.random() * missingAttrs.length)];
-    const candidates = allMonsters.filter(m => m.attr === targetAttr && m.tierNum >= 3);
-    
-    if (candidates.length > 0) {
-      const targetMonster = candidates[Math.floor(Math.random() * candidates.length)];
-      const baseMonster = baseMonstersMap.get(targetMonster.species) || targetMonster;
+  if (missingTankAttrs.length > 0) {
+    // 壁がいない属性から、手持ちにいる壁候補（タンク/ファイター/特例サポート）を探す
+    for (const attr of missingTankAttrs) {
+      const tankCandidate = rawMonstersData.find(m => 
+        userList.includes(m.name) && m.type === attr && isTankRole(m)
+      );
 
-      recommendHTML = `
-        <div style="margin-top:15px; background:#fff; padding:12px; border-radius:6px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:12px;">
-          <img src="./${encodeURIComponent(baseMonster.name)}.webp" width="60" height="60" style="border-radius:6px; object-fit:cover; background:#e2e8f0; flex-shrink:0;" alt="${baseMonster.name}" onerror="this.style.display='none'">
-          <div>
-            <div style="font-size:12px; color:#2563eb; font-weight:bold;">【おすすめ補強タタ】</div>
-            <strong style="font-size:16px; color:#1e293b;">${baseMonster.name} （${baseMonster.attr}属性）</strong>
-            <div style="font-size:12px; color:#475569; margin-top:4px;">
-              ${targetAttr}属性の戦力を補うため、まずは <b>${baseMonster.name}</b> を育成して <b>${targetMonster.name}（T${targetMonster.tierNum}）</b> を目指すのがおすすめです！
-            </div>
-          </div>
-        </div>
-      `;
+      if (tankCandidate) {
+        recommendMonster = tankCandidate;
+        const role = tankCandidate.role || '';
+        
+        if (role === 'ファイター') {
+          reasonText = `<b>${attr}属性の前衛・壁役</b>が不足しています。<br><b>${tankCandidate.name}</b> はファイターですが耐久も高く、優秀な壁役として前線を支えてくれます！最優先で進化させましょう。`;
+        } else if (specialSupportTankNames.some(name => tankCandidate.name.includes(name))) {
+          reasonText = `<b>${attr}属性の前衛・壁役</b>が不足しています。<br><b>${tankCandidate.name}</b> はサポート表記ですが実質的に非常に優秀な壁役として活躍します！最優先で育てましょう。`;
+        } else {
+          reasonText = `<b>${attr}属性のタンク（壁役）</b>が不足しています。<br>パーティの全滅を防ぐため、まずは <b>${tankCandidate.name}</b> を集中的に育てるのがおすすめです！`;
+        }
+        break;
+      }
     }
   }
+
+  // 壁が足りている場合
+  if (!recommendMonster) {
+    const targetName = userList[Math.floor(Math.random() * userList.length)];
+    recommendMonster = rawMonstersData.find(m => m.name === targetName);
+    reasonText = `各属性の前衛・壁役はしっかり確保できています！次は主力火力・サポートとして <b>${recommendMonster.name}</b> を強化して攻略速度を上げていきましょう。`;
+  }
+
+  const finalForm = rawMonstersData.find(m => m.species === recommendMonster.species && m.T >= 3) || recommendMonster;
 
   const output = document.getElementById('diag-output');
   output.style.display = 'block';
   output.innerHTML = `
-    <h3 style="margin-top:0; color:#1e3a8a; font-size:18px;">診断結果（主力目標：T${tier}段階）</h3>
-    <p style="margin-bottom:8px; color:#334155;"><b>■ 属性バランス評価:</b><br>
-    ${checkedAttrs.length === 5 
-      ? '<span style="color:#16a34a; font-weight:bold;">全属性バランス良く揃っています！</span>' 
-      : `<span style="color:#dc2626; font-weight:bold;">[ ${missingAttrs.join('・')} ]</span> 属性の主力が不足しています。`}
-    </p>
-    ${recommendHTML}
+    <div style="text-align:center;">
+      <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">今最優先で育てるべきは…</h3>
+      <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:12px;">【 ${recommendMonster.name} 】</div>
+    </div>
+
+    <div style="background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <img src="./${encodeURIComponent(recommendMonster.name)}.webp" width="60" height="60" style="border-radius:6px; object-fit:cover; background:#e2e8f0; flex-shrink:0;">
+      <div>
+        <div style="font-size:13px; color:#334155; font-weight:bold;">目標進化先：${finalForm.name}（T${finalForm.T}）</div>
+        <div style="font-size:11px; color:#2563eb; font-weight:bold; margin-top:2px;">属性: ${recommendMonster.type} / 役割: ${recommendMonster.role || 'アタッカー'}</div>
+      </div>
+    </div>
+
+    <div style="font-size:13px; color:#334155; line-height:1.5; background:#fff; padding:10px; border-radius:6px;">
+      💡 <b>育成理由:</b><br>${reasonText}
+    </div>
   `;
 }
 </script>
