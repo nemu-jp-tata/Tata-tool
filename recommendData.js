@@ -6,7 +6,7 @@ window.attrDataMap = {
     { nameKey: 'シズクジ', comment: 'ウミミT3とのコンボが非常に強力！' },
     { nameKey: 'ウミミ', comment: 'シズクジT3とのコンボで真価を発揮！' },
     { nameKey: 'パクマ', comment: 'アタッカーよりのタンク、ラッシュでも活躍！' },
-    { nameKey: 'ナミアシカ, comment: '跳弾攻撃が魅力、T3から2玉に増えます！' },
+    { nameKey: 'ナミアシカ', comment: '跳弾攻撃が魅力、T3から2玉に増えます！' },
     { nameKey: 'トコペン', comment: '高耐久で安定した盤面維持が可能！' },
     { nameKey: 'ツヨカニ', comment: 'トレジャーで大活躍するサブタンク！' }
   ],
