@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>タタ手持ち育成診断</title>
+  <!-- Chart.jsの読み込み -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: sans-serif; background: #f1f5f9; padding: 15px; margin: 0; }
     .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -37,6 +39,9 @@
     
     .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
     .rec-card img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    
+    /* チャート（円グラフ）用スタイル */
+    .chart-container { position: relative; width: 100%; max-width: 280px; margin: 15px auto; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
   </style>
 </head>
 <body>
@@ -127,6 +132,7 @@ const selectedT3Monsters = new Set();
 
 let currentBranch = 't2'; 
 let lastStepBeforeResult = 'step-2-a-1';
+let t3ChartInstance = null; // チャートインスタンス管理用
 
 const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
 
@@ -451,6 +457,55 @@ function diagnoseAttributeBalance() {
   nextStep(3);
 }
 
+// 円グラフを描画する関数
+function renderT3PieChart(attrCounts) {
+  const ctx = document.getElementById('t3PieChart');
+  if (!ctx) return;
+
+  // 再描画時に前のグラフインスタンスを破棄
+  if (t3ChartInstance) {
+    t3ChartInstance.destroy();
+  }
+
+  const labels = ['炎', '水', '草', '雷', '岩'];
+  const data = labels.map(attr => attrCounts[attr] || 0);
+  const colors = [
+    '#ef4444', // 炎 (Red)
+    '#3b82f6', // 水 (Blue)
+    '#22c55e', // 草 (Green)
+    '#eab308', // 雷 (Yellow)
+    '#78350f'  // 岩 (Brown)
+  ];
+
+  t3ChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { boxWidth: 12, font: { size: 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return ` ${context.label}: ${context.raw}体`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 // T3所持者向けの診断ロジック（STEP 2-Bルート用）
 function diagnoseT3() {
   lastStepBeforeResult = 'step-2-b';
@@ -467,6 +522,17 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
 
+  // 円グラフ用HTML（所持数が1体以上の場合のみ生成）
+  const totalT3Count = myT3Monsters.length;
+  const chartHTML = totalT3Count > 0 ? `
+    <div style="margin-top: 15px;">
+      <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 所持T3タタの属性内訳（計 ${totalT3Count}体）</div>
+      <div class="chart-container">
+        <canvas id="t3PieChart"></canvas>
+      </div>
+    </div>
+  ` : '';
+
   // ★ 各属性すべてでT3が6体以上揃っているかチェック ★
   const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 6);
 
@@ -481,9 +547,11 @@ function diagnoseT3() {
         正直なところ、<b>あなたにはもうこのツールは必要ないかもしれません…！</b>✨<br><br>
         ここからは育成効率などを気にする段階を終え、<b>好きなタタをT4にしてみんなに自慢していきましょう！</b>🔥
       </div>
+      ${chartHTML}
     `;
     document.getElementById('diag-output').innerHTML = outputHTML;
     nextStep(3);
+    if (totalT3Count > 0) renderT3PieChart(attrCounts);
     return;
   }
 
@@ -637,6 +705,7 @@ function diagnoseT3() {
     </div>
     <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
       ${recommendationSections.join('')}
+      ${chartHTML}
       <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
         💡 各属性のT3を6体揃えると「その属性の道場5」が解放されます！長期的な目標として各属性のT3を6体揃えることを目指しましょう！
       </div>
@@ -645,6 +714,11 @@ function diagnoseT3() {
 
   document.getElementById('diag-output').innerHTML = outputHTML;
   nextStep(3);
+
+  // HTML挿入後にグラフを描画
+  if (totalT3Count > 0) {
+    renderT3PieChart(attrCounts);
+  }
 }
 </script>
 </body>
