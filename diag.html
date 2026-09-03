@@ -672,13 +672,15 @@ function diagnoseT3() {
   const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
   const candidateList = dataMap[attrTarget] || [];
 
+  // ★【第1候補】補強対象属性（attrTarget）の未所持タタをフィルタリング
   const unownedCandidates = candidateList.filter(item => {
-    return !Array.from(selectedT3Monsters).some(selectedName => 
-      selectedName.includes(item.nameKey)
+    return !myT3Monsters.some(m => 
+      m.type === attrTarget && (m.name.includes(item.nameKey) || m.species.includes(item.nameKey))
     );
   });
 
-  const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList).slice(0, 2);
+  // 未所持があれば未所持から、無ければ全体から抽出（フォールバック）
+  const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList);
 
   let attrCardsHTML = "";
 
