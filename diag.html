@@ -7,12 +7,23 @@
   <!-- Chart.jsの読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; background: #f1f5f9; padding: 15px; margin: 0; }
-    .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 20px; margin-bottom: 12px; }
+    body { font-family: sans-serif; background: #f1f5f9; padding: 10px; margin: 0; }
+    
+    .card { 
+      background: #fff; 
+      padding: 16px; 
+      border-radius: 12px; 
+      border: 1px solid #cbd5e1; 
+      max-width: 600px; 
+      margin: 0 auto; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+      box-sizing: border-box; 
+    }
+    
+    h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 18px; margin-bottom: 12px; }
     
     /* プログレスバー用スタイル */
-    .progress-wrapper { margin-bottom: 18px; }
+    .progress-wrapper { margin-bottom: 16px; }
     .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
     .progress-container { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; }
     .progress-bar { height: 100%; width: 20%; background-color: #2563eb; transition: width 0.3s ease; }
@@ -20,34 +31,44 @@
     .step-panel { display: none; }
     .step-panel.active { display: block; }
 
-    .section-title { font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 15px; border-left: 4px solid #2563eb; padding-left: 8px; }
+    .section-title { font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 14px; border-left: 4px solid #2563eb; padding-left: 8px; }
     .sub-text { font-size: 12px; color: #64748b; margin-bottom: 12px; }
     
-    .radio-group { display: flex; gap: 10px; margin-bottom: 20px; }
-    .radio-label { flex: 1; text-align: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; color: #475569; }
+    .radio-group { display: flex; gap: 8px; margin-bottom: 20px; }
+    .radio-label { flex: 1; text-align: center; padding: 10px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; color: #475569; }
     .radio-label input { display: none; }
     .radio-label:has(input:checked) { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
 
-    .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+    .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 20px; }
     .monster-item { position: relative; border: 2px solid transparent; border-radius: 8px; overflow: hidden; cursor: pointer; background: #e2e8f0; aspect-ratio: 1; }
     .monster-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .monster-item.selected { border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
     .monster-item.selected::after { content: "✓"; position: absolute; top: 2px; right: 2px; background: #2563eb; color: #fff; font-size: 10px; font-weight: bold; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
-    .monster-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; text-align: center; padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .monster-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 8px; text-align: center; padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-    .btn { flex: 1; padding: 14px; background: #2563eb; color: #fff; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; text-align: center; }
+    .btn-group { display: flex; gap: 8px; margin-top: 15px; }
+    .btn { flex: 1; padding: 12px; background: #2563eb; color: #fff; font-size: 14px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; text-align: center; }
     .btn:hover { background: #1d4ed8; }
     .btn-sub { background: #94a3b8; }
     .btn-sub:hover { background: #64748b; }
     
-    #diag-output { padding: 16px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; }
+    #diag-output { padding: 12px; background: #eff6ff; border-radius: 10px; border: 2px solid #3b82f6; box-sizing: border-box; }
     
-    .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
-    .rec-card img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+    .rec-card img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
     
-    /* レーダーチャート用スタイル */
-    .chart-container { position: relative; width: 100%; max-width: 320px; margin: 15px auto; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; overflow: visible; }
+    /* レーダーチャート用スタイル（レスポンシブ崩れ対策） */
+    .chart-container { 
+      position: relative; 
+      width: 100%; 
+      max-width: 280px; 
+      margin: 10px auto; 
+      background: #fff; 
+      padding: 10px; 
+      border-radius: 8px; 
+      border: 1px solid #cbd5e1; 
+      box-sizing: border-box; 
+    }
   </style>
 </head>
 <body>
@@ -72,11 +93,11 @@
     <div class="radio-group">
       <label class="radio-label">
         <input type="radio" name="progress" value="t2" checked>
-        T2が増え始めた<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(序盤〜中盤の土台作り)</span>
+        T2が増え始めた<br><span style="font-size:10px; font-weight:normal; color:#64748b;">(序盤〜中盤の土台作り)</span>
       </label>
       <label class="radio-label">
         <input type="radio" name="progress" value="t3">
-        T3を少し持っている<br><span style="font-size:11px; font-weight:normal; color:#64748b;">(更なるステップアップ)</span>
+        T3を少し持っている<br><span style="font-size:10px; font-weight:normal; color:#64748b;">(更なるステップアップ)</span>
       </label>
     </div>
     <button class="btn" onclick="handleQ1Next()">次へ進む ➔</button>
@@ -135,7 +156,7 @@
     <div id="diag-output"></div>
     <div class="btn-group" style="margin-top: 20px;">
       <button class="btn btn-sub" onclick="backToPrevStep()">← 選択をやり直す</button>
-      <button class="btn btn-sub" style="background:#475569;" onclick="resetAll()">🔄 最初からやり直す</button>
+      <button class="btn btn-sub" style="background:#475569;" onclick="resetAll()">🔄 最初から</button>
     </div>
   </div>
 </div>
@@ -143,7 +164,6 @@
 <script src="monsters.js"></script>
 <script src="recommendData.js"></script>
 <script>
-// 画像読み込みのベースURL（必要に応じて外部ストレージURL等に変更可能）
 const IMAGE_BASE_URL = './';
 
 const selectedTanks = new Set();
@@ -165,7 +185,6 @@ function isTankRole(monster) {
   return false;
 }
 
-// プログレスバーの更新ロジック
 function updateProgressBar(step) {
   const bar = document.getElementById('progress-bar');
   const text = document.getElementById('progress-text');
@@ -226,7 +245,6 @@ function backToPrevStep() {
   nextStep(lastStepBeforeResult);
 }
 
-// 最初からやり直す（全体リセット）
 function resetAll() {
   selectedTanks.clear();
   selectedSubMonsters.clear();
@@ -241,7 +259,6 @@ function resetAll() {
   nextStep(1);
 }
 
-// Wiki (iframe) 埋め込み時の高さ自動調整用通知機能
 function notifyWikiHeight() {
   setTimeout(() => {
     const height = document.documentElement.scrollHeight || document.body.scrollHeight;
@@ -391,9 +408,9 @@ function checkTankProgress() {
     const outputHTML = `
       <div style="text-align:center;">
         <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">「壁役（前衛）」の補強が必要です！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">「壁役（前衛）」の補強が必要です！</h3>
       </div>
-      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+      <div style="font-size:12px; color:#334155; line-height:1.6; background:#fff; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         アタッカーが倒されて攻略が止まるのを防ぐため、<b>最低でもこの中から1体育成して壁を作りましょう！</b>
       </div>
       <div style="margin-top:10px;">
@@ -440,9 +457,9 @@ function checkSubProgress() {
     const outputHTML = `
       <div style="text-align:center;">
         <span style="background:#dc2626; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">重要タタのT2育成を目指しましょう！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">重要タタのT2育成を目指しましょう！</h3>
       </div>
-      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+      <div style="font-size:12px; color:#334155; line-height:1.6; background:#fff; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         パーティのサポート力と攻略の安定感を高めるため、まずは以下のタタを<b>T2まで育てましょう！</b>
       </div>
       <div style="margin-top:10px;">
@@ -455,7 +472,7 @@ function checkSubProgress() {
   }
 }
 
-// 汎用レーダーチャート描画関数
+// 汎用レーダーチャート描画関数（スマホ画面はみ出し防止調整版）
 function renderRadarChart(attrCounts, datasetLabel) {
   const ctx = document.getElementById('radarChartCanvas');
   if (!ctx) return;
@@ -478,13 +495,15 @@ function renderRadarChart(attrCounts, datasetLabel) {
         borderColor: '#2563eb',
         borderWidth: 2,
         pointBackgroundColor: '#2563eb',
-        pointRadius: 4,
-        clip: false
+        pointRadius: 4
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: true,
+      layout: {
+        padding: 5 // パディングを追加して領域拡張
+      },
       scales: {
         r: {
           min: 0,
@@ -492,13 +511,14 @@ function renderRadarChart(attrCounts, datasetLabel) {
           ticks: {
             stepSize: 1,
             display: true,
-            font: { size: 10 }
+            font: { size: 9 }
           },
           grid: { color: '#cbd5e1' },
           angleLines: { color: '#e2e8f0' },
           pointLabels: {
-            font: { size: 13, weight: 'bold' },
-            color: '#1e293b'
+            font: { size: 11, weight: 'bold' }, // ラベルサイズを少し小さくしてはみ出し防止
+            color: '#1e293b',
+            padding: 5
           }
         }
       },
@@ -516,7 +536,6 @@ function renderRadarChart(attrCounts, datasetLabel) {
   });
 }
 
-// T2選択時の診断ロジック（STEP 2-A-3）
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
@@ -577,7 +596,7 @@ function diagnoseAttributeBalance() {
         <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
         <div>
           <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${targetAttr}属性】おすすめのタタ</div>
-          <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
+          <div style="font-size:13px; font-weight:bold; color:#1e293b;">${displayName}</div>
           <div style="font-size:11px; color:#475569; margin-top:2px;">${item.comment}</div>
         </div>
       </div>
@@ -600,7 +619,7 @@ function diagnoseAttributeBalance() {
     resultHeader = `
       <div style="text-align:center;">
         <span style="background:#eab308; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">苦手属性の補強が課題です！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">苦手属性の補強が課題です！</h3>
       </div>`;
     resultBody = `
       現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
@@ -610,7 +629,7 @@ function diagnoseAttributeBalance() {
     resultHeader = `
       <div style="text-align:center;">
         <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">他属性への拡張を意識しましょう！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">他属性への拡張を意識しましょう！</h3>
       </div>`;
     resultBody = `
       手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
@@ -620,7 +639,7 @@ function diagnoseAttributeBalance() {
     resultHeader = `
       <div style="text-align:center;">
         <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">属性バランスの偏りを補強しましょう！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">属性バランスの偏りを補強しましょう！</h3>
       </div>`;
     resultBody = `
       現在【${maxAttr}属性】（${maxCount}体）に比べて<b>【${targetAttr}属性】（${minCount}体）</b>の手持ちが少なくなっています。<br>
@@ -630,7 +649,7 @@ function diagnoseAttributeBalance() {
     resultHeader = `
       <div style="text-align:center;">
         <span style="background:#16a34a; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">完璧なバランス！T3（進化）へ移行しましょう！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">完璧なバランス！T3（進化）へ移行しましょう！</h3>
       </div>`;
     resultBody = `
       全属性にバランス良くT2タタが育っており、攻略準備は万全です！<br><br>
@@ -640,10 +659,10 @@ function diagnoseAttributeBalance() {
 
   const outputHTML = `
     ${resultHeader}
-    <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+    <div style="font-size:12px; color:#334155; line-height:1.6; background:#fff; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
       ${resultBody}
-      <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
-        <div style="font-size:12px; color:#2563eb; font-weight:bold; margin-bottom:4px;">💡 【${targetAttr}属性】のおすすめ育成タタ</div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+        <div style="font-size:11px; color:#2563eb; font-weight:bold; margin-bottom:4px;">💡 【${targetAttr}属性】のおすすめ育成タタ</div>
         ${recCardsHTML}
       </div>
       <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
@@ -658,7 +677,6 @@ function diagnoseAttributeBalance() {
   renderRadarChart(attrCounts, 'T2所持数');
 }
 
-// T3所持者向けの診断ロジック（STEP 2-Bルート用）
 function diagnoseT3() {
   lastStepBeforeResult = 'step-2-b';
 
@@ -690,9 +708,9 @@ function diagnoseT3() {
     const outputHTML = `
       <div style="text-align:center;">
         <span style="background: linear-gradient(135deg, #a855f7, #ec4899); color:#fff; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🏆 殿堂入り級の攻略者</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">素晴らしい育成状況です！</h3>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">素晴らしい育成状況です！</h3>
       </div>
-      <div style="font-size:13px; color:#334155; line-height:1.7; background:#fff; padding:16px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+      <div style="font-size:12px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
         全属性でT3タタが6体以上揃っており、すべての「道場5」も解放されています！<br>
         正直なところ、<b>あなたにはもうこのツールは必要ないかもしれません…！</b>✨<br><br>
         ここからは育成効率などを気にする段階を終え、<b>好きなタタをT4にしてみんなに自慢していきましょう！</b>🔥
@@ -737,9 +755,9 @@ function diagnoseT3() {
 
   if (ownedT3Tanks.length === 0) {
     recommendationSections.push(`
-      <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;">
-        <div style="font-size:12px; color:#dc2626; font-weight:bold;">【1. 前衛の安定化】</div>
-        <div style="font-size:13px; color:#1e293b; margin-top:2px;">
+      <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
+        <div style="font-size:11px; color:#dc2626; font-weight:bold;">【1. 前衛の安定化】</div>
+        <div style="font-size:12px; color:#1e293b; margin-top:2px;">
           今後を見据えて、まずは高難易度でパーティを守り切れる<b>いずれかの属性の「壁役（前衛）」を1体T3にすること</b>を強くお勧めします！
         </div>
       </div>
@@ -749,9 +767,9 @@ function diagnoseT3() {
     const missingTankAttrs = allAttrs.filter(a => !tankAttrs.has(a));
     if (missingTankAttrs.length > 0) {
       recommendationSections.push(`
-        <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;">
-          <div style="font-size:12px; color:#2563eb; font-weight:bold;">【1. 壁役の属性拡張】</div>
-          <div style="font-size:13px; color:#1e293b; margin-top:2px;">
+        <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
+          <div style="font-size:11px; color:#2563eb; font-weight:bold;">【1. 壁役の属性拡張】</div>
+          <div style="font-size:12px; color:#1e293b; margin-top:2px;">
             壁役のT3をお持ちですが、今後の高難易度ステージを見据えて<b>「${missingTankAttrs.join('・')}属性」の壁役のT3化</b>を目指すと攻略がさらに安定します！
           </div>
         </div>
@@ -774,19 +792,19 @@ function diagnoseT3() {
           <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
           <div>
             <div style="font-size:11px; color:#dc2626; font-weight:bold;">ほぼ必須級のサポート</div>
-            <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
+            <div style="font-size:13px; font-weight:bold; color:#1e293b;">${displayName}</div>
           </div>
         </div>
       `;
     });
 
     recommendationSections.push(`
-      <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;">
-        <div style="font-size:12px; color:#dc2626; font-weight:bold;">【2. 必須級サポートの確保】</div>
-        <div style="font-size:13px; color:#1e293b; margin-top:2px;">
+      <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
+        <div style="font-size:11px; color:#dc2626; font-weight:bold;">【2. 必須級サポートの確保】</div>
+        <div style="font-size:12px; color:#1e293b; margin-top:2px;">
           <b>${missingSupport.join('・')}</b>のT3化は攻略において<b>ほぼ必須級</b>です！アタッカーの火力を引き出し、耐久力を劇的に高めます。
         </div>
-        <div style="margin-top:8px;">${supportCardsHTML}</div>
+        <div style="margin-top:6px;">${supportCardsHTML}</div>
       </div>
     `);
   }
@@ -823,7 +841,7 @@ function diagnoseT3() {
         <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
         <div>
           <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${attrTarget}属性】おすすめのT3</div>
-          <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
+          <div style="font-size:13px; font-weight:bold; color:#1e293b;">${displayName}</div>
           <div style="font-size:11px; color:#475569; margin-top:2px;">${item.comment}</div>
         </div>
       </div>
@@ -832,11 +850,11 @@ function diagnoseT3() {
 
   recommendationSections.push(`
     <div>
-      <div style="font-size:12px; color:#2563eb; font-weight:bold;">【3. 不足属性の補強おすすめ】</div>
-      <div style="font-size:13px; color:#1e293b; margin-top:2px;">
+      <div style="font-size:11px; color:#2563eb; font-weight:bold;">【3. 不足属性の補強おすすめ】</div>
+      <div style="font-size:12px; color:#1e293b; margin-top:2px;">
         ${attrReasonHeader}
       </div>
-      <div style="margin-top:8px;">
+      <div style="margin-top:6px;">
         ${attrCardsHTML}
       </div>
     </div>
@@ -845,12 +863,12 @@ function diagnoseT3() {
   const outputHTML = `
     <div style="text-align:center;">
       <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">今後を見据えたT3育成アドバイス</h3>
+      <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:17px;">今後を見据えたT3育成アドバイス</h3>
     </div>
-    <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+    <div style="font-size:12px; color:#334155; line-height:1.6; background:#fff; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
       ${recommendationSections.join('')}
       ${chartHTML}
-      <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
         💡 各属性のT3を6体揃えると「その属性の道場5」が解放されます！長期的な目標として各属性のT3を6体揃えることを目指しましょう！
       </div>
     </div>
