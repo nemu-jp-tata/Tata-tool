@@ -132,7 +132,7 @@ const selectedT3Monsters = new Set();
 
 let currentBranch = 't2'; 
 let lastStepBeforeResult = 'step-2-a-1';
-let t3ChartInstance = null;
+let radarChartInstance = null;
 
 const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
 
@@ -373,104 +373,24 @@ function checkSubProgress() {
   }
 }
 
-function diagnoseAttributeBalance() {
-  lastStepBeforeResult = 'step-2-a-3';
-
-  const allSelectedNames = [
-    ...Array.from(selectedTanks),
-    ...Array.from(selectedSubMonsters),
-    ...Array.from(selectedOtherMonsters)
-  ];
-
-  const allSelectedMonsters = rawMonstersData.filter(m => allSelectedNames.includes(m.name));
-
-  const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
-  allSelectedMonsters.forEach(m => {
-    if (attrCounts[m.type] !== undefined) {
-      attrCounts[m.type]++;
-    }
-  });
-
-  const allAttrs = ['炎', '水', '草', '雷', '岩'];
-  const zeroAttrs = allAttrs.filter(a => attrCounts[a] === 0);
-  
-  let maxAttr = '';
-  let maxCount = -1;
-  allAttrs.forEach(a => {
-    if (attrCounts[a] > maxCount) {
-      maxCount = attrCounts[a];
-      maxAttr = a;
-    }
-  });
-
-  let outputHTML = "";
-
-  if (zeroAttrs.length > 0) {
-    outputHTML = `
-      <div style="text-align:center;">
-        <span style="background:#eab308; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">苦手属性の補強が課題です！</h3>
-      </div>
-      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
-        特定属性のステージで手詰まりしやすいため、<b>不足している属性の強力なアタッカーを優先してT2育成</b>しましょう！
-        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
-        </div>
-      </div>
-    `;
-  } else if (maxCount >= 4) {
-    outputHTML = `
-      <div style="text-align:center;">
-        <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">他属性への拡張を意識しましょう！</h3>
-      </div>
-      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
-        1つの属性に偏りすぎると不利属性で詰まりやすくなるため、手薄な他の属性のアタッカーも並行して育てていきましょう。
-        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
-        </div>
-      </div>
-    `;
-  } else {
-    outputHTML = `
-      <div style="text-align:center;">
-        <span style="background:#16a34a; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
-        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">完璧なバランス！T3（進化）へ移行しましょう！</h3>
-      </div>
-      <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        全属性にバランス良くT2タタが育っており、攻略準備は万全です！<br><br>
-        次は幅広く育てるのを休止し、<b>エースアタッカーから集中してT3（最終進化）へ育成を進めましょう！</b>
-        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-          💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
-        </div>
-      </div>
-    `;
-  }
-
-  document.getElementById('diag-output').innerHTML = outputHTML;
-  nextStep(3);
-}
-
-// レーダーチャートを描画する関数（MAX 5 / 6以上ではみ出し設定）
-function renderT3RadarChart(attrCounts) {
-  const ctx = document.getElementById('t3RadarChart');
+// 汎用レーダーチャート描画関数（MAX 5 / 6以上で突き抜け表示）
+function renderRadarChart(attrCounts, datasetLabel) {
+  const ctx = document.getElementById('radarChartCanvas');
   if (!ctx) return;
 
-  if (t3ChartInstance) {
-    t3ChartInstance.destroy();
+  if (radarChartInstance) {
+    radarChartInstance.destroy();
   }
 
   const labels = ['炎', '水', '草', '雷', '岩'];
   const data = labels.map(attr => attrCounts[attr] || 0);
 
-  t3ChartInstance = new Chart(ctx, {
+  radarChartInstance = new Chart(ctx, {
     type: 'radar',
     data: {
       labels: labels,
       datasets: [{
-        label: 'T3所持数',
+        label: datasetLabel || '所持数',
         data: data,
         backgroundColor: 'rgba(37, 99, 235, 0.25)', // 薄い青透明
         borderColor: '#2563eb',                    // 線の青
@@ -508,7 +428,7 @@ function renderT3RadarChart(attrCounts) {
         }
       },
       plugins: {
-        legend: { display: false }, // 単一データのため凡例は非表示
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -519,6 +439,145 @@ function renderT3RadarChart(attrCounts) {
       }
     }
   });
+}
+
+// T2選択時の診断ロジック（STEP 2-A-3）
+function diagnoseAttributeBalance() {
+  lastStepBeforeResult = 'step-2-a-3';
+
+  const allSelectedNames = [
+    ...Array.from(selectedTanks),
+    ...Array.from(selectedSubMonsters),
+    ...Array.from(selectedOtherMonsters)
+  ];
+
+  const allSelectedMonsters = rawMonstersData.filter(m => allSelectedNames.includes(m.name));
+
+  const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
+  allSelectedMonsters.forEach(m => {
+    if (attrCounts[m.type] !== undefined) {
+      attrCounts[m.type]++;
+    }
+  });
+
+  const allAttrs = ['炎', '水', '草', '雷', '岩'];
+  const zeroAttrs = allAttrs.filter(a => attrCounts[a] === 0);
+  
+  let maxAttr = '';
+  let maxCount = -1;
+  allAttrs.forEach(a => {
+    if (attrCounts[a] > maxCount) {
+      maxCount = attrCounts[a];
+      maxAttr = a;
+    }
+  });
+
+  // 補強優先度が高い属性を選定（0体の属性、または一番数が少ない属性）
+  let targetAttr = '';
+  if (zeroAttrs.length > 0) {
+    targetAttr = zeroAttrs[0];
+  } else {
+    let minCount = 999;
+    allAttrs.forEach(a => {
+      if (attrCounts[a] < minCount) {
+        minCount = attrCounts[a];
+        targetAttr = a;
+      }
+    });
+  }
+
+  // recommendData.js から補強属性のおすすめタタを取得
+  const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
+  const candidateList = dataMap[targetAttr] || [];
+
+  // 手持ち（未所持）のタタをフィルタリング
+  const unownedCandidates = candidateList.filter(item => {
+    return !allSelectedMonsters.some(m => 
+      m.type === targetAttr && (m.name.includes(item.nameKey) || m.species.includes(item.nameKey))
+    );
+  });
+
+  const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList);
+
+  let recCardsHTML = "";
+  displayTargets.forEach(item => {
+    const monster = rawMonstersData.find(m => (m.name.includes(item.nameKey) || m.species.includes(item.nameKey)));
+    const displayName = monster ? monster.name : item.nameKey;
+
+    recCardsHTML += `
+      <div class="rec-card">
+        <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+        <div>
+          <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${targetAttr}属性】おすすめのタタ</div>
+          <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
+          <div style="font-size:11px; color:#475569; margin-top:2px;">${item.comment}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  const chartHTML = `
+    <div style="margin-top: 15px;">
+      <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 属性別 T2所持数（MAX: 5）</div>
+      <div class="chart-container">
+        <canvas id="radarChartCanvas"></canvas>
+      </div>
+    </div>
+  `;
+
+  let resultHeader = "";
+  let resultBody = "";
+
+  if (zeroAttrs.length > 0) {
+    resultHeader = `
+      <div style="text-align:center;">
+        <span style="background:#eab308; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">苦手属性の補強が課題です！</h3>
+      </div>`;
+    resultBody = `
+      現在【${maxAttr}属性】などに偏っており、<b style="color:#dc2626;">[ ${zeroAttrs.join('・')} ]</b> 属性のT2タタが手薄です。<br>
+      特定属性のステージで手詰まりしやすいため、<b>不足している【${targetAttr}属性】の強力なタタを優先してT2育成</b>しましょう！
+    `;
+  } else if (maxCount >= 4) {
+    resultHeader = `
+      <div style="text-align:center;">
+        <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">他属性への拡張を意識しましょう！</h3>
+      </div>`;
+    resultBody = `
+      手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
+      1つの属性に偏りすぎると不利属性で詰まりやすくなるため、数が少なめな<b>【${targetAttr}属性】</b>なども並行して育てていきましょう。
+    `;
+  } else {
+    resultHeader = `
+      <div style="text-align:center;">
+        <span style="background:#16a34a; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">完璧なバランス！T3（進化）へ移行しましょう！</h3>
+      </div>`;
+    resultBody = `
+      全属性にバランス良くT2タタが育っており、攻略準備は万全です！<br><br>
+      次は幅広く育てるのをお休みし、<b>エースアタッカーから集中してT3（最終進化）へ育成を進めましょう！</b>
+    `;
+  }
+
+  const outputHTML = `
+    ${resultHeader}
+    <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
+      ${resultBody}
+      <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+        <div style="font-size:12px; color:#2563eb; font-weight:bold; margin-bottom:4px;">💡 【${targetAttr}属性】のおすすめ育成タタ</div>
+        ${recCardsHTML}
+      </div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
+        💡 各属性のT2を5体揃えると「その属性の道場3」が解放されます！まだ達成していない属性があれば優先して目指しましょう！
+      </div>
+    </div>
+    ${chartHTML}
+  `;
+
+  document.getElementById('diag-output').innerHTML = outputHTML;
+  nextStep(3);
+  renderRadarChart(attrCounts, 'T2所持数');
 }
 
 // T3所持者向けの診断ロジック（STEP 2-Bルート用）
@@ -537,18 +596,16 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
 
-  // レーダーチャート用HTML（所持数が1体以上の場合のみ生成）
   const totalT3Count = myT3Monsters.length;
   const chartHTML = totalT3Count > 0 ? `
     <div style="margin-top: 15px;">
       <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 属性別 T3所持数（MAX: 5）</div>
       <div class="chart-container">
-        <canvas id="t3RadarChart"></canvas>
+        <canvas id="radarChartCanvas"></canvas>
       </div>
     </div>
   ` : '';
 
-  // 各属性すべてでT3が6体以上揃っているかチェック
   const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 6);
 
   if (isMasterPlayer) {
@@ -566,7 +623,7 @@ function diagnoseT3() {
     `;
     document.getElementById('diag-output').innerHTML = outputHTML;
     nextStep(3);
-    if (totalT3Count > 0) renderT3RadarChart(attrCounts);
+    if (totalT3Count > 0) renderRadarChart(attrCounts, 'T3所持数');
     return;
   }
 
@@ -600,7 +657,6 @@ function diagnoseT3() {
 
   let recommendationSections = [];
 
-  // 1. 壁役のT3化チェック
   if (ownedT3Tanks.length === 0) {
     recommendationSections.push(`
       <div style="margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1;">
@@ -625,7 +681,6 @@ function diagnoseT3() {
     }
   }
 
-  // 2. 必須級サポート（ヒノムシ / プラビ）チェック
   if (!hasHinomushiT3 || !hasPurabiT3) {
     const missingSupport = [];
     if (!hasHinomushiT3) missingSupport.push('ヒノムシ');
@@ -658,7 +713,6 @@ function diagnoseT3() {
     `);
   }
 
-  // 3. 属性偏りの解消・手薄な属性のおすすめアタッカー提案
   let attrReasonHeader = "";
 
   if (myT3Monsters.length > 0 && maxCount >= 2) {
@@ -672,14 +726,12 @@ function diagnoseT3() {
   const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
   const candidateList = dataMap[attrTarget] || [];
 
-  // ★【第1候補】補強対象属性（attrTarget）の未所持タタをフィルタリング
   const unownedCandidates = candidateList.filter(item => {
     return !myT3Monsters.some(m => 
       m.type === attrTarget && (m.name.includes(item.nameKey) || m.species.includes(item.nameKey))
     );
   });
 
-  // 未所持があれば未所持から、無ければ全体から抽出（フォールバック）
   const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList);
 
   let attrCardsHTML = "";
@@ -730,7 +782,7 @@ function diagnoseT3() {
   nextStep(3);
 
   if (totalT3Count > 0) {
-    renderT3RadarChart(attrCounts);
+    renderRadarChart(attrCounts, 'T3所持数');
   }
 }
 </script>
