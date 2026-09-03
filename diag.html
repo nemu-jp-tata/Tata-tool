@@ -40,8 +40,8 @@
     .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
     .rec-card img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
     
-    /* チャート（円グラフ）用スタイル */
-    .chart-container { position: relative; width: 100%; max-width: 280px; margin: 15px auto; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    /* レーダーチャート用スタイル（はみ出しが見えるようにpaddingを大きめに設定） */
+    .chart-container { position: relative; width: 100%; max-width: 320px; margin: 15px auto; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; overflow: visible; }
   </style>
 </head>
 <body>
@@ -132,7 +132,7 @@ const selectedT3Monsters = new Set();
 
 let currentBranch = 't2'; 
 let lastStepBeforeResult = 'step-2-a-1';
-let t3ChartInstance = null; // チャートインスタンス管理用
+let t3ChartInstance = null;
 
 const specialSupportTankNames = ['ガオデン', 'ホネギョ', 'ガオ', 'ホネ']; 
 
@@ -248,7 +248,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// UI要素生成ヘルパー
 function createMonsterItem(m, selectionSet) {
   const item = document.createElement('div');
   item.className = 'monster-item';
@@ -272,7 +271,6 @@ function createMonsterItem(m, selectionSet) {
   return item;
 }
 
-// Q2（壁役）チェック判定
 function checkTankProgress() {
   const userList = Array.from(selectedTanks);
   const myTanks = rawMonstersData.filter(m => userList.includes(m.name));
@@ -328,7 +326,6 @@ function checkTankProgress() {
   }
 }
 
-// Q3（ヒノムシ・プラビ）チェック判定
 function checkSubProgress() {
   const hasHinomushi = selectedSubMonsters.has('ヒノムシ');
   const hasPurabi = selectedSubMonsters.has('プラビ');
@@ -376,7 +373,6 @@ function checkSubProgress() {
   }
 }
 
-// 属性の偏りによる最終診断ロジック（T2ルート用）
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
@@ -457,47 +453,66 @@ function diagnoseAttributeBalance() {
   nextStep(3);
 }
 
-// 円グラフを描画する関数
-function renderT3PieChart(attrCounts) {
-  const ctx = document.getElementById('t3PieChart');
+// レーダーチャートを描画する関数（MAX 5 / 6以上ではみ出し設定）
+function renderT3RadarChart(attrCounts) {
+  const ctx = document.getElementById('t3RadarChart');
   if (!ctx) return;
 
-  // 再描画時に前のグラフインスタンスを破棄
   if (t3ChartInstance) {
     t3ChartInstance.destroy();
   }
 
   const labels = ['炎', '水', '草', '雷', '岩'];
   const data = labels.map(attr => attrCounts[attr] || 0);
-  const colors = [
-    '#ef4444', // 炎 (Red)
-    '#3b82f6', // 水 (Blue)
-    '#22c55e', // 草 (Green)
-    '#eab308', // 雷 (Yellow)
-    '#78350f'  // 岩 (Brown)
-  ];
 
   t3ChartInstance = new Chart(ctx, {
-    type: 'pie',
+    type: 'radar',
     data: {
       labels: labels,
       datasets: [{
+        label: 'T3所持数',
         data: data,
-        backgroundColor: colors,
-        borderWidth: 1
+        backgroundColor: 'rgba(37, 99, 235, 0.25)', // 薄い青透明
+        borderColor: '#2563eb',                    // 線の青
+        borderWidth: 2,
+        pointBackgroundColor: '#2563eb',
+        pointRadius: 4,
+        clip: false // ★ 枠外へのはみ出し（突き抜け）を許可する設定
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          min: 0,
+          max: 5, // ★ MAX値を「5」に指定
+          ticks: {
+            stepSize: 1,
+            display: true,
+            font: { size: 10 }
+          },
+          grid: {
+            color: '#cbd5e1'
+          },
+          angleLines: {
+            color: '#e2e8f0'
+          },
+          pointLabels: {
+            font: {
+              size: 13,
+              weight: 'bold'
+            },
+            color: '#1e293b'
+          }
+        }
+      },
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { boxWidth: 12, font: { size: 12 } }
-        },
+        legend: { display: false }, // 単一データのため凡例は非表示
         tooltip: {
           callbacks: {
             label: function(context) {
-              return ` ${context.label}: ${context.raw}体`;
+              return ` ${context.label}属性: ${context.raw}体`;
             }
           }
         }
@@ -522,18 +537,18 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
 
-  // 円グラフ用HTML（所持数が1体以上の場合のみ生成）
+  // レーダーチャート用HTML（所持数が1体以上の場合のみ生成）
   const totalT3Count = myT3Monsters.length;
   const chartHTML = totalT3Count > 0 ? `
     <div style="margin-top: 15px;">
-      <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 所持T3タタの属性内訳（計 ${totalT3Count}体）</div>
+      <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 属性別 T3所持数（MAX: 5）</div>
       <div class="chart-container">
-        <canvas id="t3PieChart"></canvas>
+        <canvas id="t3RadarChart"></canvas>
       </div>
     </div>
   ` : '';
 
-  // ★ 各属性すべてでT3が6体以上揃っているかチェック ★
+  // 各属性すべてでT3が6体以上揃っているかチェック
   const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 6);
 
   if (isMasterPlayer) {
@@ -551,7 +566,7 @@ function diagnoseT3() {
     `;
     document.getElementById('diag-output').innerHTML = outputHTML;
     nextStep(3);
-    if (totalT3Count > 0) renderT3PieChart(attrCounts);
+    if (totalT3Count > 0) renderT3RadarChart(attrCounts);
     return;
   }
 
@@ -654,18 +669,15 @@ function diagnoseT3() {
     attrReasonHeader = `次に補強すべき<b>【${attrTarget}属性】</b>のおすすめタタはこちらです！T3化をご検討ください。`;
   }
 
-  // 外部ファイル（recommendData.js）で定義した window.attrDataMap を参照
   const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
   const candidateList = dataMap[attrTarget] || [];
 
-  // ユーザーが選択済みのT3タタを除外
   const unownedCandidates = candidateList.filter(item => {
     return !Array.from(selectedT3Monsters).some(selectedName => 
       selectedName.includes(item.nameKey)
     );
   });
 
-  // 未所持の候補があればそちらから、全て所持済みなら元のリストから最大2体を表示
   const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList).slice(0, 2);
 
   let attrCardsHTML = "";
@@ -715,9 +727,8 @@ function diagnoseT3() {
   document.getElementById('diag-output').innerHTML = outputHTML;
   nextStep(3);
 
-  // HTML挿入後にグラフを描画
   if (totalT3Count > 0) {
-    renderT3PieChart(attrCounts);
+    renderT3RadarChart(attrCounts);
   }
 }
 </script>
