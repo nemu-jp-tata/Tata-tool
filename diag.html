@@ -22,11 +22,26 @@
     
     h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 18px; margin-bottom: 12px; }
     
+    /* 初期画面用スタイル */
+    .start-banner-container {
+      width: 100%;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .start-banner-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+
     /* プログレスバー用スタイル */
-    .progress-wrapper { margin-bottom: 16px; }
+    .progress-wrapper { margin-bottom: 16px; display: none; } /* 初期画面では非表示 */
     .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
     .progress-container { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; }
-    .progress-bar { height: 100%; width: 20%; background-color: #2563eb; transition: width 0.3s ease; }
+    .progress-bar { height: 100%; width: 0%; background-color: #2563eb; transition: width 0.3s ease; }
 
     .step-panel { display: none; }
     .step-panel.active { display: block; }
@@ -57,7 +72,7 @@
     .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 10px; }
     .rec-card img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
     
-    /* レーダーチャート用スタイル（レスポンシブ崩れ対策） */
+    /* レーダーチャート用スタイル */
     .chart-container { 
       position: relative; 
       width: 100%; 
@@ -77,18 +92,26 @@
   <h2>🔰 次に育てるタタ診断</h2>
 
   <!-- プログレスバーエリア -->
-  <div class="progress-wrapper">
+  <div class="progress-wrapper" id="progress-wrapper">
     <div class="progress-info">
       <span>診断進捗</span>
-      <span id="progress-text">20%</span>
+      <span id="progress-text">0%</span>
     </div>
     <div class="progress-container">
       <div id="progress-bar" class="progress-bar"></div>
     </div>
   </div>
 
+  <!-- STEP 0: 初期画面 -->
+  <div id="step-0" class="step-panel active">
+    <div class="start-banner-container">
+      <img src="./育成診断ツール.webp" alt="育成診断ツール" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x300?text=育成診断ツール';">
+    </div>
+    <button class="btn" style="width: 100%; font-size: 16px; padding: 14px;" onclick="nextStep(1)">診断を開始する ➔</button>
+  </div>
+
   <!-- STEP 1: Q1 -->
-  <div id="step-1" class="step-panel active">
+  <div id="step-1" class="step-panel">
     <div class="section-title">Q1. 今の攻略状況は？</div>
     <div class="radio-group">
       <label class="radio-label">
@@ -186,9 +209,17 @@ function isTankRole(monster) {
 }
 
 function updateProgressBar(step) {
+  const wrapper = document.getElementById('progress-wrapper');
   const bar = document.getElementById('progress-bar');
   const text = document.getElementById('progress-text');
-  let percent = 20;
+  let percent = 0;
+
+  if (step === 0 || step === 'step-0') {
+    if (wrapper) wrapper.style.display = 'none';
+    return;
+  } else {
+    if (wrapper) wrapper.style.display = 'block';
+  }
 
   switch (step) {
     case 1:
@@ -256,7 +287,7 @@ function resetAll() {
   const defaultRadio = document.querySelector('input[name="progress"][value="t2"]');
   if (defaultRadio) defaultRadio.checked = true;
 
-  nextStep(1);
+  nextStep(0); // 最初（初期画面）に戻る
 }
 
 function notifyWikiHeight() {
@@ -472,7 +503,7 @@ function checkSubProgress() {
   }
 }
 
-// 汎用レーダーチャート描画関数（スマホ画面はみ出し防止調整版）
+// 汎用レーダーチャート描画関数
 function renderRadarChart(attrCounts, datasetLabel) {
   const ctx = document.getElementById('radarChartCanvas');
   if (!ctx) return;
@@ -502,7 +533,7 @@ function renderRadarChart(attrCounts, datasetLabel) {
       responsive: true,
       maintainAspectRatio: true,
       layout: {
-        padding: 5 // パディングを追加して領域拡張
+        padding: 5
       },
       scales: {
         r: {
@@ -516,7 +547,7 @@ function renderRadarChart(attrCounts, datasetLabel) {
           grid: { color: '#cbd5e1' },
           angleLines: { color: '#e2e8f0' },
           pointLabels: {
-            font: { size: 11, weight: 'bold' }, // ラベルサイズを少し小さくしてはみ出し防止
+            font: { size: 11, weight: 'bold' },
             color: '#1e293b',
             padding: 5
           }
