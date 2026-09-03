@@ -118,6 +118,7 @@
 </div>
 
 <script src="monsters.js"></script>
+<script src="recommendData.js"></script>
 <script>
 const selectedTanks = new Set();
 const selectedSubMonsters = new Set();
@@ -585,32 +586,23 @@ function diagnoseT3() {
     attrReasonHeader = `次に補強すべき<b>【${attrTarget}属性】</b>のおすすめタタはこちらです！T3化をご検討ください。`;
   }
 
-  const attrDataMap = {
-    '水': [
-      { nameKey: 'シズクジ', comment: 'ウミミT3とのコンボが非常に強力！' },
-      { nameKey: 'ウミミ', comment: 'シズクジT3とのコンボで真価を発揮！' }
-    ],
-    '炎': [
-      { nameKey: 'コロコン', comment: '攻撃範囲が広く、集団戦で大活躍！' }
-    ],
-    '草': [
-      { nameKey: 'コパンダ', comment: '範囲攻撃に優れており、高い殲滅力を発揮！' },
-      { nameKey: 'フリコー', comment: '広範囲攻撃で敵を一網打尽にできる！' }
-    ],
-    '岩': [
-      { nameKey: 'ヤンザル', comment: '単体・総合性能が非常に高い頼れるエース！' },
-      { nameKey: 'コロタマ', comment: 'ラッシュ攻略・足止めで大活躍！' }
-    ],
-    '雷': [
-      { nameKey: 'ビリジカ', comment: '範囲貫通攻撃が強力で道中・ボス戦共に優秀！' },
-      { nameKey: 'トジコモル', comment: '攻撃範囲の広さが魅力の強力なタタ！' }
-    ]
-  };
+  // 外部ファイル（recommendData.js）で定義した window.attrDataMap を参照
+  const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
+  const candidateList = dataMap[attrTarget] || [];
 
-  const targetList = attrDataMap[attrTarget] || [];
+  // ユーザーが選択済みのT3タタを除外
+  const unownedCandidates = candidateList.filter(item => {
+    return !Array.from(selectedT3Monsters).some(selectedName => 
+      selectedName.includes(item.nameKey)
+    );
+  });
+
+  // 未所持の候補があればそちらから、全て所持済みなら元のリストから最大2体を表示
+  const displayTargets = (unownedCandidates.length > 0 ? unownedCandidates : candidateList).slice(0, 2);
+
   let attrCardsHTML = "";
 
-  targetList.forEach(item => {
+  displayTargets.forEach(item => {
     const monster = rawMonstersData.find(m => (m.name.includes(item.nameKey) || m.species.includes(item.nameKey)) && m.T === 3);
     const displayName = monster ? monster.name : item.nameKey + 'T3';
 
