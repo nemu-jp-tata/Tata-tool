@@ -40,7 +40,7 @@
     .rec-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
     .rec-card img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
     
-    /* レーダーチャート用スタイル（はみ出しが見えるようにpaddingを大きめに設定） */
+    /* レーダーチャート用スタイル */
     .chart-container { position: relative; width: 100%; max-width: 320px; margin: 15px auto; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; overflow: visible; }
   </style>
 </head>
@@ -373,7 +373,7 @@ function checkSubProgress() {
   }
 }
 
-// 汎用レーダーチャート描画関数（MAX 5 / 6以上で突き抜け表示）
+// 汎用レーダーチャート描画関数
 function renderRadarChart(attrCounts, datasetLabel) {
   const ctx = document.getElementById('radarChartCanvas');
   if (!ctx) return;
@@ -392,12 +392,12 @@ function renderRadarChart(attrCounts, datasetLabel) {
       datasets: [{
         label: datasetLabel || '所持数',
         data: data,
-        backgroundColor: 'rgba(37, 99, 235, 0.25)', // 薄い青透明
-        borderColor: '#2563eb',                    // 線の青
+        backgroundColor: 'rgba(37, 99, 235, 0.25)',
+        borderColor: '#2563eb',
         borderWidth: 2,
         pointBackgroundColor: '#2563eb',
         pointRadius: 4,
-        clip: false // ★ 枠外へのはみ出し（突き抜け）を許可する設定
+        clip: false
       }]
     },
     options: {
@@ -406,23 +406,16 @@ function renderRadarChart(attrCounts, datasetLabel) {
       scales: {
         r: {
           min: 0,
-          max: 5, // ★ MAX値を「5」に指定
+          max: 5,
           ticks: {
             stepSize: 1,
             display: true,
             font: { size: 10 }
           },
-          grid: {
-            color: '#cbd5e1'
-          },
-          angleLines: {
-            color: '#e2e8f0'
-          },
+          grid: { color: '#cbd5e1' },
+          angleLines: { color: '#e2e8f0' },
           pointLabels: {
-            font: {
-              size: 13,
-              weight: 'bold'
-            },
+            font: { size: 13, weight: 'bold' },
             color: '#1e293b'
           }
         }
@@ -445,13 +438,18 @@ function renderRadarChart(attrCounts, datasetLabel) {
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
-  const allSelectedNames = [
-    ...Array.from(selectedTanks),
-    ...Array.from(selectedSubMonsters),
-    ...Array.from(selectedOtherMonsters)
-  ];
+  // 選択されたモンスターのフルオブジェクトを取得
+  const tankMonsters = rawMonstersData.filter(m => selectedTanks.has(m.name));
+  
+  // ヒノムシ・プラビは選択された名前から該当するT1相当モンスターを探す
+  const subMonsters = rawMonstersData.filter(m => {
+    return Array.from(selectedSubMonsters).some(sName => m.name.includes(sName) || m.species.includes(sName));
+  });
 
-  const allSelectedMonsters = rawMonstersData.filter(m => allSelectedNames.includes(m.name));
+  const otherMonsters = rawMonstersData.filter(m => selectedOtherMonsters.has(m.name));
+
+  // 重複を考慮した選択モンスターのリスト
+  const allSelectedMonsters = Array.from(new Set([...tankMonsters, ...subMonsters, ...otherMonsters]));
 
   const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
   allSelectedMonsters.forEach(m => {
@@ -465,26 +463,22 @@ function diagnoseAttributeBalance() {
   
   let maxAttr = '';
   let maxCount = -1;
+  let minAttr = '';
+  let minCount = 999;
+
   allAttrs.forEach(a => {
     if (attrCounts[a] > maxCount) {
       maxCount = attrCounts[a];
       maxAttr = a;
     }
+    if (attrCounts[a] < minCount) {
+      minCount = attrCounts[a];
+      minAttr = a;
+    }
   });
 
-  // 補強優先度が高い属性を選定（0体の属性、または一番数が少ない属性）
-  let targetAttr = '';
-  if (zeroAttrs.length > 0) {
-    targetAttr = zeroAttrs[0];
-  } else {
-    let minCount = 999;
-    allAttrs.forEach(a => {
-      if (attrCounts[a] < minCount) {
-        minCount = attrCounts[a];
-        targetAttr = a;
-      }
-    });
-  }
+  // 補強優先度が高い属性を選定
+  let targetAttr = zeroAttrs.length > 0 ? zeroAttrs[0] : minAttr;
 
   // recommendData.js から補強属性のおすすめタタを取得
   const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
@@ -528,6 +522,7 @@ function diagnoseAttributeBalance() {
   let resultHeader = "";
   let resultBody = "";
 
+  // 修正：属性カウント結果に基づいた厳格な判定条件
   if (zeroAttrs.length > 0) {
     resultHeader = `
       <div style="text-align:center;">
@@ -547,6 +542,16 @@ function diagnoseAttributeBalance() {
     resultBody = `
       手持ちの中で <b>【${maxAttr}属性】</b> のタタが非常に充実しています！<br>
       1つの属性に偏りすぎると不利属性で詰まりやすくなるため、数が少なめな<b>【${targetAttr}属性】</b>なども並行して育てていきましょう。
+    `;
+  } else if (maxCount - minCount >= 2) {
+    resultHeader = `
+      <div style="text-align:center;">
+        <span style="background:#2563eb; color:#fff; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px;">診断結果</span>
+        <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">属性バランスの偏りを補強しましょう！</h3>
+      </div>`;
+    resultBody = `
+      現在【${maxAttr}属性】（${maxCount}体）に比べて<b>【${targetAttr}属性】（${minCount}体）</b>の手持ちが少なくなっています。<br>
+      各属性の対応力を高めるため、層が薄い<b>【${targetAttr}属性】</b>のT2タタを補強するのがおすすめです！
     `;
   } else {
     resultHeader = `
