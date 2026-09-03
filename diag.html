@@ -9,8 +9,14 @@
   <style>
     body { font-family: sans-serif; background: #f1f5f9; padding: 15px; margin: 0; }
     .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 20px; }
+    h2 { margin-top: 0; text-align: center; color: #1e293b; font-size: 20px; margin-bottom: 12px; }
     
+    /* プログレスバー用スタイル */
+    .progress-wrapper { margin-bottom: 18px; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+    .progress-container { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 20%; background-color: #2563eb; transition: width 0.3s ease; }
+
     .step-panel { display: none; }
     .step-panel.active { display: block; }
 
@@ -46,8 +52,19 @@
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="card-container">
   <h2>🔰 次に育てるタタ診断</h2>
+
+  <!-- プログレスバーエリア -->
+  <div class="progress-wrapper">
+    <div class="progress-info">
+      <span>診断進捗</span>
+      <span id="progress-text">20%</span>
+    </div>
+    <div class="progress-container">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
+  </div>
 
   <!-- STEP 1: Q1 -->
   <div id="step-1" class="step-panel active">
@@ -118,6 +135,7 @@
     <div id="diag-output"></div>
     <div class="btn-group" style="margin-top: 20px;">
       <button class="btn btn-sub" onclick="backToPrevStep()">← 選択をやり直す</button>
+      <button class="btn btn-sub" style="background:#475569;" onclick="resetAll()">🔄 最初からやり直す</button>
     </div>
   </div>
 </div>
@@ -125,6 +143,9 @@
 <script src="monsters.js"></script>
 <script src="recommendData.js"></script>
 <script>
+// 画像読み込みのベースURL（必要に応じて外部ストレージURL等に変更可能）
+const IMAGE_BASE_URL = './';
+
 const selectedTanks = new Set();
 const selectedSubMonsters = new Set();
 const selectedOtherMonsters = new Set();
@@ -144,14 +165,50 @@ function isTankRole(monster) {
   return false;
 }
 
+// プログレスバーの更新ロジック
+function updateProgressBar(step) {
+  const bar = document.getElementById('progress-bar');
+  const text = document.getElementById('progress-text');
+  let percent = 20;
+
+  switch (step) {
+    case 1:
+    case 'step-1':
+      percent = 20;
+      break;
+    case 'step-2-a-1':
+      percent = 40;
+      break;
+    case 'step-2-a-2':
+      percent = 60;
+      break;
+    case 'step-2-a-3':
+      percent = 80;
+      break;
+    case 'step-2-b':
+      percent = 60;
+      break;
+    case 3:
+    case 'step-3':
+      percent = 100;
+      break;
+  }
+
+  if (bar) bar.style.width = percent + '%';
+  if (text) text.innerText = percent + '%';
+}
+
 function nextStep(step) {
   document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
   
-  if (typeof step === 'string') {
-    document.getElementById(step).classList.add('active');
-  } else {
-    document.getElementById(`step-${step}`).classList.add('active');
+  const stepId = (typeof step === 'string') ? step : `step-${step}`;
+  const targetPanel = document.getElementById(stepId);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
   }
+
+  updateProgressBar(step);
+  notifyWikiHeight();
 }
 
 function handleQ1Next() {
@@ -167,6 +224,29 @@ function handleQ1Next() {
 
 function backToPrevStep() {
   nextStep(lastStepBeforeResult);
+}
+
+// 最初からやり直す（全体リセット）
+function resetAll() {
+  selectedTanks.clear();
+  selectedSubMonsters.clear();
+  selectedOtherMonsters.clear();
+  selectedT3Monsters.clear();
+
+  document.querySelectorAll('.monster-item').forEach(el => el.classList.remove('selected'));
+  
+  const defaultRadio = document.querySelector('input[name="progress"][value="t2"]');
+  if (defaultRadio) defaultRadio.checked = true;
+
+  nextStep(1);
+}
+
+// Wiki (iframe) 埋め込み時の高さ自動調整用通知機能
+function notifyWikiHeight() {
+  setTimeout(() => {
+    const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.parent.postMessage({ frameHeight: height }, '*');
+  }, 50);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -204,7 +284,7 @@ window.addEventListener('DOMContentLoaded', () => {
     item.className = 'monster-item';
     item.dataset.name = displayName;
     item.innerHTML = `
-      <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(displayName)}';">
+      <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(displayName)}';">
       <div class="monster-name">${displayName}</div>
     `;
     item.addEventListener('click', () => {
@@ -246,6 +326,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const item = createMonsterItem(m, selectedT3Monsters);
     t3Grid.appendChild(item);
   });
+
+  notifyWikiHeight();
 });
 
 function createMonsterItem(m, selectionSet) {
@@ -254,7 +336,7 @@ function createMonsterItem(m, selectionSet) {
   item.dataset.name = m.name;
   
   item.innerHTML = `
-    <img src="./${encodeURIComponent(m.name)}.webp" alt="${m.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(m.name)}';">
+    <img src="${IMAGE_BASE_URL}${encodeURIComponent(m.name)}.webp" alt="${m.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(m.name)}';">
     <div class="monster-name">${m.name}</div>
   `;
 
@@ -296,7 +378,7 @@ function checkTankProgress() {
       candidates.forEach(candidate => {
         candidateCardsHTML += `
           <div class="rec-card">
-            <img src="./${encodeURIComponent(candidate.name)}.webp" alt="${candidate.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(candidate.name)}';">
+            <img src="${IMAGE_BASE_URL}${encodeURIComponent(candidate.name)}.webp" alt="${candidate.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(candidate.name)}';">
             <div>
               <div style="font-size:11px; color:#dc2626; font-weight:bold;">【${attr}属性】の壁役</div>
               <div style="font-size:14px; font-weight:bold; color:#1e293b;">${candidate.name}</div>
@@ -346,7 +428,7 @@ function checkSubProgress() {
 
       candidateCardsHTML += `
         <div class="rec-card">
-          <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+          <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
           <div>
             <div style="font-size:11px; color:#dc2626; font-weight:bold;">優先育成ターゲット</div>
             <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
@@ -438,17 +520,12 @@ function renderRadarChart(attrCounts, datasetLabel) {
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
-  // 選択されたモンスターのフルオブジェクトを取得
   const tankMonsters = rawMonstersData.filter(m => selectedTanks.has(m.name));
-  
-  // ヒノムシ・プラビは選択された名前から該当するT1相当モンスターを探す
   const subMonsters = rawMonstersData.filter(m => {
     return Array.from(selectedSubMonsters).some(sName => m.name.includes(sName) || m.species.includes(sName));
   });
-
   const otherMonsters = rawMonstersData.filter(m => selectedOtherMonsters.has(m.name));
 
-  // 重複を考慮した選択モンスターのリスト
   const allSelectedMonsters = Array.from(new Set([...tankMonsters, ...subMonsters, ...otherMonsters]));
 
   const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
@@ -477,14 +554,11 @@ function diagnoseAttributeBalance() {
     }
   });
 
-  // 補強優先度が高い属性を選定
   let targetAttr = zeroAttrs.length > 0 ? zeroAttrs[0] : minAttr;
 
-  // recommendData.js から補強属性のおすすめタタを取得
   const dataMap = (typeof window.attrDataMap !== 'undefined') ? window.attrDataMap : {};
   const candidateList = dataMap[targetAttr] || [];
 
-  // 手持ち（未所持）のタタをフィルタリング
   const unownedCandidates = candidateList.filter(item => {
     return !allSelectedMonsters.some(m => 
       m.type === targetAttr && (m.name.includes(item.nameKey) || m.species.includes(item.nameKey))
@@ -500,7 +574,7 @@ function diagnoseAttributeBalance() {
 
     recCardsHTML += `
       <div class="rec-card">
-        <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+        <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
         <div>
           <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${targetAttr}属性】おすすめのタタ</div>
           <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
@@ -522,7 +596,6 @@ function diagnoseAttributeBalance() {
   let resultHeader = "";
   let resultBody = "";
 
-  // 修正：属性カウント結果に基づいた厳格な判定条件
   if (zeroAttrs.length > 0) {
     resultHeader = `
       <div style="text-align:center;">
@@ -600,8 +673,8 @@ function diagnoseT3() {
   });
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
-
   const totalT3Count = myT3Monsters.length;
+
   const chartHTML = totalT3Count > 0 ? `
     <div style="margin-top: 15px;">
       <div style="font-size:12px; color:#2563eb; font-weight:bold; text-align:center;">📊 属性別 T3所持数（MAX: 5）</div>
@@ -698,7 +771,7 @@ function diagnoseT3() {
 
       supportCardsHTML += `
         <div class="rec-card">
-          <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+          <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
           <div>
             <div style="font-size:11px; color:#dc2626; font-weight:bold;">ほぼ必須級のサポート</div>
             <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
@@ -747,7 +820,7 @@ function diagnoseT3() {
 
     attrCardsHTML += `
       <div class="rec-card">
-        <img src="./${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
+        <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${encodeURIComponent(displayName)}';">
         <div>
           <div style="font-size:11px; color:#2563eb; font-weight:bold;">【${attrTarget}属性】おすすめのT3</div>
           <div style="font-size:14px; font-weight:bold; color:#1e293b;">${displayName}</div>
