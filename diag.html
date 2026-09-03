@@ -466,8 +466,8 @@ function diagnoseT3() {
 
   const allAttrs = ['炎', '水', '草', '雷', '岩'];
 
-  // ★ 各属性すべてでT3が5体以上揃っているかチェック ★
-  const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 3);
+  // ★ 各属性すべてでT3が6体以上揃っているかチェック ★
+  const isMasterPlayer = allAttrs.every(a => attrCounts[a] >= 6);
 
   if (isMasterPlayer) {
     const outputHTML = `
@@ -476,9 +476,9 @@ function diagnoseT3() {
         <h3 style="margin:10px 0 5px 0; color:#1e293b; font-size:18px;">素晴らしい育成状況です！</h3>
       </div>
       <div style="font-size:13px; color:#334155; line-height:1.7; background:#fff; padding:16px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
-        全属性でT3タタが3体以上揃っており、すべての「道場5」も解放されています！<br>
-        正直なところ、<b>あなたにはもうこの育成診断ツールは必要ないかもしれません…！</b>✨<br><br>
-        ここからは育成効率などを気にする段階を終え、<b>大好きな推しタタをT4にして自慢の限界突破パーティを作り上げていきましょう！</b>🔥
+        全属性でT3タタが6体以上揃っており、すべての「道場5」も解放されています！<br>
+        正直なところ、<b>あなたにはもうこのツールは必要ないかもしれません…！</b>✨<br><br>
+        ここからは育成効率などを気にする段階を終え、<b>好きなタタをT4にしてみんなに自慢していきましょう！</b>🔥
       </div>
     `;
     document.getElementById('diag-output').innerHTML = outputHTML;
@@ -646,7 +646,7 @@ function diagnoseT3() {
     <div style="font-size:13px; color:#334155; line-height:1.6; background:#fff; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:10px;">
       ${recommendationSections.join('')}
       <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#2563eb; font-weight:bold;">
-        💡 各属性のT3を3体揃えると「その属性の道場5」が解放されます！長期的な目標として各属性のT3を5体揃えることを目指しましょう！
+        💡 各属性のT3を6体揃えると「その属性の道場5」が解放されます！長期的な目標として各属性のT3を6体揃えることを目指しましょう！
       </div>
     </div>
   `;
