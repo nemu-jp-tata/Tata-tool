@@ -613,7 +613,7 @@ function renderMonsters() {
     const item = document.createElement('div');
     item.className = 'monster-item';
     item.dataset.attr = baseM.attr;
-    item.style.touchAction = 'pan-y';
+    item.style.touchAction = 'none'; // 画像に触れた瞬間から即座にドラッグ（持ち上げ）を開始できるように変更
     
     if (currentSelected && currentSelected.species === species) {
       item.classList.add('active');
@@ -660,14 +660,8 @@ function renderMonsters() {
         const dy = moveEvent.clientY - startY;
 
         if (!isDragging) {
-          if (moveEvent.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            window.removeEventListener('pointercancel', onUp);
-            return;
-          }
-
-          if (Math.hypot(dx, dy) > 10) {
+          // 閾値を下げて、触れた瞬間（少しの動き）からすぐにドラッグを開始する
+          if (Math.hypot(dx, dy) > 3) {
             isDragging = true;
             try {
               item.setPointerCapture(pointerId);
