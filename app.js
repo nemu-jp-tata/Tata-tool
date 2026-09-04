@@ -71,13 +71,11 @@ function updateChipsetAreaVisibility(isZombieStage) {
   }
 }
 
-// チップ一覧を描画する関数（画像歪み防止スタイル修正版）
+// チップ一覧を描画する関数
 function renderChips() {
   monsterGrid.innerHTML = '';
-
   const selectedChips = selectedChipsMap[currentPlayer];
 
-  // セットボタン用のコンテナを作成・配置（スクロール時に上部に追従するsticky配置）
   const actionArea = document.createElement('div');
   actionArea.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 10;';
   actionArea.innerHTML = `
@@ -91,7 +89,6 @@ function renderChips() {
     applyChipsToSlots();
   });
 
-  // 全49種のチップを描画
   chipsetList.forEach(chip => {
     const isSelected = selectedChips.some(c => c.id === chip.id);
     const item = document.createElement('div');
@@ -121,7 +118,6 @@ function renderChips() {
   });
 }
 
-// 1P・2P両方の選択したチップを各専用スロットに反映する関数
 function applyChipsToSlots() {
   const p1Chips = selectedChipsMap['1P'] || [];
   const p1Slots = document.querySelectorAll('.chipset-slot.p1-slot');
@@ -129,9 +125,7 @@ function applyChipsToSlots() {
     slot.innerHTML = '';
     if (p1Chips[index]) {
       const chip = p1Chips[index];
-      slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="[1P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
-      `;
+      slot.innerHTML = `<img src="${chip.img}" alt="${chip.name}" title="[1P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">`;
     }
   });
 
@@ -141,14 +135,11 @@ function applyChipsToSlots() {
     slot.innerHTML = '';
     if (p2Chips[index]) {
       const chip = p2Chips[index];
-      slot.innerHTML = `
-        <img src="${chip.img}" alt="${chip.name}" title="[2P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">
-      `;
+      slot.innerHTML = `<img src="${chip.img}" alt="${chip.name}" title="[2P] ${chip.name}" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 4px; display: block; margin: auto;" onerror="this.outerHTML='<span style=\\'font-size:9px; color:#fff;\\'>${chip.name}</span>';">`;
     }
   });
 }
 
-// 全データをマッピング
 const allMonsters = rawMonstersData.map(m => ({
   name: m.name,
   species: m.species,
@@ -180,10 +171,11 @@ const monstersData = Array.from(baseMonstersMap.values());
 let currentSelected = null;
 let currentAttr = "all";
 let currentType = "all";
-let currentGridSize = parseInt(localStorage.getItem('monsterBoard_size')) || 5;
+// グリッドサイズ（"5", "6", または "3x4" などの文字列やオブジェクトで管理、ここでは識別用に文字列またはオブジェクト等で保持）
+let currentGridType = localStorage.getItem('monsterBoard_gridType') || '5'; 
+
 let currentPlayer = "1P";
 
-// ドラッグ＆ドロップ用の状態管理
 let draggingItem = null;
 const dragGhost = document.getElementById('dragGhost');
 
@@ -194,9 +186,10 @@ const btn1P = document.getElementById('btn1P');
 const btn2P = document.getElementById('btn2P');
 const normalStageBtn = document.getElementById('normalStageBtn');
 const zombieStageBtn = document.getElementById('zombieStageBtn');
+const dojoStageBtn = document.getElementById('dojoStageBtn');
 const selectedNameEl = document.getElementById('selectedName');
+const boardNotice = document.getElementById('boardNotice');
 
-// --- ドラッグ描画の描画フレーム同期(rAF) ---
 let rafId = null;
 let pendingX = 0;
 let pendingY = 0;
@@ -206,14 +199,12 @@ function updateGhostPosition(x, y) {
   pendingY = y;
   if (!rafId) {
     rafId = requestAnimationFrame(() => {
-      // 50pxサイズのドラッグGhostの中心をカーソル位置に設定
       dragGhost.style.transform = `translate3d(${pendingX - 25}px, ${pendingY - 25}px, 0)`;
       rafId = null;
     });
   }
 }
 
-// --- ドロップ位置のハイライト処理 ---
 let currentHoveredCell = null;
 
 function updateHoverHighlight(x, y) {
@@ -238,7 +229,6 @@ function clearHoverHighlight() {
   }
 }
 
-// 保存・復元機能
 function saveBoardState() {
   const cellsData = [];
   document.querySelectorAll('#mainGrid .cell').forEach((indexCell, index) => {
@@ -254,7 +244,7 @@ function saveBoardState() {
       });
     }
   });
-  localStorage.setItem('monsterBoard_size', currentGridSize);
+  localStorage.setItem('monsterBoard_gridType', currentGridType);
   localStorage.setItem('monsterBoard_cells', JSON.stringify(cellsData));
   localStorage.setItem('monsterBoard_chips', JSON.stringify(selectedChipsMap));
 }
@@ -381,7 +371,6 @@ function fillCellWithMonster(cell, data) {
         }
 
         const targetIndex = cells.indexOf(targetCell);
-        
         const existingImg = targetCell.querySelector('img, .no-image-badge');
         let targetCellData = null;
         if (existingImg && existingImg.dataset) {
@@ -395,27 +384,26 @@ function fillCellWithMonster(cell, data) {
         }
 
         const targetSpecies = draggingItem.species;
-
         let isSpeciesOnBoard = false;
         cells.forEach((c, idx) => {
           if (idx === targetIndex || idx === sourceIndex) return;
           const im = c.querySelector('img, .no-image-badge');
           if (im && im.dataset && im.dataset.species === targetSpecies) {
-            if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
+            if (currentGridType === '5' || currentGridType === '3x4' || im.dataset.player === draggingItem.player) {
               isSpeciesOnBoard = true;
             }
           }
         });
 
         if (isSpeciesOnBoard) {
-          const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
+          const playerText = (currentGridType === '6') ? `[${draggingItem.player}]` : "";
           alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
           revertToSourceCell();
           return;
         }
 
         targetCell.className = 'cell';
-        if (currentGridSize === 6) {
+        if (currentGridType === '6') {
           targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
         }
 
@@ -460,25 +448,42 @@ function revertToSourceCell() {
   saveBoardState();
 }
 
-function buildBoard(size) {
-  currentGridSize = size;
-  mainGrid.className = `grid-${size}x${size}`;
+function buildBoard(gridType) {
+  currentGridType = gridType;
   
-  if (size === 6) {
-    if (playerSwitchContainer) playerSwitchContainer.classList.add('show');
-    if (zombieStageBtn) zombieStageBtn.classList.add('active');
-    if (normalStageBtn) normalStageBtn.classList.remove('active');
-    updateChipsetAreaVisibility(true);
-  } else {
+  // 状態に応じたUI切り替え
+  normalStageBtn?.classList.remove('active');
+  zombieStageBtn?.classList.remove('active');
+  dojoStageBtn?.classList.remove('active');
+
+  if (gridType === '5') {
+    mainGrid.className = `grid-5x5`;
     if (playerSwitchContainer) playerSwitchContainer.classList.remove('show');
     if (normalStageBtn) normalStageBtn.classList.add('active');
-    if (zombieStageBtn) zombieStageBtn.classList.remove('active');
+    if (boardNotice) boardNotice.style.display = 'block';
+    updateChipsetAreaVisibility(false);
+  } else if (gridType === '6') {
+    mainGrid.className = `grid-6x6`;
+    if (playerSwitchContainer) playerSwitchContainer.classList.add('show');
+    if (zombieStageBtn) zombieStageBtn.classList.add('active');
+    if (boardNotice) boardNotice.style.display = 'block';
     currentPlayer = "1P";
+    updateChipsetAreaVisibility(true);
+  } else if (gridType === '3x4') {
+    mainGrid.className = `grid-3x4`;
+    if (playerSwitchContainer) playerSwitchContainer.classList.remove('show');
+    if (dojoStageBtn) dojoStageBtn.classList.add('active');
+    if (boardNotice) boardNotice.style.display = 'none'; // 道場用にはゾンビ通知を非表示
     updateChipsetAreaVisibility(false);
   }
 
   mainGrid.innerHTML = '';
-  for (let i = 0; i < size * size; i++) {
+  
+  let totalCells = 25;
+  if (gridType === '6') totalCells = 36;
+  if (gridType === '3x4') totalCells = 12; // 4列×3行 = 12マス
+
+  for (let i = 0; i < totalCells; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
     
@@ -510,14 +515,18 @@ function buildBoard(size) {
       const existingImg = cell.querySelector('img, .no-image-badge');
       const isReplacingSelf = existingImg && existingImg.dataset &&
                               existingImg.dataset.species === targetSpecies &&
-                              (currentGridSize === 5 || existingImg.dataset.player === currentPlayer);
+                              (currentGridType !== '6' || existingImg.dataset.player === currentPlayer);
 
       if (!isReplacingSelf) {
-        if (currentGridSize === 5 && totalCount >= 15) {
+        if (gridType === '5' && totalCount >= 15) {
           alert('ノーマルステージでは最大15体までしか配置できません。');
           return;
         }
-        if (currentGridSize === 6) {
+        if (gridType === '3x4' && totalCount >= 12) {
+          alert('道場では最大12体までしか配置できません。');
+          return;
+        }
+        if (gridType === '6') {
           if (currentPlayer === '1P' && p1Count >= 15) {
             alert('1Pは最大15体までしか配置できません。');
             return;
@@ -533,7 +542,7 @@ function buildBoard(size) {
       document.querySelectorAll('#mainGrid .cell').forEach(c => {
         const im = c.querySelector('img, .no-image-badge');
         if (im && im.dataset && im.dataset.species === targetSpecies) {
-          if (currentGridSize === 5 || im.dataset.player === currentPlayer) {
+          if (gridType !== '6' || im.dataset.player === currentPlayer) {
             if (c !== cell) {
               isSpeciesOnBoard = true;
             }
@@ -542,18 +551,18 @@ function buildBoard(size) {
       });
 
       if (isSpeciesOnBoard) {
-        const playerText = (currentGridSize === 6) ? `[${currentPlayer}]` : "";
+        const playerText = (gridType === '6') ? `[${currentPlayer}]` : "";
         alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
         return;
       }
 
-      const newCellClassName = 'cell ' + (currentGridSize === 6 ? (currentPlayer === '1P' ? 'p1-cell' : 'p2-cell') : '');
+      const newCellClassName = 'cell ' + (gridType === '6' ? (currentPlayer === '1P' ? 'p1-cell' : 'p2-cell') : '');
       
       fillCellWithMonster(cell, {
         src: currentSelected.imgUrl,
         species: targetSpecies,
         tier: targetTier,
-        player: currentGridSize === 6 ? currentPlayer : '1P',
+        player: gridType === '6' ? currentPlayer : '1P',
         className: newCellClassName.trim()
       });
       
@@ -572,7 +581,7 @@ function buildBoard(size) {
 const monsterGrid = document.getElementById('monsterGrid');
 
 function renderMonsters() {
-  if (currentSelectionMode === 'chip' && currentGridSize === 6) {
+  if (currentSelectionMode === 'chip' && currentGridType === '6') {
     renderChips();
     return;
   }
@@ -669,7 +678,7 @@ function renderMonsters() {
               src: paletteItemData.imgUrl,
               species: paletteItemData.species,
               tier: paletteItemData.tierNum,
-              player: currentGridSize === 6 ? currentPlayer : '1P'
+              player: currentGridType === '6' ? currentPlayer : '1P'
             };
 
             dragGhost.style.backgroundImage = `url(${paletteItemData.imgUrl})`;
@@ -750,15 +759,20 @@ function renderMonsters() {
 
           const isReplacingSelf = existingImg && existingImg.dataset &&
                                   existingImg.dataset.species === targetSpecies &&
-                                  (currentGridSize === 5 || existingImg.dataset.player === draggingItem.player);
+                                  (currentGridType !== '6' || existingImg.dataset.player === draggingItem.player);
 
           if (!isReplacingSelf) {
-            if (currentGridSize === 5 && totalCount >= 15) {
+            if (currentGridType === '5' && totalCount >= 15) {
               alert('ノーマルステージでは最大15体までしか配置できません。');
               draggingItem = null;
               return;
             }
-            if (currentGridSize === 6) {
+            if (currentGridType === '3x4' && totalCount >= 12) {
+              alert('道場では最大12体までしか配置できません。');
+              draggingItem = null;
+              return;
+            }
+            if (currentGridType === '6') {
               if (draggingItem.player === '1P' && p1Count >= 15) {
                 alert('1Pは最大15体までしか配置できません。');
                 draggingItem = null;
@@ -777,21 +791,21 @@ function renderMonsters() {
             if (idx === targetIndex) return;
             const im = c.querySelector('img, .no-image-badge');
             if (im && im.dataset && im.dataset.species === targetSpecies) {
-              if (currentGridSize === 5 || im.dataset.player === draggingItem.player) {
+              if (currentGridType !== '6' || im.dataset.player === draggingItem.player) {
                 isSpeciesOnBoard = true;
               }
             }
           });
 
           if (isSpeciesOnBoard) {
-            const playerText = (currentGridSize === 6) ? `[${draggingItem.player}]` : "";
+            const playerText = (currentGridType === '6') ? `[${draggingItem.player}]` : "";
             alert(`${playerText} 同じ種族のタタは既に盤面に配置されています。`);
             draggingItem = null;
             return;
           }
 
           targetCell.className = 'cell';
-          if (currentGridSize === 6) {
+          if (currentGridType === '6') {
             targetCell.classList.add(draggingItem.player === '1P' ? 'p1-cell' : 'p2-cell');
           }
 
@@ -818,7 +832,6 @@ function renderMonsters() {
   });
 }
 
-// 選択解除機能
 document.getElementById('appContainer')?.addEventListener('click', (e) => {
   if (!e.target.closest('.cell, .board-slot') && !e.target.closest('.monster-item')) {
     if (currentSelected) {
@@ -860,7 +873,6 @@ document.getElementById('clearBtn')?.addEventListener('click', (e) => {
   renderMonsters();
 });
 
-// 保存ボタン処理
 document.getElementById('saveBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -926,22 +938,10 @@ document.getElementById('saveBtn')?.addEventListener('click', (e) => {
   captureContainer.appendChild(titleEl);
   captureContainer.appendChild(boardClone);
 
-  if (currentGridSize === 6) {
+  if (currentGridType === '6') {
     const chipsetContainer = document.getElementById('chipsetContainer');
     if (chipsetContainer && chipsetContainer.style.display !== 'none') {
       const chipsetClone = chipsetContainer.cloneNode(true);
-
-      const slotImgs = chipsetClone.querySelectorAll('.chipset-slot img');
-      slotImgs.forEach(img => {
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '100%';
-        img.style.width = 'auto';
-        img.style.height = 'auto';
-        img.style.objectFit = 'contain';
-        img.style.display = 'block';
-        img.style.margin = 'auto';
-      });
-
       captureContainer.appendChild(chipsetClone);
     }
   }
@@ -962,7 +962,7 @@ document.getElementById('saveBtn')?.addEventListener('click', (e) => {
     const imageURL = canvas.toDataURL('image/webp', 0.98);
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
-    downloadLink.download = `${titleText}-${currentGridSize}x${currentGridSize}.webp`;
+    downloadLink.download = `${titleText}-${currentGridType}.webp`;
     
     document.body.appendChild(downloadLink);
     downloadLink.click();
@@ -985,9 +985,7 @@ btn1P?.addEventListener('click', (e) => {
   btn1P.classList.add('active');
   btn2P?.classList.remove('active');
   applyChipsToSlots();
-  if (currentSelectionMode === 'chip') {
-    renderChips();
-  }
+  if (currentSelectionMode === 'chip') renderChips();
 });
 
 btn2P?.addEventListener('click', (e) => {
@@ -996,9 +994,7 @@ btn2P?.addEventListener('click', (e) => {
   btn2P.classList.add('active');
   btn1P?.classList.remove('active');
   applyChipsToSlots();
-  if (currentSelectionMode === 'chip') {
-    renderChips();
-  }
+  if (currentSelectionMode === 'chip') renderChips();
 });
 
 const menuOpenBtn = document.getElementById('menuOpenBtn');
@@ -1021,31 +1017,44 @@ drawerMenu?.addEventListener('click', (e) => {
 });
 
 normalStageBtn?.addEventListener('click', () => {
-  if (currentGridSize !== 5) {
+  if (currentGridType !== '5') {
     localStorage.removeItem('monsterBoard_cells');
     localStorage.removeItem('monsterBoard_chips');
     selectedChipsMap = { '1P': [], '2P': [] };
   }
   currentSelected = null;
   if (selectedNameEl) selectedNameEl.textContent = 'なし';
-  buildBoard(5);
+  buildBoard('5');
   renderMonsters();
   drawerOverlay?.classList.remove('open');
 });
 
 zombieStageBtn?.addEventListener('click', () => {
-  if (currentGridSize !== 6) {
+  if (currentGridType !== '6') {
     localStorage.removeItem('monsterBoard_cells');
     localStorage.removeItem('monsterBoard_chips');
     selectedChipsMap = { '1P': [], '2P': [] };
   }
   currentSelected = null;
   if (selectedNameEl) selectedNameEl.textContent = 'なし';
-  buildBoard(6);
+  buildBoard('6');
+  renderMonsters();
+  drawerOverlay?.classList.remove('open');
+});
+
+dojoStageBtn?.addEventListener('click', () => {
+  if (currentGridType !== '3x4') {
+    localStorage.removeItem('monsterBoard_cells');
+    localStorage.removeItem('monsterBoard_chips');
+    selectedChipsMap = { '1P': [], '2P': [] };
+  }
+  currentSelected = null;
+  if (selectedNameEl) selectedNameEl.textContent = 'なし';
+  buildBoard('3x4');
   renderMonsters();
   drawerOverlay?.classList.remove('open');
 });
 
 // 初期化実行
-buildBoard(currentGridSize);
+buildBoard(currentGridType);
 renderMonsters();
