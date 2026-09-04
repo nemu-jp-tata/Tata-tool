@@ -301,18 +301,11 @@ function fillCellWithMonster(cell, data) {
         const dy = moveEvent.clientY - startY;
 
         if (!isDragging) {
-          // タッチ操作時、縦方向(Y)の移動が横方向(X)より大きく、かつ一定以上動いたらスクロールとみなしてドラッグをキャンセル
-          if (moveEvent.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            return;
-          }
-
-          // ドラッグ開始の閾値を 10px に設定
-          if (Math.hypot(dx, dy) > 10) {
+          // 上方向（dy < -6）または一定以上動いた場合、ドラッグ開始
+          if (dy < -6 || Math.hypot(dx, dy) > 8) {
             isDragging = true;
             draggingItem = {
-              type: 'board',
+              type: 'board', // パレット側の場合は 'palette'
               src: data.src,
               species: species,
               tier: tier,
@@ -325,12 +318,16 @@ function fillCellWithMonster(cell, data) {
             dragGhost.style.display = 'block';
             updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
 
-            cell.innerHTML = '';
-            cell.className = 'cell';
+            // 画像の消去など必要に応じた処理
+            if (draggingItem.type === 'board') {
+              cell.innerHTML = '';
+              cell.className = 'cell';
+            }
           }
         }
 
         if (isDragging) {
+          // ドラッグ中はいかなるブラウザスクロールも横取りしてドラッグ操作にする
           if (moveEvent.cancelable) moveEvent.preventDefault();
           updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
           updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
