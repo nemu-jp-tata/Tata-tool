@@ -1,3 +1,4 @@
+/* style.css */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -142,7 +143,7 @@ body {
   width: 100%;
 }
 
-/* 盤面マス目（スマホ対応の可変サイズ） */
+/* 盤面マス目 */
 .cell, .board-slot {
   background: #0f111a;
   border: 1px dashed #282d45;
@@ -170,7 +171,7 @@ body {
   background: rgba(59, 130, 246, 0.15);
 }
 
-/* ドラッグ中の要素が上に乗った時に付与するクラス（光る演出） */
+/* ドラッグ中の要素が上に乗った時に付与するクラス */
 .cell.drag-over,
 .board-slot.drag-over {
   border-color: #00ffff !important;
@@ -198,6 +199,7 @@ body {
   border: 1px solid #282d42;
   border-radius: 12px;
   padding: 10px;
+  position: relative;
 }
 
 .monster-title {
@@ -287,18 +289,38 @@ body {
   border-color: #3b82f6;
 }
 
-/* モンスター一覧（Flexbox内で正常に縦スクロールできるように修正） */
+/* モンスター一覧（右側にスワイプ・スクロール用余白スペースを適用） */
 .monster-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   max-height: 320px;
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: 28px; /* 右側にスクロールガイド兼指置きエリアを確保 */
   flex: 1;
   min-height: 0;
   align-content: start;
-  touch-action: pan-y; /* スワイプ縦スクロールを有効化 */
+  touch-action: pan-y;
+  position: relative;
+}
+
+/* カスタムスクロールバー（視認性とスクロールしやすさの向上） */
+.monster-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.monster-grid::-webkit-scrollbar-track {
+  background: rgba(15, 17, 26, 0.8);
+  border-radius: 4px;
+}
+
+.monster-grid::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.monster-grid::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .monster-item {
@@ -313,7 +335,7 @@ body {
   padding: 4px;
   cursor: pointer;
   position: relative;
-  touch-action: pan-y; /* タッチスクロールを妨げないように修正 */
+  touch-action: pan-y;
 }
 
 .monster-item[data-attr="水"] { background: rgba(37, 99, 235, 0.15); }
@@ -448,7 +470,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* パソコン版（画面幅900px以上）の左右レイアウト修正 */
+/* パソコン版（画面幅900px以上）のレイアウト */
 @media (min-width: 900px) {
   body {
     display: flex;
@@ -469,7 +491,7 @@ body {
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
-    height: auto; /* 固定高さを解除し縦崩れを防止 */
+    height: auto;
   }
   .left-column {
     display: flex;
@@ -479,7 +501,7 @@ body {
   }
   .board-frame {
     width: 100%;
-    flex: none; /* 要素の高さ固定化による押し出しを防御 */
+    flex: none;
   }
   .monster-frame {
     width: 450px;
@@ -497,8 +519,8 @@ body {
   .monster-list {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 14px !important;
-    padding: 8px !important;
+    gap: 10px !important;
+    padding-right: 32px !important; /* スマホで誤操作なくスクロールできるよう大きめの余白を適用 */
     touch-action: pan-y !important;
   }
 
@@ -507,7 +529,7 @@ body {
   }
 }
 
-/* タッチ操作の遅延防止（※スクロールを妨げる .monster-item や .chipset-slot は除外） */
+/* タッチ操作の遅延防止 */
 .cell, #mainGrid img, #dragGhost {
   touch-action: none;
 }
@@ -552,7 +574,7 @@ body {
   50% { opacity: 1; transform: scale(0.97); }
 }
 
-/* タイトル入力エリアのスタイリング */
+/* タイトル入力エリア */
 .title-container {
   width: 100%;
   margin-bottom: 10px;
@@ -633,10 +655,10 @@ body {
   box-sizing: border-box;
   position: relative;
   transition: all 0.2s ease;
-  touch-action: pan-y; /* スワイプスクロールを有効化 */
+  touch-action: pan-y;
 }
 
-/* プレイヤー別のチップセットスロット色分け用クラス */
+/* プレイヤー別のチップセットスロット色分け */
 .chipset-slot.p1-slot {
   border: 2px solid #ef4444;
   background: rgba(239, 68, 68, 0.1);
@@ -647,10 +669,7 @@ body {
   background: rgba(59, 130, 246, 0.15);
 }
 
-/* --------------------------------------------------
-   選択状態 (active / selected) の強調スタイル
-   -------------------------------------------------- */
-
+/* 選択状態 (active / selected) の強調スタイル */
 .monster-item.active,
 .chipset-slot.active,
 .chipset-slot.selected {
@@ -694,12 +713,11 @@ body {
   pointer-events: none;
   z-index: 10;
 }
-/* セルを基準位置にする */
+
 .cell {
   position: relative;
 }
 
-/* 右下に表示する Tier バッジのデザイン */
 .tier-badge {
   position: absolute;
   bottom: 2px;
@@ -711,7 +729,7 @@ body {
   padding: 1px 4px;
   border-radius: 4px;
   line-height: 1;
-  pointer-events: none; /* クリックやドラッグの邪魔にならないように透過 */
+  pointer-events: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
