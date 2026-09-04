@@ -52,7 +52,7 @@
     </div>
 
     <div class="board-frame" id="boardFrame">
-      <div class="board-notice">こちらからゾンビが来ます ▼</div>
+      <div class="board-notice" id="boardNotice" style="display: none;">こちらからゾンビが来ます ▼</div>
       <div id="mainGrid"></div>
     </div>
   </div>
@@ -102,6 +102,7 @@
       <div class="drawer-title">ステージ選択</div>
       <div class="drawer-item active" id="normalStageBtn">ノーマルステージ (5×5)</div>
       <div class="drawer-item" id="zombieStageBtn">ゾンビラッシュ (6×6)</div>
+      <div class="drawer-item" id="dojoStageBtn">道場 (3×4)</div>
 
       <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
         <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
