@@ -800,7 +800,7 @@ body {
 /* レベル表示 */
 .cell .placed-level {
   position: absolute;
-  left: 3px;
+  left: 2px;
   bottom: 2px;
   min-width: 0;
   height: auto;
@@ -817,7 +817,6 @@ body {
   z-index: 5;
   text-shadow: 0 1px 2px #000;
 }
-
 /* レベルモード中にタップできるキャラクター */
 .level-mode .cell.has-monster {
   cursor: pointer;
