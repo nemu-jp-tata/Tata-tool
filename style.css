@@ -739,3 +739,97 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* ========================================
+   ゾンビラッシュ：レベルボタン
+======================================== */
+
+.level-btn {
+  display: none;
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.level-btn:hover {
+  background: #334155;
+}
+
+.level-btn.active {
+  background: #7c3aed;
+  border-color: #a78bfa;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.45);
+}
+
+/* ゾンビラッシュ時のみ表示 */
+.player-switch-container.zombie-mode .level-btn {
+  display: block;
+}
+
+
+/* ========================================
+   盤面キャラクターの装飾
+======================================== */
+
+/* キャラクターを配置したセル */
+.cell.has-monster {
+  position: relative;
+}
+
+/* タイプアイコン */
+.cell .placed-type-icon {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+/* レベル表示 */
+.cell .placed-level {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* レベルモード中にタップできるキャラクター */
+.level-mode .cell.has-monster {
+  cursor: pointer;
+}
+
+/* レベルモード中の軽い強調 */
+.level-mode .cell.has-monster::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px dashed rgba(167, 139, 250, 0.5);
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 4;
+}
