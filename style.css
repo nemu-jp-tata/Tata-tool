@@ -787,8 +787,8 @@ body {
 /* タイプアイコン */
 .cell .placed-type-icon {
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: 2px;
+  right: 2px;
   width: 15px;
   height: 15px;
   object-fit: contain;
