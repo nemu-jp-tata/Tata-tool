@@ -726,13 +726,13 @@ body {
 
 .tier-badge {
   position: absolute;
-  bottom: 1px;
+  bottom: 2px;
   right: 1px;
   background-color: rgba(0, 0, 0, 0.75);
   color: #ffffff;
   font-size: 8px;
   font-weight: bold;
-  padding: 1px 4px;
+  padding: 1px 4px 2px 4px;
   border-radius: 4px;
   line-height: 1;
   pointer-events: none;
@@ -801,10 +801,10 @@ body {
 .cell .placed-level {
   position: absolute;
   left: 1px;
-  bottom: 1px;
+  bottom: 2px;
   min-width: 0;
   height: auto;
-  padding: 1px 4px;
+  padding: 1px 4px 2px 4px;
   border-radius: 4px;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
