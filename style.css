@@ -837,17 +837,17 @@ body {
    道場（3×4）：表示を少し大きく
 ======================================== */
 
-#mainGrid.grid-3x4 .placed-type-icon {
-  width: 20px;
-  height: 20px;
+.grid-3x4 .placed-type-icon {
+  width: 22px;
+  height: 22px;
 }
 
-#mainGrid.grid-3x4 .tier-badge {
-  font-size: 11px;
-  padding: 1px 4px 2px 4px;
+.grid-3x4 .tier-badge {
+  font-size: 12px;
+  padding: 2px 4px;
 }
 
-#mainGrid.grid-3x4 .placed-level {
-  font-size: 11px;
-  padding: 1px 4px 2px 4px;
+.grid-3x4 .placed-level {
+  font-size: 12px;
+  padding: 2px 4px;
 }
