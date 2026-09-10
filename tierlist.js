@@ -27,7 +27,7 @@ placeholder.className = 'drop-placeholder';
 const STORAGE_KEY = 'tierList_save_data_v7';
 const DEFAULT_TITLE = '○○ティア表';
 
-// 通常時は同じ階層、7回タップ後は 'images/' を使用するフラグ
+// 【変更】常に通常モード（false）でスタート（リロードすれば必ずここに戻ります）
 let useImagesFolder = false;
 
 // ==========================================
@@ -74,7 +74,7 @@ function init() {
   }
 
   setupEvents();
-  setupSecretResetGesture(); // 7回タップのリセット機能を設定
+  setupSecretResetGesture(); // 7回タップの裏技を設定
 }
 
 // プレフィックス（通常時: '' / 7回タップ後: 'images/'）を返すヘルパー
@@ -93,10 +93,9 @@ function setupMonsterImage(img, badge, itemName) {
   }
 
   if (useImagesFolder) {
-    // 7回タップ後のモード：余計なルールやフォールバックを一切せず、そのまま指定ファイル名を読み込む
+    // 7回タップ後のモード：images/ フォルダ内の別ファイルリストから読み込む
     img.src = `${prefix}${itemName}`;
     img.onerror = function() {
-      // 画像が見つからなくても文字に変換せず、単に非表示にする（ピンク枠のバッジを出さない）
       this.style.display = 'none';
     };
   } else {
@@ -196,12 +195,11 @@ function renderMonsters() {
   monsterPool.innerHTML = '';
 
   if (useImagesFolder) {
-    const itemsToRender = (typeof imagesFolderList !== 'undefined') ? imagesFolderList : uniqueMonsters;
+    // 別ファイルで定義された imagesFolderList を使用して生成
+    const itemsToRender = (typeof imagesFolderList !== 'undefined') ? imagesFolderList : [];
     
-    itemsToRender.forEach(item => {
-      const key = item.species || item;
-      const name = item.name || item;
-      const card = createMonsterCard(key, name);
+    itemsToRender.forEach(filename => {
+      const card = createMonsterCard(filename, filename);
       monsterPool.appendChild(card);
     });
   } else {
@@ -542,7 +540,8 @@ function getCurrentStateJson() {
   return JSON.stringify([
     title,
     rowsData,
-    monstersData
+    monstersData,
+    useImagesFolder
   ]);
 }
 
@@ -566,10 +565,11 @@ function applyState(jsonStr) {
       title = data[0] !== undefined ? data[0] : DEFAULT_TITLE;
       rows = data[1] || [];
       monsters = data[2] || [];
+      // ※保存データにモードが含まれていても、リロード後は常に無効（false）にするため読み込みません
     } else {
       title = (data.t !== undefined ? data.t : data.title) || DEFAULT_TITLE;
       const rawRows = data.r !== undefined ? data.r : data.rows;
-      const rawMonsters = data.m !== undefined ? data.m : data.monsters;
+      const rawMonstersDataList = data.m !== undefined ? data.m : data.monsters;
 
       if (rawRows) {
         rows = rawRows.map((r, i) => [
@@ -577,8 +577,8 @@ function applyState(jsonStr) {
           r.c !== undefined ? r.c : r.color
         ]);
       }
-      if (rawMonsters) {
-        monsters = rawMonsters.map(m => [
+      if (rawMonstersDataList) {
+        monsters = rawMonstersDataList.map(m => [
           m.s !== undefined ? m.s : m.species,
           m.r !== undefined ? m.r : m.rowId,
           m.n !== undefined ? m.n : m.name
@@ -625,7 +625,7 @@ function applyState(jsonStr) {
 
         if (card && targetRowEl) {
           let monsterName = savedName || card.dataset.name;
-          if (!monsterName && typeof rawMonsters !== 'undefined') {
+          if (!monsterName && typeof rawMonsters !== 'undefined' && !useImagesFolder) {
             const mData = rawMonsters.find(m => m.species === species);
             if (mData) monsterName = mData.name;
           }
@@ -775,7 +775,7 @@ async function copyToClipboard(text, successMessage) {
 }
 
 // ==========================================
-// 画面を7回連続タップしたときのリセット機能
+// 画面を7回連続タップしたときの裏技モード（リロードで元に戻る）
 // ==========================================
 function setupSecretResetGesture() {
   let tapCount = 0;
@@ -797,8 +797,8 @@ function setupSecretResetGesture() {
       
       localStorage.removeItem(STORAGE_KEY);
 
-      // imagesフォルダからルール無視で直接読み込むモードへ切り替え
-      useImagesFolder = true;
+      // 【一時的】このセッションのみimagesフォルダから読み込むモードにする
+      useImagesFolder = true; 
 
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
       renderMonsters();
@@ -814,7 +814,7 @@ function setupSecretResetGesture() {
       updateRowControlsState();
       saveState();
 
-      alert('画面を7回連続タップしました。imagesフォルダの画像をそのまま読み込むモードに切り替えました。');
+      alert('✨ 【裏技発動】imagesフォルダの画像を直接読み込むモードに切り替えました！\n（※ページを再読み込みすると通常のモードに戻ります）');
     }
   });
 }
@@ -854,6 +854,7 @@ function setupEvents() {
       if (!confirmReset) return;
 
       localStorage.removeItem(STORAGE_KEY);
+      useImagesFolder = false;
 
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
 
