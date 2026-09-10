@@ -67,9 +67,10 @@ function init() {
   }
 
   setupEvents();
+  setupSecretResetGesture(); // 7回タップのリセット機能を設定
 }
 
-// 画像の読み込みエラーと名前表示のハンドリング共通関数
+// 画像の読み込みエラーと名前表示のハンドリング共通関数（images/ フォルダ対応）
 function setupMonsterImage(img, badge, monsterName) {
   if (!img) return;
 
@@ -83,10 +84,10 @@ function setupMonsterImage(img, badge, monsterName) {
   img.onerror = function() {
     if (!this.dataset.retry) {
       this.dataset.retry = '1';
-      this.src = `${monsterName}.png`;
+      this.src = `images/${monsterName}.png`;
     } else if (this.dataset.retry === '1') {
       this.dataset.retry = '2';
-      this.src = `${monsterName}.jpg`;
+      this.src = `images/${monsterName}.jpg`;
     } else {
       this.style.display = 'none';
       if (badge) {
@@ -104,7 +105,7 @@ function createMonsterCard(monster) {
   card.dataset.name = monster.name;
 
   card.innerHTML = `
-    <img src="${monster.name}.webp" alt="${monster.name}">
+    <img src="images/${monster.name}.webp" alt="${monster.name}">
     <div class="no-image-badge" style="display: none;">${monster.name}</div>
   `;
 
@@ -136,7 +137,7 @@ function cycleSingleMonsterTier(card) {
 
     if (img) {
       setupMonsterImage(img, badge, nextMonster.name);
-      img.src = `${nextMonster.name}.webp`;
+      img.src = `images/${nextMonster.name}.webp`;
     }
     saveState();
   }
@@ -186,7 +187,7 @@ function changeAllMonstersTier(targetTier) {
       
       if (img) {
         setupMonsterImage(img, badge, targetMonster.name);
-        img.src = `${targetMonster.name}.webp`;
+        img.src = `images/${targetMonster.name}.webp`;
       }
     }
   });
@@ -593,7 +594,7 @@ function applyState(jsonStr) {
             const badge = card.querySelector('.no-image-badge');
             if (img) {
               setupMonsterImage(img, badge, monsterName);
-              img.src = `${monsterName}.webp`;
+              img.src = `images/${monsterName}.webp`;
             }
           }
 
@@ -730,6 +731,54 @@ async function copyToClipboard(text, successMessage) {
   prompt('以下のURLをコピーして共有してください:', text);
 }
 
+// ==========================================
+// 画面を7回連続タップしたときのリセット機能
+// ==========================================
+function setupSecretResetGesture() {
+  let tapCount = 0;
+  let lastTapTime = 0;
+
+  document.addEventListener('click', (e) => {
+    // ティア行のタイトル編集やボタン操作などは誤爆を防ぐために除外したい場合は条件を追加できますが、
+    // ここでは画面全体のどこをタップしても反応するようにしています。
+    const currentTime = new Date().getTime();
+    const tapInterval = currentTime - lastTapTime;
+
+    // 500ミリ秒以内に連続してタップされた場合
+    if (lastTapTime === 0 || tapInterval < 500) {
+      tapCount++;
+    } else {
+      tapCount = 1;
+    }
+    lastTapTime = currentTime;
+
+    // 7回連続タップに到達した場合
+    if (tapCount >= 7) {
+      tapCount = 0;
+      
+      // 保存データを削除
+      localStorage.removeItem(STORAGE_KEY);
+
+      // 初期状態に戻して画像を再読み込み
+      if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
+      renderMonsters();
+
+      if (tierTable) {
+        tierTable.innerHTML = '';
+        DEFAULT_ROWS.forEach(r => {
+          const rowEl = createRowElement(r.id, r.label, r.color);
+          tierTable.appendChild(rowEl);
+        });
+      }
+
+      updateRowControlsState();
+      saveState();
+
+      alert('画面を7回連続タップしたため、データをリセットし画像を再読み込みしました。');
+    }
+  });
+}
+
 function setupEvents() {
   if (tierTableTitle) {
     tierTableTitle.addEventListener('input', saveState);
@@ -814,4 +863,5 @@ function setupEvents() {
   }
 }
 
+init();
 init();
