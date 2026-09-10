@@ -94,7 +94,6 @@ function setupMonsterImage(img, badge, itemName) {
   }
 
   if (useImagesFolder) {
-    // 7回タップ後のモード：余計なルールやフォールバックを排除し、そのままファイル名として読み込む
     img.src = `${prefix}${itemName}`;
     img.onerror = function() {
       this.style.display = 'none';
@@ -104,7 +103,6 @@ function setupMonsterImage(img, badge, itemName) {
       }
     };
   } else {
-    // 通常モード：従来通りの拡張子フォールバック処理
     img.dataset.retry = '';
     img.src = `${prefix}${itemName}.webp`;
 
@@ -136,7 +134,7 @@ function createMonsterCard(itemKey, displayName) {
   const initialSrc = useImagesFolder ? `${prefix}${displayName}` : `${prefix}${displayName}.webp`;
 
   card.innerHTML = `
-    <img src="${initialSrc}" alt="${displayName}">
+    <img src="${initialSrc}" alt="${displayName}" crossorigin="anonymous">
     <div class="no-image-badge" style="display: none;">${displayName}</div>
   `;
 
@@ -149,9 +147,9 @@ function createMonsterCard(itemKey, displayName) {
   return card;
 }
 
-// 単一カードの切り替え処理（7回タップ後は無効、またはそのまま）
+// 単一カードの切り替え処理（7回タップ後は無効）
 function cycleSingleMonsterTier(card) {
-  if (useImagesFolder) return; // フォルダモード時は個別ルール変更を行わない
+  if (useImagesFolder) return;
 
   const species = card.dataset.species;
   const currentName = card.dataset.name;
@@ -177,7 +175,6 @@ function cycleSingleMonsterTier(card) {
   }
 }
 
-// カードに対する個別イベントを設定
 function attachCardEvents(card) {
   card.addEventListener('dblclick', (e) => {
     e.preventDefault();
@@ -201,9 +198,6 @@ function renderMonsters() {
   monsterPool.innerHTML = '';
 
   if (useImagesFolder) {
-    // 7回タップ後は、rawMonstersの代わりに window.imagesList などの配列があればそこから、
-    // あるいは rawMonsters の name / species をそのまま単純なプールとして展開する
-    // （※もし images フォルダ内の全ファイル名リストを別途用意している場合は、ここに直接配列を指定することも可能です）
     const itemsToRender = (typeof imagesFolderList !== 'undefined') ? imagesFolderList : uniqueMonsters;
     
     itemsToRender.forEach(item => {
@@ -896,6 +890,7 @@ function setupEvents() {
         backgroundColor: '#000000',
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         windowWidth: 1200,
         ignoreElements: (element) => element.classList.contains('tier-row-controls')
       }).then(canvas => {
