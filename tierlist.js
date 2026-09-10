@@ -82,7 +82,7 @@ function getImgPathPrefix() {
   return useImagesFolder ? 'images/' : '';
 }
 
-// 画像の読み込み処理（7回タップ後はルール無視で単純にそのまま読み込む）
+// 画像の読み込み処理
 function setupMonsterImage(img, badge, itemName) {
   if (!img) return;
 
@@ -90,19 +90,17 @@ function setupMonsterImage(img, badge, itemName) {
   img.style.display = 'block';
   if (badge) {
     badge.style.display = 'none';
-    badge.textContent = itemName;
   }
 
   if (useImagesFolder) {
+    // 7回タップ後のモード：余計なルールやフォールバックを一切せず、そのまま指定ファイル名を読み込む
     img.src = `${prefix}${itemName}`;
     img.onerror = function() {
+      // 画像が見つからなくても文字に変換せず、単に非表示にする（ピンク枠のバッジを出さない）
       this.style.display = 'none';
-      if (badge) {
-        badge.textContent = itemName;
-        badge.style.display = 'flex';
-      }
     };
   } else {
+    // 通常モード：従来通りの拡張子フォールバック処理
     img.dataset.retry = '';
     img.src = `${prefix}${itemName}.webp`;
 
