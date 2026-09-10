@@ -814,7 +814,7 @@ function setupSecretResetGesture() {
       updateRowControlsState();
       saveState();
 
-      alert('✨ 【裏技発動】imagesフォルダの画像を直接読み込むモードに切り替えました！\n（※ページを再読み込みすると通常のモードに戻ります）');
+      alert('モードを切り替えました！\n（※ページを再読み込みすると通常のモードに戻ります）');
     }
   });
 }
