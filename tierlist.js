@@ -1,5 +1,9 @@
+// ==========================================
+// データの準備
+// ==========================================
 const rawMonsters = (typeof rawMonstersData !== 'undefined') ? rawMonstersData : [];
 
+// 通常モード用の一意なモンスターリスト作成ロジック
 const baseMonstersMap = new Map();
 rawMonsters.forEach(m => {
   if (!baseMonstersMap.has(m.species) || m.T < baseMonstersMap.get(m.species).T) {
@@ -78,58 +82,77 @@ function getImgPathPrefix() {
   return useImagesFolder ? 'images/' : '';
 }
 
-// 画像の読み込みエラーと名前表示のハンドリング共通関数
-function setupMonsterImage(img, badge, monsterName) {
+// 画像の読み込み処理（7回タップ後はルール無視で単純にそのまま読み込む）
+function setupMonsterImage(img, badge, itemName) {
   if (!img) return;
 
   const prefix = getImgPathPrefix();
-  img.dataset.retry = '';
   img.style.display = 'block';
   if (badge) {
     badge.style.display = 'none';
-    badge.textContent = monsterName;
+    badge.textContent = itemName;
   }
 
-  img.onerror = function() {
-    if (!this.dataset.retry) {
-      this.dataset.retry = '1';
-      this.src = `${prefix}${monsterName}.png`;
-    } else if (this.dataset.retry === '1') {
-      this.dataset.retry = '2';
-      this.src = `${prefix}${monsterName}.jpg`;
-    } else {
+  if (useImagesFolder) {
+    // 7回タップ後のモード：余計なルールやフォールバックを排除し、そのままファイル名として読み込む
+    img.src = `${prefix}${itemName}`;
+    img.onerror = function() {
       this.style.display = 'none';
       if (badge) {
-        badge.textContent = monsterName;
+        badge.textContent = itemName;
         badge.style.display = 'flex';
       }
-    }
-  };
+    };
+  } else {
+    // 通常モード：従来通りの拡張子フォールバック処理
+    img.dataset.retry = '';
+    img.src = `${prefix}${itemName}.webp`;
+
+    img.onerror = function() {
+      if (!this.dataset.retry) {
+        this.dataset.retry = '1';
+        this.src = `${prefix}${itemName}.png`;
+      } else if (this.dataset.retry === '1') {
+        this.dataset.retry = '2';
+        this.src = `${prefix}${itemName}.jpg`;
+      } else {
+        this.style.display = 'none';
+        if (badge) {
+          badge.textContent = itemName;
+          badge.style.display = 'flex';
+        }
+      }
+    };
+  }
 }
 
-function createMonsterCard(monster) {
+function createMonsterCard(itemKey, displayName) {
   const card = document.createElement('div');
   card.className = 'monster-card';
-  card.dataset.species = monster.species;
-  card.dataset.name = monster.name;
+  card.dataset.species = itemKey;
+  card.dataset.name = displayName;
 
   const prefix = getImgPathPrefix();
+  const initialSrc = useImagesFolder ? `${prefix}${displayName}` : `${prefix}${displayName}.webp`;
+
   card.innerHTML = `
-    <img src="${prefix}${monster.name}.webp" alt="${monster.name}">
-    <div class="no-image-badge" style="display: none;">${monster.name}</div>
+    <img src="${initialSrc}" alt="${displayName}">
+    <div class="no-image-badge" style="display: none;">${displayName}</div>
   `;
 
   const img = card.querySelector('img');
   const badge = card.querySelector('.no-image-badge');
 
-  setupMonsterImage(img, badge, monster.name);
+  setupMonsterImage(img, badge, displayName);
   attachDragEvents(card);
   attachCardEvents(card);
   return card;
 }
 
-// 単一カードのTを次の段階（T1 -> T2 -> T3 -> T4 -> T1）へ切り替える処理
+// 単一カードの切り替え処理（7回タップ後は無効、またはそのまま）
 function cycleSingleMonsterTier(card) {
+  if (useImagesFolder) return; // フォルダモード時は個別ルール変更を行わない
+
   const species = card.dataset.species;
   const currentName = card.dataset.name;
 
@@ -154,15 +177,13 @@ function cycleSingleMonsterTier(card) {
   }
 }
 
-// カードに対する個別イベントを設定（ダブルクリック／ダブルタップ）
+// カードに対する個別イベントを設定
 function attachCardEvents(card) {
-  // PC向け：ダブルクリック
   card.addEventListener('dblclick', (e) => {
     e.preventDefault();
     cycleSingleMonsterTier(card);
   });
 
-  // スマホ向け：ダブルタップ判定
   let lastTap = 0;
   card.addEventListener('touchend', (e) => {
     const currentTime = new Date().getTime();
@@ -178,13 +199,30 @@ function attachCardEvents(card) {
 function renderMonsters() {
   if (!monsterPool) return;
   monsterPool.innerHTML = '';
-  uniqueMonsters.forEach(m => {
-    const card = createMonsterCard(m);
-    monsterPool.appendChild(card);
-  });
+
+  if (useImagesFolder) {
+    // 7回タップ後は、rawMonstersの代わりに window.imagesList などの配列があればそこから、
+    // あるいは rawMonsters の name / species をそのまま単純なプールとして展開する
+    // （※もし images フォルダ内の全ファイル名リストを別途用意している場合は、ここに直接配列を指定することも可能です）
+    const itemsToRender = (typeof imagesFolderList !== 'undefined') ? imagesFolderList : uniqueMonsters;
+    
+    itemsToRender.forEach(item => {
+      const key = item.species || item;
+      const name = item.name || item;
+      const card = createMonsterCard(key, name);
+      monsterPool.appendChild(card);
+    });
+  } else {
+    uniqueMonsters.forEach(m => {
+      const card = createMonsterCard(m.species, m.name);
+      monsterPool.appendChild(card);
+    });
+  }
 }
 
 function changeAllMonstersTier(targetTier) {
+  if (useImagesFolder) return;
+
   const allCards = document.querySelectorAll('.monster-card');
   
   allCards.forEach(card => {
@@ -607,7 +645,7 @@ function applyState(jsonStr) {
             if (img) {
               setupMonsterImage(img, badge, monsterName);
               const prefix = getImgPathPrefix();
-              img.src = `${prefix}${monsterName}.webp`;
+              img.src = useImagesFolder ? `${prefix}${monsterName}` : `${prefix}${monsterName}.webp`;
             }
           }
 
@@ -755,7 +793,6 @@ function setupSecretResetGesture() {
     const currentTime = new Date().getTime();
     const tapInterval = currentTime - lastTapTime;
 
-    // 500ミリ秒以内に連続してタップされた場合
     if (lastTapTime === 0 || tapInterval < 500) {
       tapCount++;
     } else {
@@ -763,17 +800,14 @@ function setupSecretResetGesture() {
     }
     lastTapTime = currentTime;
 
-    // 7回連続タップに到達した場合
     if (tapCount >= 7) {
       tapCount = 0;
       
-      // 保存データを削除
       localStorage.removeItem(STORAGE_KEY);
 
-      // ★ 7回タップされたので images/ フォルダから読み込むモードに切り替え
+      // imagesフォルダからルール無視で直接読み込むモードへ切り替え
       useImagesFolder = true;
 
-      // 初期状態に戻して画像を再読み込み
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
       renderMonsters();
 
@@ -788,7 +822,7 @@ function setupSecretResetGesture() {
       updateRowControlsState();
       saveState();
 
-      alert('画面を7回連続タップしたため、データをリセットしimagesフォルダから画像を再読み込みしました。');
+      alert('画面を7回連続タップしました。imagesフォルダの画像をそのまま読み込むモードに切り替えました。');
     }
   });
 }
