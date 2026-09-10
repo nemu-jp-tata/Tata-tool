@@ -23,11 +23,14 @@ placeholder.className = 'drop-placeholder';
 const STORAGE_KEY = 'tierList_save_data_v7';
 const DEFAULT_TITLE = '○○ティア表';
 
+// 通常時は同じ階層、7回タップ後は 'images/' を使用するフラグ
+let useImagesFolder = false;
+
 // ==========================================
 // Supabase の初期化
 // ==========================================
 const SUPABASE_URL = 'https://vtvlocbzbejslbrpubfr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dmxvY2J6YmVqc2xicnB1YmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5Nzc0MDksImV4cCI6MjEwMzU1MzQwOX0.W9t-qkr0CE7JSbgjXmzE3KUKkDSNqJ7nhbC8HKCKG-E';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0dmxvY2J6YmVqc2xicnB1YmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5Nzc0MDksImV4cCI6MjEwMzU1MzQwOX0.W9t-qkr0CE7JSbgjXmzE3KUKkDSNqJ7nhbC8HKCKG-E';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -70,10 +73,16 @@ function init() {
   setupSecretResetGesture(); // 7回タップのリセット機能を設定
 }
 
-// 画像の読み込みエラーと名前表示のハンドリング共通関数（images/ フォルダ対応）
+// プレフィックス（通常時: '' / 7回タップ後: 'images/'）を返すヘルパー
+function getImgPathPrefix() {
+  return useImagesFolder ? 'images/' : '';
+}
+
+// 画像の読み込みエラーと名前表示のハンドリング共通関数
 function setupMonsterImage(img, badge, monsterName) {
   if (!img) return;
 
+  const prefix = getImgPathPrefix();
   img.dataset.retry = '';
   img.style.display = 'block';
   if (badge) {
@@ -84,10 +93,10 @@ function setupMonsterImage(img, badge, monsterName) {
   img.onerror = function() {
     if (!this.dataset.retry) {
       this.dataset.retry = '1';
-      this.src = `images/${monsterName}.png`;
+      this.src = `${prefix}${monsterName}.png`;
     } else if (this.dataset.retry === '1') {
       this.dataset.retry = '2';
-      this.src = `images/${monsterName}.jpg`;
+      this.src = `${prefix}${monsterName}.jpg`;
     } else {
       this.style.display = 'none';
       if (badge) {
@@ -104,8 +113,9 @@ function createMonsterCard(monster) {
   card.dataset.species = monster.species;
   card.dataset.name = monster.name;
 
+  const prefix = getImgPathPrefix();
   card.innerHTML = `
-    <img src="images/${monster.name}.webp" alt="${monster.name}">
+    <img src="${prefix}${monster.name}.webp" alt="${monster.name}">
     <div class="no-image-badge" style="display: none;">${monster.name}</div>
   `;
 
@@ -137,7 +147,8 @@ function cycleSingleMonsterTier(card) {
 
     if (img) {
       setupMonsterImage(img, badge, nextMonster.name);
-      img.src = `images/${nextMonster.name}.webp`;
+      const prefix = getImgPathPrefix();
+      img.src = `${prefix}${nextMonster.name}.webp`;
     }
     saveState();
   }
@@ -187,7 +198,8 @@ function changeAllMonstersTier(targetTier) {
       
       if (img) {
         setupMonsterImage(img, badge, targetMonster.name);
-        img.src = `images/${targetMonster.name}.webp`;
+        const prefix = getImgPathPrefix();
+        img.src = `${prefix}${targetMonster.name}.webp`;
       }
     }
   });
@@ -594,7 +606,8 @@ function applyState(jsonStr) {
             const badge = card.querySelector('.no-image-badge');
             if (img) {
               setupMonsterImage(img, badge, monsterName);
-              img.src = `images/${monsterName}.webp`;
+              const prefix = getImgPathPrefix();
+              img.src = `${prefix}${monsterName}.webp`;
             }
           }
 
@@ -739,8 +752,6 @@ function setupSecretResetGesture() {
   let lastTapTime = 0;
 
   document.addEventListener('click', (e) => {
-    // ティア行のタイトル編集やボタン操作などは誤爆を防ぐために除外したい場合は条件を追加できますが、
-    // ここでは画面全体のどこをタップしても反応するようにしています。
     const currentTime = new Date().getTime();
     const tapInterval = currentTime - lastTapTime;
 
@@ -759,6 +770,9 @@ function setupSecretResetGesture() {
       // 保存データを削除
       localStorage.removeItem(STORAGE_KEY);
 
+      // ★ 7回タップされたので images/ フォルダから読み込むモードに切り替え
+      useImagesFolder = true;
+
       // 初期状態に戻して画像を再読み込み
       if (tierTableTitle) tierTableTitle.value = DEFAULT_TITLE;
       renderMonsters();
@@ -774,7 +788,7 @@ function setupSecretResetGesture() {
       updateRowControlsState();
       saveState();
 
-      alert('画面を7回連続タップしたため、データをリセットし画像を再読み込みしました。');
+      alert('画面を7回連続タップしたため、データをリセットしimagesフォルダから画像を再読み込みしました。');
     }
   });
 }
@@ -863,5 +877,4 @@ function setupEvents() {
   }
 }
 
-init();
 init();
