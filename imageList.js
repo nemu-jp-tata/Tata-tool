@@ -1,5 +1,5 @@
 const imagesFolderList = [
-  "P_beropaka.webp", "P_ビリジカ.webp", "P_bililimori.webp", "P_bilipiyo.webp",
+  "P_ベロパカ.webp", "P_ビリジカ.webp", "P_bililimori.webp", "P_bilipiyo.webp",
   "P_エレキネコ.webp", "P_ヒエビ.webp", "P_gaoden.webp", "P_グリンビィ.webp",
   "P_ヒマワリン.webp", "P_ヒモリ.webp", "P_ヒニャオ.webp", "P_horurin.webp",
   "P_フクログモ.webp", "P_コパンダ.webp", "P_koroju.webp", "P_korokame.webp",
