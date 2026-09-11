@@ -2,7 +2,7 @@ const imagesFolderList = [
   "P_beropaka.webp", "P_ビリジカ.webp", "P_bililimori.webp", "P_bilipiyo.webp",
   "P_エレキネコ.webp", "P_ヒエビ.webp", "P_gaoden.webp", "P_グリンビィ.webp",
   "P_himawarin.webp", "P_ヒモリ.webp", "P_ヒニャオ.webp", "P_horurin.webp",
-  "P_hukurogumo.webp", "P_kopanda.webp", "P_koroju.webp", "P_korokame.webp",
+  "P_hukurogumo.webp", "P_コパンダ.webp", "P_koroju.webp", "P_korokame.webp",
   "P_korotama.webp", "P_maroshu.webp", "P_moemin.webp", "P_mogurin.webp",
   "P_nemukurage.webp", "P_purabi.webp", "P_sizukumusi.webp", "P_tubutumuri.webp",
   "P_アタタマ.webp", "P_ウミミ.webp", "P_コマキリ.webp", "P_コロコン.webp",
