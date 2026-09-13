@@ -1,10 +1,10 @@
 const imagesFolderList = [
-  "P_ベロパカ.webp", "P_ビリジカ.webp", "P_bililimori.webp", "P_bilipiyo.webp",
+  "P_ベロパカ.webp", "P_ビリジカ.webp", "P_ビリモ.webp", "P_ビリピヨ.webp",
   "P_エレキネコ.webp", "P_ヒエビ.webp", "P_ガオデン.webp", "P_グリンビィ.webp",
   "P_ヒマワリン.webp", "P_ヒモリ.webp", "P_ヒニャオ.webp", "P_ホルリン.webp",
   "P_フクログモ.webp", "P_コパンダ.webp", "P_コロジュー.webp", "P_コロカメ.webp",
-  "P_コロタマ.webp", "P_マルッシュ.webp", "P_moemin.webp", "P_モグリン.webp",
-  "P_ネムクラゲ.webp", "P_purabi.webp", "P_シズクジ.webp", "P_ツブツムリ.webp",
+  "P_コロタマ.webp", "P_マルッシュ.webp", "P_モエミン.webp", "P_モグリン.webp",
+  "P_ネムクラゲ.webp", "P_プラビ.webp", "P_シズクジ.webp", "P_ツブツムリ.webp",
   "P_アタタマ.webp", "P_ウミミ.webp", "P_コマキリ.webp", "P_コロコン.webp",
   "P_コワガルー.webp", "P_サボール.webp", "P_スケダコ.webp", "P_ツヨカニ.webp",
   "P_トコペンギン.webp", "P_トジコモル.webp", "P_トラーニー.webp", "P_ナミアシカ.webp",
