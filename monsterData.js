@@ -311,6 +311,87 @@ const speciesEffectsMaster = {
         { type: "debuff", text: "毒エリア" }
       ]
   },
+        "マドブヒ種": {
+    baseEffects: [],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "減速" }
+      ]
+    }
+  },
+        "ハリネム種": {
+    baseEffects: [
+      { type: "heal", text: "自己回復" },
+      { type: "buff", text: "被ダメージ減少" }
+    ]
+  },
+        "コロジュー種": {
+    baseEffects: [
+      { type: "debuff", text: "スタン" }
+    ]
+  },
+        "コロカメ種": {
+    baseEffects: [
+      { type: "buff", text: "カメシールド" }
+    ]
+  },
+        "ヤンザル種": {
+    baseEffects: [
+      { type: "buff", text: "デコイ" },
+      { type: "buff", text: "鉄頭鉄壁-被ダメージ減少" }
+    ]
+  },
+        "モグリン種": {
+    baseEffects: [
+      { type: "buff", text: "穴潜り-被ダメージ減少" },
+      { type: "debuff", text: "ダメージ減少" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "debuff", text: "視界妨害" }
+      ]
+  },
+          "コロタマ種": {
+    baseEffects: [],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "減速" }
+      ]
+    }
+  },
+          "ボウズヘビ種": {
+    baseEffects: [
+      { type: "heal", text: "回復" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "スタン" }
+      ]
+  },
+           "ホルリン種": {
+    baseEffects: [
+      { type: "debuff", text: "列ノックバック" },
+      { type: "debuff", text: "防御力減少" },
+      { type: "buff", text: "防御力増加" },
+      { type: "debuff", text: "裂傷" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "スタン" }
+      ]
+  },
+            "ムムカバ種": {
+    baseEffects: [
+      { type: "heal", text: "自己回復" },
+      { type: "buff", text: "回数シールド" },
+      { type: "buff", text: "心の障壁" },
+      { type: "debuff", text: "スタン" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "buff", text: "ピンクシールド" }
+      ]
+  },  
   "コマリ種": {
     baseEffects: [
       { type: "buff", text: "攻撃" }
