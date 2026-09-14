@@ -148,6 +148,60 @@ const speciesEffectsMaster = {
       ]
     }
   },
+  "ワンブー種": {
+    baseEffects: [
+      { type: "buff", text: "グリルシールド" },
+      { type: "buff", text: "回復" },
+      { type: "debuff", text: "スタン" },
+      { type: "buff", text: "攻撃力増加" }
+    ]
+  },
+   "トラーニー種": {
+    baseEffects: [
+      { type: "debuff", text: "燃焼" }
+    ]
+  },
+   "ププンク種": {
+    baseEffects: [
+      { type: "buff", text: "ガス-攻防増加" }
+    ]
+  },
+  "ヒニャオ種": {
+    baseEffects: [
+      { type: "debuff", text: "ダメージ減少" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "buff", text: "ヒニャオ-攻撃力増加" }
+      ]
+    }
+  },
+   "フグマル種": {
+    baseEffects: [
+      { type: "heal", text: "回復" },
+      { type: "debuff", text: "燃焼" },
+      { type: "debuff", text: "スタン" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "buff", text: "一貫-攻撃力増加" }
+      ]
+    }
+  },
+  "アタタマ種": {
+    baseEffects: [
+      { type: "debuff", text: "燃焼" },
+      { type: "buff", text: "ダメージ増加" },
+      { type: "buff", text: "攻撃力増加" },
+      { type: "debuff", text: "減速" },
+      { type: "debuff", text: "スタン" }
+    ]
+  },
+  "フタのみバード種": {
+    baseEffects: [
+      { type: "heal", text: "回復" }
+    ]
+  },
   "コマキリ種": {
     baseEffects: [
       { type: "buff", text: "攻撃" }
