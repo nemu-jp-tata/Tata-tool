@@ -120,13 +120,23 @@ function updateBuffSummary() {
     html += `
       <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">
     `;
-    effectMap.forEach(effect => {
-      const badgeColor =
-  effect.type === 'buff'
-    ? '#ef4444'
-    : effect.type === 'debuff'
-      ? '#3b82f6'
-      : '#22c55e';
+    const effectOrder = {
+  buff: 1,
+  debuff: 2,
+  heal: 3
+};
+const sortedEffects = Array.from(effectMap.values()).sort((a, b) => {
+  return (effectOrder[a.type] || 99) - (effectOrder[b.type] || 99);
+});
+sortedEffects.forEach(effect => {
+  const badgeColor =
+    effect.type === 'buff'
+      ? '#ef4444'
+      : effect.type === 'debuff'
+        ? '#3b82f6'
+        : effect.type === 'heal'
+          ? '#22c55e'
+          : '#94a3b8';
       // ------------------------------------
       // 発動元をまとめる
       // ------------------------------------
