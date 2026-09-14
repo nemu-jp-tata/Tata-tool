@@ -1,4 +1,4 @@
-// speciesData.js
+// monsterData.js
 
 /**
  * 種族ごとの発動効果（バフ・デバフ）マスタデータ
