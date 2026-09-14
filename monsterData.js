@@ -392,14 +392,94 @@ const speciesEffectsMaster = {
         { type: "buff", text: "ピンクシールド" }
       ]
   },  
-  "コマリ種": {
+          "ビリマズ種": {
     baseEffects: [
-      { type: "buff", text: "攻撃" }
+      { type: "buff", text: "カメシールド" }
+    ]
+  }, 
+            "ガオデン種": {
+    baseEffects: [
+      { type: "debuff", text: "ノックバック" },
+      { type: "debuff", text: "麻痺" }
     ],
     tierEffects: {
       3: [
-        { type: "buff", text: "" }
+        { type: "buff", text: "鼓舞-ダメージ増加" }
+      ]
+  },   
+       "ビリジカ種": {
+    baseEffects: [
+      { type: "debuff", text: "麻痺" }
+    ]
+  }, 
+        "パチルフ種": {
+    baseEffects: [],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "麻痺" }
       ]
     }
+  },   
+        "ビリピヨ種": {
+    baseEffects: [
+      { type: "buff", text: "充電-被ダメージ減少" },
+      { type: "buff", text: "充電-攻撃力増加" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "buff", text: "強力充電-攻撃力増加" }
+      ]
+  },      
+          "プラビ種": {
+    baseEffects: [
+      { type: "heal", text: "回復" },
+      { type: "buff", text: "応援-攻防増加" },
+      { type: "debuff", text: "麻痺" },
+      { type: "debuff", text: "束縛" },
+      { type: "debuff", text: "スタン" }
+    ]
+  }, 
+          "ライメー種": {
+    baseEffects: [],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "麻痺" }
+      ]
+    }
+  },   
+          "エレキネコ種": {
+    baseEffects: [
+      { type: "buff", text: "攻撃力増加" },
+      { type: "debuff", text: "スタン" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "buff", text: "エレキネコ-防御力増加" }
+      ]
+  },      
+           "ビリモ種": {
+    baseEffects: [
+      { type: "buff", text: "ダメージ増加・小" },
+      { type: "buff", text: "ダメージ増加・大" },
+      { type: "heal", text: "回復" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "コウモリ-被ダメージ増加" }
+      ]
+  },  
+            "ピカル種": {
+    baseEffects: [
+      { type: "buff", text: "静電気シールド" },
+      { type: "debuff", text: "麻痺" },
+      { type: "buff", text: "蛍光" }
+    ]
+  },  
+  "トジコモル種": {
+    baseEffects: [
+      { type: "buff", text: "エレキケージ" },
+      { type: "debuff", text: "束縛" },
+      { type: "debuff", text: "減速" }
+    ]
   }
 };
