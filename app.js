@@ -21,6 +21,43 @@ let selectedChipsMap = {
 let levelMode = false;
 const MAX_LEVEL = 7;
 
+// ========================================
+// 種族効果バッジ生成ヘルパー
+// ========================================
+
+/**
+ * 指定された種族・Tierに応じた効果バッジのHTML文字列を返します
+ */
+function getSpeciesEffectsHtml(species, tierNum) {
+  const master = typeof speciesEffectsMaster !== 'undefined' ? speciesEffectsMaster[species] : null;
+  if (!master) return '';
+
+  const effects = [];
+
+  // 基本効果（baseEffects）の追加
+  if (master.baseEffects && Array.isArray(master.baseEffects)) {
+    effects.push(...master.baseEffects);
+  }
+
+  // Tier開放効果（tierEffects）の追加
+  if (master.tierEffects && tierNum) {
+    Object.keys(master.tierEffects).forEach(tierKey => {
+      if (Number(tierNum) >= Number(tierKey)) {
+        effects.push(...master.tierEffects[tierKey]);
+      }
+    });
+  }
+
+  if (effects.length === 0) return '';
+
+  const badgesHtml = effects.map(eff => {
+    const badgeClass = eff.type || 'buff';
+    return `<span class="effect-badge ${badgeClass}">${eff.text}</span>`;
+  }).join('');
+
+  return `<div class="species-effects-container">${badgesHtml}</div>`;
+}
+
 
 // ========================================
 // チップセットエリアの表示・非表示
@@ -748,6 +785,9 @@ function fillCellWithMonster(cell, data) {
 
   delete cell.dataset.level;
 
+  // 種族効果バッジを取得
+  const speciesEffectsHtml = getSpeciesEffectsHtml(data.species, data.tier);
+
   // --------------------------------------
   // HTML生成
   // --------------------------------------
@@ -806,6 +846,8 @@ function fillCellWithMonster(cell, data) {
         ? `<div class="tier-badge">T${data.tier}</div>`
         : ''
     }
+
+    ${speciesEffectsHtml}
   `;
 
 
@@ -1905,6 +1947,10 @@ function renderMonsters() {
       `${baseM.type}.webp`;
 
 
+    // 種族効果バッジを取得
+    const speciesEffectsHtml = getSpeciesEffectsHtml(species, activeTierNum);
+
+
     // ------------------------------------
     // モンスターカード
     // ------------------------------------
@@ -1963,6 +2009,8 @@ function renderMonsters() {
       <div class="monster-name">
         ${name}
       </div>
+
+      ${speciesEffectsHtml}
     `;
 
 
