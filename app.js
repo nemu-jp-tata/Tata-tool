@@ -2846,6 +2846,24 @@ document
         boardFrame.cloneNode(true);
 
 
+      // ----------------------------------------
+      // アコーディオン（発動効果）強制展開処理
+      // ----------------------------------------
+      const buffSummaryContent =
+        boardClone.querySelector('#buffSummaryContent');
+
+      const buffToggleIcon =
+        boardClone.querySelector('#buffToggleIcon');
+
+      if (buffSummaryContent) {
+        buffSummaryContent.style.display = 'block';
+      }
+
+      if (buffToggleIcon) {
+        buffToggleIcon.textContent = '▲';
+      }
+
+
       const cells =
         boardClone.querySelectorAll(
           '.cell'
@@ -2906,34 +2924,6 @@ document
       captureContainer.appendChild(
         boardClone
       );
-
-
-      if (
-        currentGridType === '6'
-      ) {
-
-        const chipsetContainer =
-          document.getElementById(
-            'chipsetContainer'
-          );
-
-
-        if (
-          chipsetContainer &&
-          chipsetContainer.style.display !==
-            'none'
-        ) {
-
-          const chipsetClone =
-            chipsetContainer.cloneNode(
-              true
-            );
-
-          captureContainer.appendChild(
-            chipsetClone
-          );
-        }
-      }
 
 
       document.body.appendChild(
