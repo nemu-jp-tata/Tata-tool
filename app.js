@@ -122,11 +122,11 @@ function updateBuffSummary() {
     `;
     effectMap.forEach(effect => {
       const badgeColor =
-        effect.type === 'buff'
-          ? '#22c55e'
-          : effect.type === 'debuff'
-            ? '#ef4444'
-            : '#3b82f6';
+  effect.type === 'buff'
+    ? '#ef4444'
+    : effect.type === 'debuff'
+      ? '#3b82f6'
+      : '#22c55e';
       // ------------------------------------
       // 発動元をまとめる
       // ------------------------------------
