@@ -2777,15 +2777,7 @@ document
 
       const boardClone = boardFrame.cloneNode(true);
 
-      // ----------------------------------------
-      // 1. 不要な重複「チップセット」枠をクローンから除去（内部にある場合）
-      // ----------------------------------------
-      const innerChipset = boardClone.querySelector('#chipsetContainer');
-      if (innerChipset) {
-        innerChipset.remove();
-      }
-
-      // ----------------------------------------
+       // ----------------------------------------
       // 2. アコーディオン（発動効果）強制展開処理
       // ----------------------------------------
       const buffSummaryContent = boardClone.querySelector('#buffSummaryContent');
