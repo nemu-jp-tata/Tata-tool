@@ -2723,308 +2723,147 @@ document
 
 
 // ========================================
-// 画像保存
+// 画像保存（修正版）
 // ========================================
 
 document
   .getElementById('saveBtn')
   ?.addEventListener(
     'click',
-    (e) => {
+    async (e) => {
 
       e.stopPropagation();
 
-      const boardFrame =
-        document.getElementById(
-          'boardFrame'
-        );
-
-      const titleInput =
-        document.getElementById(
-          'appTitleInput'
-        );
-
-      const playerSwitchContainer =
-        document.getElementById(
-          'playerSwitchContainer'
-        );
-
+      const boardFrame = document.getElementById('boardFrame');
+      const titleInput = document.getElementById('appTitleInput');
+      const playerSwitchContainer = document.getElementById('playerSwitchContainer');
 
       if (!boardFrame) {
-
-        alert(
-          '盤面が見つかりません。'
-        );
-
+        alert('盤面が見つかりません。');
         return;
       }
 
-
-      let titleText =
-        'タタ配置ツール';
-
-
-      if (
-        titleInput &&
-        titleInput.value.trim() !== ''
-      ) {
-
-        titleText =
-          titleInput.value.trim();
+      let titleText = 'タタ配置ツール';
+      if (titleInput && titleInput.value.trim() !== '') {
+        titleText = titleInput.value.trim();
       }
 
-
-      const originalPlayerSwitchDisplay =
-        playerSwitchContainer
-          ? playerSwitchContainer.style.display
-          : '';
-
+      const originalPlayerSwitchDisplay = playerSwitchContainer
+        ? playerSwitchContainer.style.display
+        : '';
 
       if (playerSwitchContainer) {
-        playerSwitchContainer.style.display =
-          'none';
+        playerSwitchContainer.style.display = 'none';
       }
 
+      const captureContainer = document.createElement('div');
+      captureContainer.style.position = 'absolute';
+      captureContainer.style.top = '-9999px';
+      captureContainer.style.left = '-9999px';
+      captureContainer.style.width = `${boardFrame.offsetWidth}px`;
+      captureContainer.style.background = '#181a29';
+      captureContainer.style.padding = '16px';
+      captureContainer.style.boxSizing = 'border-box';
+      captureContainer.style.borderRadius = '12px';
 
-      const captureContainer =
-        document.createElement('div');
+      const titleEl = document.createElement('div');
+      titleEl.textContent = titleText;
+      titleEl.style.fontSize = '20px';
+      titleEl.style.fontWeight = 'bold';
+      titleEl.style.color = '#f8fafc';
+      titleEl.style.textAlign = 'center';
+      titleEl.style.marginBottom = '12px';
+      titleEl.style.fontFamily = 'sans-serif';
 
-
-      captureContainer.style.position =
-        'absolute';
-
-      captureContainer.style.top =
-        '-9999px';
-
-      captureContainer.style.left =
-        '-9999px';
-
-      captureContainer.style.width =
-        `${boardFrame.offsetWidth}px`;
-
-      captureContainer.style.background =
-        '#181a29';
-
-      captureContainer.style.padding =
-        '16px';
-
-      captureContainer.style.boxSizing =
-        'border-box';
-
-      captureContainer.style.borderRadius =
-        '12px';
-
-
-      const titleEl =
-        document.createElement('div');
-
-
-      titleEl.textContent =
-        titleText;
-
-
-      titleEl.style.fontSize =
-        '20px';
-
-      titleEl.style.fontWeight =
-        'bold';
-
-      titleEl.style.color =
-        '#f8fafc';
-
-      titleEl.style.textAlign =
-        'center';
-
-      titleEl.style.marginBottom =
-        '12px';
-
-      titleEl.style.fontFamily =
-        'sans-serif';
-
-
-      const boardClone =
-        boardFrame.cloneNode(true);
-
+      const boardClone = boardFrame.cloneNode(true);
 
       // ----------------------------------------
-      // アコーディオン（発動効果）強制展開処理
+      // 1. 不要な重複「チップセット」枠をクローンから除去（内部にある場合）
       // ----------------------------------------
-      const buffSummaryContent =
-        boardClone.querySelector('#buffSummaryContent');
+      const innerChipset = boardClone.querySelector('#chipsetContainer');
+      if (innerChipset) {
+        innerChipset.remove();
+      }
 
-      const buffToggleIcon =
-        boardClone.querySelector('#buffToggleIcon');
+      // ----------------------------------------
+      // 2. アコーディオン（発動効果）強制展開処理
+      // ----------------------------------------
+      const buffSummaryContent = boardClone.querySelector('#buffSummaryContent');
+      const buffToggleIcon = boardClone.querySelector('#buffToggleIcon');
 
       if (buffSummaryContent) {
-        buffSummaryContent.style.display = 'block';
+        buffSummaryContent.style.setProperty('display', 'block', 'important');
+        buffSummaryContent.style.height = 'auto';
+        buffSummaryContent.style.visibility = 'visible';
+        buffSummaryContent.style.opacity = '1';
       }
 
       if (buffToggleIcon) {
         buffToggleIcon.textContent = '▲';
       }
 
-
-      const cells =
-        boardClone.querySelectorAll(
-          '.cell'
-        );
-
-
+      const cells = boardClone.querySelectorAll('.cell');
       cells.forEach(cell => {
+        cell.style.aspectRatio = '1 / 1';
+        cell.style.display = 'flex';
+        cell.style.alignItems = 'center';
+        cell.style.justifyContent = 'center';
 
-        cell.style.aspectRatio =
-          '1 / 1';
-
-        cell.style.display =
-          'flex';
-
-        cell.style.alignItems =
-          'center';
-
-        cell.style.justifyContent =
-          'center';
-
-
-        const img =
-          cell.querySelector(
-            '.placed-monster-image'
-          );
-
-
+        const img = cell.querySelector('.placed-monster-image');
         if (img) {
-
-          img.style.maxWidth =
-            '100%';
-
-          img.style.maxHeight =
-            '100%';
-
-          img.style.width =
-            'auto';
-
-          img.style.height =
-            'auto';
-
-          img.style.objectFit =
-            'contain';
-
-          img.style.display =
-            'block';
-
-          img.style.margin =
-            'auto';
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+          img.style.objectFit = 'contain';
+          img.style.display = 'block';
+          img.style.margin = 'auto';
         }
       });
 
+      captureContainer.appendChild(titleEl);
+      captureContainer.appendChild(boardClone);
+      document.body.appendChild(captureContainer);
 
-      captureContainer.appendChild(
-        titleEl
-      );
+      // DOMレンダリング確定待ち
+      await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
 
-      captureContainer.appendChild(
-        boardClone
-      );
-
-
-      document.body.appendChild(
-        captureContainer
-      );
-
-
-      html2canvas(
-        captureContainer,
-        {
-
-          backgroundColor:
-            '#181a29',
-
+      try {
+        const canvas = await html2canvas(captureContainer, {
+          backgroundColor: '#181a29',
           scale: 3,
-
           useCORS: true,
-
           logging: false
-        }
-      )
-      .then(canvas => {
+        });
 
-        document.body.removeChild(
-          captureContainer
-        );
-
+        document.body.removeChild(captureContainer);
 
         if (playerSwitchContainer) {
-
-          playerSwitchContainer.style.display =
-            originalPlayerSwitchDisplay;
+          playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
         }
 
+        const imageURL = canvas.toDataURL('image/webp', 0.98);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = imageURL;
+        downloadLink.download = `${titleText}-${currentGridType}.webp`;
 
-        const imageURL =
-          canvas.toDataURL(
-            'image/webp',
-            0.98
-          );
-
-
-        const downloadLink =
-          document.createElement('a');
-
-
-        downloadLink.href =
-          imageURL;
-
-
-        downloadLink.download =
-          `${titleText}-${currentGridType}.webp`;
-
-
-        document.body.appendChild(
-          downloadLink
-        );
-
-
+        document.body.appendChild(downloadLink);
         downloadLink.click();
+        document.body.removeChild(downloadLink);
 
-
-        document.body.removeChild(
-          downloadLink
-        );
-
-      })
-      .catch(err => {
-
-        console.error(
-          '画像保存エラー:',
-          err
-        );
-
-
-        alert(
-          '画像の保存に失敗しました。'
-        );
-
+      } catch (err) {
+        console.error('画像保存エラー:', err);
+        alert('画像の保存に失敗しました。');
 
         if (playerSwitchContainer) {
-
-          playerSwitchContainer.style.display =
-            originalPlayerSwitchDisplay;
+          playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
         }
-
-
-        if (
-          document.body.contains(
-            captureContainer
-          )
-        ) {
-
-          document.body.removeChild(
-            captureContainer
-          );
+        if (document.body.contains(captureContainer)) {
+          document.body.removeChild(captureContainer);
         }
-      });
+      }
     }
   );
-
 
 // ========================================
 // 1P / 2P切り替え
