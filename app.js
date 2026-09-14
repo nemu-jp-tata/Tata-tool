@@ -21,6 +21,141 @@ let selectedChipsMap = {
 let levelMode = false;
 const MAX_LEVEL = 7;
 
+// ========================================
+// 発動効果一覧（Buff Summary）の集計・更新
+// ========================================
+
+/**
+ * 盤面上のモンスターから発動中の効果を集計し、#buffSummaryContainer 内に描画します
+ */
+function updateBuffSummary() {
+  const container = document.getElementById('buffSummaryContainer');
+  const content = document.getElementById('buffSummaryContent');
+  if (!container || !content) return;
+
+  const cells = document.querySelectorAll('#mainGrid .cell');
+  const playerEffects = {
+    '1P': [],
+    '2P': []
+  };
+
+  let totalMonsterCount = 0;
+
+  cells.forEach(cell => {
+    const monsterEl = getCellMonsterElement(cell);
+    if (!monsterEl) return;
+
+    totalMonsterCount++;
+    const species = monsterEl.dataset.species;
+    const tierNum = Number(monsterEl.dataset.tier) || 1;
+    const player = monsterEl.dataset.player || '1P';
+
+    if (!species || typeof speciesEffectsMaster === 'undefined') return;
+
+    const master = speciesEffectsMaster[species];
+    if (!master) return;
+
+    // 基本効果
+    if (master.baseEffects && Array.isArray(master.baseEffects)) {
+      master.baseEffects.forEach(eff => {
+        playerEffects[player].push({
+          species: species,
+          tier: tierNum,
+          ...eff
+        });
+      });
+    }
+
+    // Tier解放効果
+    if (master.tierEffects) {
+      Object.keys(master.tierEffects).forEach(tierKey => {
+        if (tierNum >= Number(tierKey)) {
+          master.tierEffects[tierKey].forEach(eff => {
+            playerEffects[player].push({
+              species: species,
+              tier: tierNum,
+              ...eff
+            });
+          });
+        }
+      });
+    }
+  });
+
+  // 盤面にモンスターが1体もいない場合は非表示
+  if (totalMonsterCount === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+
+  // HTMLの組み立て
+  let html = '';
+
+  if (currentGridType === '6') {
+    // ゾンビラッシュ（1P / 2P 別に表示）
+    ['1P', '2P'].forEach(p => {
+      const list = playerEffects[p];
+      html += `<div class="buff-player-section" style="margin-bottom: 8px;">`;
+      html += `<div style="font-weight: bold; font-size: 11px; color: ${p === '1P' ? '#60a5fa' : '#f87171'}; margin-bottom: 4px;">【${p} 発動効果】</div>`;
+
+      if (list.length === 0) {
+        html += `<div style="font-size: 11px; color: #64748b; padding-left: 8px;">発動中の効果なし</div>`;
+      } else {
+        html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
+        list.forEach(item => {
+          const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
+          html += `<li style="margin-bottom: 2px;">
+            <span style="color: #94a3b8;">[${item.species}]</span>
+            <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>
+          </li>`;
+        });
+        html += `</ul>`;
+      }
+      html += `</div>`;
+    });
+  } else {
+    // ノーマル・道場（一括表示）
+    const list = playerEffects['1P'];
+    html += `<div class="buff-player-section">`;
+    if (list.length === 0) {
+      html += `<div style="font-size: 11px; color: #64748b;">発動中の効果なし</div>`;
+    } else {
+      html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
+      list.forEach(item => {
+        const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
+        html += `<li style="margin-bottom: 2px;">
+          <span style="color: #94a3b8;">[${item.species}]</span>
+          <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+// ========================================
+// 発動効果コンテナの折りたたみ初期化
+// ========================================
+function initBuffSummaryToggle() {
+  const header = document.getElementById('buffSummaryHeader');
+  const content = document.getElementById('buffSummaryContent');
+  const icon = document.getElementById('buffToggleIcon');
+
+  if (header && content && icon) {
+    header.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = content.style.display === 'none';
+      content.style.display = isHidden ? 'block' : 'none';
+      icon.textContent = isHidden ? '▲' : '▼';
+    });
+  }
+}
+
 
 // ========================================
 // チップセットエリアの表示・非表示
@@ -36,13 +171,10 @@ function updateChipsetAreaVisibility(isZombieStage) {
     chipsetContainer.style.display = isZombieStage ? 'block' : 'none';
   }
 
-  // ゾンビラッシュ時のみレベルボタンを有効にする
   if (playerSwitch) {
     playerSwitch.classList.toggle('zombie-mode', isZombieStage);
   }
 
-  // ゾンビラッシュ時のみ、
-  // モンスター選択エリアに「タタ選択 / チップ選択」を表示
   let modeSwitch = document.getElementById('selectionModeSwitch');
 
   if (isZombieStage) {
@@ -556,7 +688,6 @@ function setCellLevel(cell, level) {
 
 function setLevelMode(enabled) {
 
-  // ゾンビラッシュ以外では強制OFF
   if (currentGridType !== '6') {
     enabled = false;
   }
@@ -573,7 +704,6 @@ function setLevelMode(enabled) {
 
   if (enabled) {
 
-    // モンスター選択を解除
     currentSelected = null;
 
     if (selectedNameEl) {
@@ -678,6 +808,9 @@ function saveBoardState() {
     'monsterBoard_chips',
     JSON.stringify(selectedChipsMap)
   );
+
+  // 保存のタイミングで発動効果一覧も更新
+  updateBuffSummary();
 }
 
 
@@ -722,6 +855,7 @@ function loadBoardState() {
   }
 
   applyChipsToSlots();
+  updateBuffSummary();
 }
 
 
@@ -734,13 +868,11 @@ function fillCellWithMonster(cell, data) {
   const type =
     getMonsterType(data);
 
-  // 以前のレベルを保持
   const previousLevel =
     data.level ||
     cell.dataset.level ||
     null;
 
-  // セルをリセット
   cell.className =
     data.className || 'cell';
 
@@ -809,18 +941,10 @@ function fillCellWithMonster(cell, data) {
   `;
 
 
-  // --------------------------------------
-  // レベルを復元
-  // --------------------------------------
-
   if (previousLevel) {
     setCellLevel(cell, previousLevel);
   }
 
-
-  // --------------------------------------
-  // キャラクター本体
-  // --------------------------------------
 
   const targetEl =
     getCellMonsterElement(cell);
@@ -829,10 +953,6 @@ function fillCellWithMonster(cell, data) {
     return;
   }
 
-
-  // --------------------------------------
-  // ドラッグ処理
-  // --------------------------------------
 
   targetEl.addEventListener(
     'pointerdown',
@@ -847,7 +967,6 @@ function fillCellWithMonster(cell, data) {
         return;
       }
 
-      // レベルモードではドラッグさせない
       if (levelMode) {
         return;
       }
@@ -959,7 +1078,6 @@ function fillCellWithMonster(cell, data) {
             );
 
 
-            // ドラッグ中は一旦空にする
             cell.innerHTML = '';
 
             cell.className = 'cell';
@@ -1012,10 +1130,6 @@ function fillCellWithMonster(cell, data) {
         clearHoverHighlight();
 
 
-        // ----------------------------------
-        // タップだった場合 → 削除
-        // ----------------------------------
-
         if (!isDragging) {
 
           cell.innerHTML = '';
@@ -1029,10 +1143,6 @@ function fillCellWithMonster(cell, data) {
           return;
         }
 
-
-        // ----------------------------------
-        // ドラッグ終了
-        // ----------------------------------
 
         dragGhost.style.display =
           'none';
@@ -1057,11 +1167,6 @@ function fillCellWithMonster(cell, data) {
           monsterFrame.contains(dropTarget);
 
 
-        // ----------------------------------
-        // モンスター選択エリアへ戻した場合
-        // → 削除
-        // ----------------------------------
-
         if (isOverMonsterFrame) {
 
           draggingItem = null;
@@ -1071,11 +1176,6 @@ function fillCellWithMonster(cell, data) {
           return;
         }
 
-
-        // ----------------------------------
-        // 盤面外
-        // → 元の場所へ戻す
-        // ----------------------------------
 
         if (
           !targetCell ||
@@ -1091,10 +1191,6 @@ function fillCellWithMonster(cell, data) {
         const targetIndex =
           cells.indexOf(targetCell);
 
-
-        // ----------------------------------
-        // 移動先のキャラクター
-        // ----------------------------------
 
         const existingMonster =
           getCellMonsterElement(targetCell);
@@ -1151,10 +1247,6 @@ function fillCellWithMonster(cell, data) {
         }
 
 
-        // ----------------------------------
-        // 同種族チェック
-        // ----------------------------------
-
         const targetSpecies =
           draggingItem.species;
 
@@ -1209,10 +1301,6 @@ function fillCellWithMonster(cell, data) {
         }
 
 
-        // ----------------------------------
-        // 移動先を設定
-        // ----------------------------------
-
         targetCell.className =
           'cell';
 
@@ -1253,11 +1341,6 @@ function fillCellWithMonster(cell, data) {
           }
         );
 
-
-        // ----------------------------------
-        // 移動先に元からキャラがいた場合
-        // → 元の場所へ移動
-        // ----------------------------------
 
         const sourceCell =
           cells[sourceIndex];
@@ -1365,20 +1448,12 @@ function buildBoard(gridType) {
 
   currentGridType = gridType;
 
-
-  // ステージ切替時のレベルを解除
   setLevelMode(false);
 
-
-  // ステージボタン
   normalStageBtn?.classList.remove('active');
   zombieStageBtn?.classList.remove('active');
   dojoStageBtn?.classList.remove('active');
 
-
-  // --------------------------------------
-  // ノーマル
-  // --------------------------------------
 
   if (gridType === '5') {
 
@@ -1402,10 +1477,6 @@ function buildBoard(gridType) {
   }
 
 
-  // --------------------------------------
-  // ゾンビラッシュ
-  // --------------------------------------
-
   else if (gridType === '6') {
 
     mainGrid.className =
@@ -1414,8 +1485,6 @@ function buildBoard(gridType) {
     if (playerSwitchContainer) {
 
       playerSwitchContainer.classList.add('show');
-
-      // ★ここでレベルボタンを表示
       playerSwitchContainer.classList.add('zombie-mode');
     }
 
@@ -1441,10 +1510,6 @@ function buildBoard(gridType) {
   }
 
 
-  // --------------------------------------
-  // 道場
-  // --------------------------------------
-
   else if (gridType === '3x4') {
 
     mainGrid.className =
@@ -1466,10 +1531,6 @@ function buildBoard(gridType) {
     updateChipsetAreaVisibility(false);
   }
 
-
-  // --------------------------------------
-  // 盤面を作り直す
-  // --------------------------------------
 
   mainGrid.innerHTML = '';
 
@@ -1498,20 +1559,12 @@ function buildBoard(gridType) {
       'cell';
 
 
-    // ------------------------------------
-    // セルクリック
-    // ------------------------------------
-
     cell.addEventListener(
       'click',
       (e) => {
 
         e.stopPropagation();
 
-
-        // ================================
-        // ★ レベルモード
-        // ================================
 
         if (
           levelMode &&
@@ -1521,7 +1574,6 @@ function buildBoard(gridType) {
           const monsterEl =
             getCellMonsterElement(cell);
 
-          // キャラがいない場合は何もしない
           if (!monsterEl) {
             return;
           }
@@ -1554,10 +1606,6 @@ function buildBoard(gridType) {
         }
 
 
-        // ================================
-        // 通常のキャラクター配置
-        // ================================
-
         if (!currentSelected) {
 
           cell.innerHTML = '';
@@ -1579,10 +1627,6 @@ function buildBoard(gridType) {
         const targetTier =
           currentSelected.tierNum;
 
-
-        // --------------------------------
-        // 現在の配置数
-        // --------------------------------
 
         let totalCount = 0;
         let p1Count = 0;
@@ -1632,10 +1676,6 @@ function buildBoard(gridType) {
               currentPlayer
           );
 
-
-        // --------------------------------
-        // 最大数チェック
-        // --------------------------------
 
         if (!isReplacingSelf) {
 
@@ -1695,10 +1735,6 @@ function buildBoard(gridType) {
         }
 
 
-        // --------------------------------
-        // 同種族チェック
-        // --------------------------------
-
         let isSpeciesOnBoard = false;
 
 
@@ -1745,10 +1781,6 @@ function buildBoard(gridType) {
         }
 
 
-        // --------------------------------
-        // 配置
-        // --------------------------------
-
         const newCellClassName =
           'cell ' +
           (
@@ -1793,7 +1825,6 @@ function buildBoard(gridType) {
         );
 
 
-        // 選択解除
         currentSelected = null;
 
         if (selectedNameEl) {
@@ -1813,7 +1844,6 @@ function buildBoard(gridType) {
   }
 
 
-  // 保存状態読み込み
   loadBoardState();
 }
 
@@ -1866,10 +1896,6 @@ function renderMonsters() {
       baseM;
 
 
-    // ------------------------------------
-    // 現在選択中のティア
-    // ------------------------------------
-
     if (
       currentSelected &&
       currentSelected.species === species
@@ -1904,10 +1930,6 @@ function renderMonsters() {
     const typeImgUrl =
       `${baseM.type}.webp`;
 
-
-    // ------------------------------------
-    // モンスターカード
-    // ------------------------------------
 
     const item =
       document.createElement('div');
@@ -1966,10 +1988,6 @@ function renderMonsters() {
     `;
 
 
-    // ------------------------------------
-    // ドラッグ / タップ
-    // ------------------------------------
-
     item.addEventListener(
       'pointerdown',
       (e) => {
@@ -1985,7 +2003,6 @@ function renderMonsters() {
         }
 
 
-        // レベルモード中はモンスター選択を無効
         if (levelMode) {
           return;
         }
@@ -2007,10 +2024,6 @@ function renderMonsters() {
         const availableTiers =
           speciesTiersMap[species];
 
-
-        // ----------------------------------
-        // 選択するデータ
-        // ----------------------------------
 
         let paletteItemData;
 
@@ -2072,10 +2085,6 @@ function renderMonsters() {
           };
         }
 
-
-        // ----------------------------------
-        // 移動
-        // ----------------------------------
 
         function onMove(moveEvent) {
 
@@ -2167,10 +2176,6 @@ function renderMonsters() {
         }
 
 
-        // ----------------------------------
-        // 指を離した
-        // ----------------------------------
-
         function onUp(upEvent) {
 
           window.removeEventListener(
@@ -2198,10 +2203,6 @@ function renderMonsters() {
 
           clearHoverHighlight();
 
-
-          // ================================
-          // タップ
-          // ================================
 
           if (!isDragging) {
 
@@ -2286,10 +2287,6 @@ function renderMonsters() {
           }
 
 
-          // ================================
-          // ドラッグ
-          // ================================
-
           dragGhost.style.display =
             'none';
 
@@ -2334,10 +2331,6 @@ function renderMonsters() {
               draggingItem.species;
 
 
-            // ------------------------------
-            // 配置数
-            // ------------------------------
-
             let totalCount = 0;
             let p1Count = 0;
             let p2Count = 0;
@@ -2380,10 +2373,6 @@ function renderMonsters() {
                   draggingItem.player
               );
 
-
-            // ------------------------------
-            // 最大数チェック
-            // ------------------------------
 
             if (!isReplacingSelf) {
 
@@ -2453,10 +2442,6 @@ function renderMonsters() {
             }
 
 
-            // ------------------------------
-            // 同種族チェック
-            // ------------------------------
-
             let isSpeciesOnBoard =
               false;
 
@@ -2512,10 +2497,6 @@ function renderMonsters() {
               return;
             }
 
-
-            // ------------------------------
-            // 配置
-            // ------------------------------
 
             targetCell.className =
               'cell';
@@ -2735,6 +2716,8 @@ document
       applyChipsToSlots();
 
       renderMonsters();
+
+      updateBuffSummary();
     }
   );
 
@@ -2925,7 +2908,6 @@ document
       );
 
 
-      // ゾンビラッシュならチップも保存
       if (
         currentGridType === '6'
       ) {
@@ -3335,6 +3317,8 @@ dojoStageBtn?.addEventListener(
 // ========================================
 // 初期化
 // ========================================
+
+initBuffSummaryToggle();
 
 buildBoard(
   currentGridType
