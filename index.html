@@ -34,36 +34,39 @@
       </button>
     </div>
 
-   <div class="player-switch-container" id="playerSwitchContainer">
-  <button class="player-btn p1 active" id="btn1P">1P 視点</button>
-  <button class="player-btn p2" id="btn2P">2P 視点</button>
-  <button class="level-btn" id="levelBtn">レベル</button>
-</div>
-
-    <div class="chipset-container" id="chipsetContainer" style="display: none;">
-      <div class="chipset-title">チップセット</div>
-      <div class="chipset-slots">
-        <div class="chipset-slot p1-slot"></div>
-        <div class="chipset-slot p1-slot"></div>
-        <div class="chipset-slot p1-slot"></div>
-        <div class="chipset-slot p2-slot"></div>
-        <div class="chipset-slot p2-slot"></div>
-        <div class="chipset-slot p2-slot"></div>
-      </div>
+    <div class="player-switch-container" id="playerSwitchContainer">
+      <button class="player-btn p1 active" id="btn1P">1P 視点</button>
+      <button class="player-btn p2" id="btn2P">2P 視点</button>
+      <button class="level-btn" id="levelBtn">レベル</button>
     </div>
-    <div id="buffSummaryContainer" class="buff-summary-card" style="display: none;">
-  <div id="buffSummaryHeader" class="buff-summary-header">
-    <span>発動効果一覧</span>
-    <span id="buffToggleIcon">▼</span>
-  </div>
-  <div id="buffSummaryContent" class="buff-summary-content">
-    <!-- JSでここに1P/2Pのリストを生成 -->
-  </div>
-</div>
 
     <div class="board-frame" id="boardFrame">
       <div class="board-notice" id="boardNotice" style="display: none;">こちらからゾンビが来ます ▼</div>
       <div id="mainGrid"></div>
+
+      <!-- チップセット表示エリア -->
+      <div class="chipset-container" id="chipsetContainer" style="display: none;">
+        <div class="chipset-title">チップセット</div>
+        <div class="chipset-slots">
+          <div class="chipset-slot p1-slot"></div>
+          <div class="chipset-slot p1-slot"></div>
+          <div class="chipset-slot p1-slot"></div>
+          <div class="chipset-slot p2-slot"></div>
+          <div class="chipset-slot p2-slot"></div>
+          <div class="chipset-slot p2-slot"></div>
+        </div>
+      </div>
+
+      <!-- 発動効果一覧（折りたたみコンテナ） -->
+      <div id="buffSummaryContainer" class="buff-summary-card" style="display: none;">
+        <div id="buffSummaryHeader" class="buff-summary-header" style="cursor: pointer; user-select: none;">
+          <span>⚡ 発動効果一覧</span>
+          <span id="buffToggleIcon" class="buff-toggle-icon">▼</span>
+        </div>
+        <div id="buffSummaryContent" class="buff-summary-content" style="display: none;">
+          <!-- JSでここに1P/2Pのリストを動的生成 -->
+        </div>
+      </div>
     </div>
   </div>
 
