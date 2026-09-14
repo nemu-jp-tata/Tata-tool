@@ -1,11 +1,5 @@
-// monsterData.js
+//monsterData.js
 
-/**
- * 種族ごとの発動効果（バフ・デバフ）マスタデータ
- * 
- * - baseEffects: その種族のモンスターが持つ基本効果
- * - tierEffects: 特定のTier以上で追加開放される効果（例: T2やT3で解放される効果）
- */
 const speciesEffectsMaster = {
   "チーシェル種": {
     baseEffects: [
@@ -156,12 +150,12 @@ const speciesEffectsMaster = {
       { type: "buff", text: "攻撃力増加" }
     ]
   },
-   "トラーニー種": {
+  "トラーニー種": {
     baseEffects: [
       { type: "debuff", text: "燃焼" }
     ]
   },
-   "ププンク種": {
+  "ププンク種": {
     baseEffects: [
       { type: "buff", text: "ガス-攻防増加" }
     ]
@@ -176,7 +170,7 @@ const speciesEffectsMaster = {
       ]
     }
   },
-   "フグマル種": {
+  "フグマル種": {
     baseEffects: [
       { type: "heal", text: "回復" },
       { type: "debuff", text: "燃焼" },
@@ -253,8 +247,9 @@ const speciesEffectsMaster = {
       2: [
         { type: "buff", text: "陽だまり-攻防増加" }
       ]
+    }
   },
-    "フクログモ種": {
+  "フクログモ種": {
     baseEffects: [
       { type: "buff", text: "雫シールド" },
       { type: "debuff", text: "クモの巣-束縛" }
@@ -263,13 +258,14 @@ const speciesEffectsMaster = {
       2: [
         { type: "debuff", text: "スタン" }
       ]
+    }
   },
-      "サボール種": {
+  "サボール種": {
     baseEffects: [
       { type: "debuff", text: "トゲ刺し" }
     ]
   },
-      "マルッシュ種": {
+  "マルッシュ種": {
     baseEffects: [
       { type: "buff", text: "胞子-攻撃速度増加" },
       { type: "debuff", text: "被ダメージ増加" }
@@ -279,8 +275,9 @@ const speciesEffectsMaster = {
         { type: "debuff", text: "胞子-被ダメージ増加" },
         { type: "buff", text: "胞子-被ダメージ減少" }
       ]
+    }
   },
-    "ベロパカ種": {
+  "ベロパカ種": {
     baseEffects: [
       { type: "buff", text: "ダメージ増加" },
       { type: "debuff", text: "強力減速エリア" },
@@ -290,18 +287,18 @@ const speciesEffectsMaster = {
       2: [
         { type: "debuff", text: "束縛" }
       ],
-      tierEffects: {
       3: [
         { type: "debuff", text: "減速エリア" }
       ]
+    }
   },
-      "フリコー種": {
+  "フリコー種": {
     baseEffects: [
       { type: "heal", text: "回復" },
       { type: "debuff", text: "スロウクロック" }
     ]
   },
-      "ヤミノメ種": {
+  "ヤミノメ種": {
     baseEffects: [
       { type: "debuff", text: "毒" },
       { type: "debuff", text: "寄生毒" }
@@ -310,8 +307,9 @@ const speciesEffectsMaster = {
       3: [
         { type: "debuff", text: "毒エリア" }
       ]
+    }
   },
-        "マドブヒ種": {
+  "マドブヒ種": {
     baseEffects: [],
     tierEffects: {
       2: [
@@ -319,29 +317,29 @@ const speciesEffectsMaster = {
       ]
     }
   },
-        "ハリネム種": {
+  "ハリネム種": {
     baseEffects: [
       { type: "heal", text: "自己回復" },
       { type: "buff", text: "被ダメージ減少" }
     ]
   },
-        "コロジュー種": {
+  "コロジュー種": {
     baseEffects: [
       { type: "debuff", text: "スタン" }
     ]
   },
-        "コロカメ種": {
+  "コロカメ種": {
     baseEffects: [
       { type: "buff", text: "カメシールド" }
     ]
   },
-        "ヤンザル種": {
+  "ヤンザル種": {
     baseEffects: [
       { type: "buff", text: "デコイ" },
       { type: "buff", text: "鉄頭鉄壁-被ダメージ減少" }
     ]
   },
-        "モグリン種": {
+  "モグリン種": {
     baseEffects: [
       { type: "buff", text: "穴潜り-被ダメージ減少" },
       { type: "debuff", text: "ダメージ減少" }
@@ -350,8 +348,9 @@ const speciesEffectsMaster = {
       3: [
         { type: "debuff", text: "視界妨害" }
       ]
+    }
   },
-          "コロタマ種": {
+  "コロタマ種": {
     baseEffects: [],
     tierEffects: {
       2: [
@@ -359,7 +358,7 @@ const speciesEffectsMaster = {
       ]
     }
   },
-          "ボウズヘビ種": {
+  "ボウズヘビ種": {
     baseEffects: [
       { type: "heal", text: "回復" }
     ],
@@ -367,8 +366,9 @@ const speciesEffectsMaster = {
       2: [
         { type: "debuff", text: "スタン" }
       ]
+    }
   },
-           "ホルリン種": {
+  "ホルリン種": {
     baseEffects: [
       { type: "debuff", text: "列ノックバック" },
       { type: "debuff", text: "防御力減少" },
@@ -379,8 +379,9 @@ const speciesEffectsMaster = {
       2: [
         { type: "debuff", text: "スタン" }
       ]
+    }
   },
-            "ムムカバ種": {
+  "ムムカバ種": {
     baseEffects: [
       { type: "heal", text: "自己回復" },
       { type: "buff", text: "回数シールド" },
@@ -391,13 +392,14 @@ const speciesEffectsMaster = {
       2: [
         { type: "buff", text: "ピンクシールド" }
       ]
-  },  
-          "ビリマズ種": {
+    }
+  },
+  "ビリマズ種": {
     baseEffects: [
       { type: "buff", text: "カメシールド" }
     ]
-  }, 
-            "ガオデン種": {
+  },
+  "ガオデン種": {
     baseEffects: [
       { type: "debuff", text: "ノックバック" },
       { type: "debuff", text: "麻痺" }
@@ -406,21 +408,22 @@ const speciesEffectsMaster = {
       3: [
         { type: "buff", text: "鼓舞-ダメージ増加" }
       ]
-  },   
-       "ビリジカ種": {
+    }
+  },
+  "ビリジカ種": {
     baseEffects: [
       { type: "debuff", text: "麻痺" }
     ]
-  }, 
-        "パチルフ種": {
+  },
+  "パチルフ種": {
     baseEffects: [],
     tierEffects: {
       2: [
         { type: "debuff", text: "麻痺" }
       ]
     }
-  },   
-        "ビリピヨ種": {
+  },
+  "ビリピヨ種": {
     baseEffects: [
       { type: "buff", text: "充電-被ダメージ減少" },
       { type: "buff", text: "充電-攻撃力増加" }
@@ -429,8 +432,9 @@ const speciesEffectsMaster = {
       3: [
         { type: "buff", text: "強力充電-攻撃力増加" }
       ]
-  },      
-          "プラビ種": {
+    }
+  },
+  "プラビ種": {
     baseEffects: [
       { type: "heal", text: "回復" },
       { type: "buff", text: "応援-攻防増加" },
@@ -438,16 +442,16 @@ const speciesEffectsMaster = {
       { type: "debuff", text: "束縛" },
       { type: "debuff", text: "スタン" }
     ]
-  }, 
-          "ライメー種": {
+  },
+  "ライメー種": {
     baseEffects: [],
     tierEffects: {
       2: [
         { type: "debuff", text: "麻痺" }
       ]
     }
-  },   
-          "エレキネコ種": {
+  },
+  "エレキネコ種": {
     baseEffects: [
       { type: "buff", text: "攻撃力増加" },
       { type: "debuff", text: "スタン" }
@@ -456,8 +460,9 @@ const speciesEffectsMaster = {
       3: [
         { type: "buff", text: "エレキネコ-防御力増加" }
       ]
-  },      
-           "ビリモ種": {
+    }
+  },
+  "ビリモ種": {
     baseEffects: [
       { type: "buff", text: "ダメージ増加・小" },
       { type: "buff", text: "ダメージ増加・大" },
@@ -467,14 +472,15 @@ const speciesEffectsMaster = {
       2: [
         { type: "debuff", text: "コウモリ-被ダメージ増加" }
       ]
-  },  
-            "ピカル種": {
+    }
+  },
+  "ピカル種": {
     baseEffects: [
       { type: "buff", text: "静電気シールド" },
       { type: "debuff", text: "麻痺" },
       { type: "buff", text: "蛍光" }
     ]
-  },  
+  },
   "トジコモル種": {
     baseEffects: [
       { type: "buff", text: "エレキケージ" },
