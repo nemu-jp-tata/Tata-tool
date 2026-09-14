@@ -3287,7 +3287,77 @@ dojoStageBtn?.addEventListener(
   }
 );
 
+// ========================================
+// 発動効果一覧 アコーディオン
+// ========================================
 
+function initBuffSummaryToggle() {
+
+  const container =
+    document.getElementById('buffSummaryContainer');
+
+  const content =
+    document.getElementById('buffSummaryContent');
+
+  const icon =
+    document.getElementById('buffToggleIcon');
+
+  if (!container || !content) {
+    return;
+  }
+
+
+  // ----------------------------------------
+  // ヘッダー部分を取得
+  // contentの直前にある要素をヘッダーとして使用
+  // ----------------------------------------
+
+  const header =
+    content.previousElementSibling;
+
+  if (!header) {
+    return;
+  }
+
+
+  // ----------------------------------------
+  // クリック処理
+  // ----------------------------------------
+
+  header.addEventListener(
+    'click',
+    (e) => {
+
+      e.stopPropagation();
+
+
+      const isOpen =
+        content.style.display !== 'none';
+
+
+      if (isOpen) {
+
+        // 閉じる
+        content.style.display = 'none';
+
+        if (icon) {
+          icon.textContent = '▼';
+        }
+
+      } else {
+
+        // 開く
+        content.style.display = 'block';
+
+        if (icon) {
+          icon.textContent = '▲';
+        }
+
+      }
+
+    }
+  );
+}
 // ========================================
 // 初期化
 // ========================================
