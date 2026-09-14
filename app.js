@@ -23,147 +23,291 @@ const MAX_LEVEL = 7;
 
 // ========================================
 // 発動効果一覧（Buff Summary）の集計・更新
+// 同じ効果名を統合・1P/2Pも統合
 // ========================================
 
-/**
- * 盤面上のモンスターから発動中の効果を集計し、#buffSummaryContainer 内に描画します
- */
 function updateBuffSummary() {
-  const container = document.getElementById('buffSummaryContainer');
-  const content = document.getElementById('buffSummaryContent');
+
+  const container =
+    document.getElementById('buffSummaryContainer');
+
+  const content =
+    document.getElementById('buffSummaryContent');
+
   if (!container || !content) return;
 
-  const cells = document.querySelectorAll('#mainGrid .cell');
-  const playerEffects = {
-    '1P': [],
-    '2P': []
-  };
+
+  const cells =
+    document.querySelectorAll('#mainGrid .cell');
+
+
+  // ----------------------------------------
+  // 効果を「効果名」をキーにしてまとめる
+  // ----------------------------------------
+
+  const effectMap = new Map();
+
 
   let totalMonsterCount = 0;
 
+
   cells.forEach(cell => {
-    const monsterEl = getCellMonsterElement(cell);
+
+    const monsterEl =
+      getCellMonsterElement(cell);
+
     if (!monsterEl) return;
 
+
     totalMonsterCount++;
-    const species = monsterEl.dataset.species;
-    const tierNum = Number(monsterEl.dataset.tier) || 1;
-    const player = monsterEl.dataset.player || '1P';
 
-    if (!species || typeof speciesEffectsMaster === 'undefined') return;
 
-    const master = speciesEffectsMaster[species];
+    const species =
+      monsterEl.dataset.species;
+
+    const tierNum =
+      Number(monsterEl.dataset.tier) || 1;
+
+    const player =
+      monsterEl.dataset.player || '1P';
+
+
+    if (
+      !species ||
+      typeof speciesEffectsMaster === 'undefined'
+    ) {
+      return;
+    }
+
+
+    const master =
+      speciesEffectsMaster[species];
+
     if (!master) return;
 
-    // 基本効果
-    if (master.baseEffects && Array.isArray(master.baseEffects)) {
-      master.baseEffects.forEach(eff => {
-        playerEffects[player].push({
+
+    // --------------------------------------
+    // 効果を登録する関数
+    // --------------------------------------
+
+    const addEffect = (eff) => {
+
+      if (!eff || !eff.text) return;
+
+
+      // 効果名として text を使用
+      const effectName =
+        String(eff.text).trim();
+
+
+      if (!effectName) return;
+
+
+      if (!effectMap.has(effectName)) {
+
+        effectMap.set(
+          effectName,
+          {
+            text: effectName,
+
+            type:
+              eff.type || 'other',
+
+            sources: []
+          }
+        );
+
+      }
+
+
+      const effect =
+        effectMap.get(effectName);
+
+
+      // ------------------------------------
+      // 同じタタ・同じPの重複登録を防止
+      // ------------------------------------
+
+      const alreadyExists =
+        effect.sources.some(source =>
+          source.species === species &&
+          source.player === player
+        );
+
+
+      if (!alreadyExists) {
+
+        effect.sources.push({
           species: species,
           tier: tierNum,
-          ...eff
+          player: player
         });
+
+      }
+
+    };
+
+
+    // --------------------------------------
+    // 基本効果
+    // --------------------------------------
+
+    if (
+      master.baseEffects &&
+      Array.isArray(master.baseEffects)
+    ) {
+
+      master.baseEffects.forEach(eff => {
+
+        addEffect(eff);
+
       });
+
     }
 
+
+    // --------------------------------------
     // Tier解放効果
+    // --------------------------------------
+
     if (master.tierEffects) {
-      Object.keys(master.tierEffects).forEach(tierKey => {
-        if (tierNum >= Number(tierKey)) {
-          master.tierEffects[tierKey].forEach(eff => {
-            playerEffects[player].push({
-              species: species,
-              tier: tierNum,
-              ...eff
+
+      Object.keys(
+        master.tierEffects
+      ).forEach(tierKey => {
+
+        if (
+          tierNum >= Number(tierKey)
+        ) {
+
+          master.tierEffects[tierKey]
+            .forEach(eff => {
+
+              addEffect(eff);
+
             });
-          });
+
         }
+
       });
+
     }
+
   });
 
-  // 盤面にモンスターが1体もいない場合は非表示
+
+  // ----------------------------------------
+  // モンスターがいない場合
+  // ----------------------------------------
+
   if (totalMonsterCount === 0) {
-    container.style.display = 'none';
+
+    container.style.display =
+      'none';
+
     return;
+
   }
 
-  container.style.display = 'block';
 
-  // 効果テキストごとに集約するヘルパー関数
-  const aggregateEffects = (list) => {
-    const map = new Map();
-    list.forEach(item => {
-      // 同じ効果テキスト（typeとtext）のものをまとめる
-      const key = `${item.type}_${item.text}`;
-      if (!map.has(key)) {
-        map.set(key, {
-          ...item,
-          count: 1,
-          speciesList: [item.species]
-        });
-      } else {
-        const entry = map.get(key);
-        entry.count++;
-        if (!entry.speciesList.includes(item.species)) {
-          entry.speciesList.push(item.species);
-        }
-      }
-    });
-    return Array.from(map.values());
-  };
+  container.style.display =
+    'block';
 
-  // HTMLの組み立て
+
+  // ----------------------------------------
+  // HTML生成
+  // ----------------------------------------
+
   let html = '';
 
-  if (currentGridType === '6') {
-    // ゾンビラッシュ（1P / 2P 別に表示）
-    ['1P', '2P'].forEach(p => {
-      const rawList = playerEffects[p];
-      const aggregatedList = aggregateEffects(rawList);
 
-      html += `<div class="buff-player-section" style="margin-bottom: 8px;">`;
-      html += `<div style="font-weight: bold; font-size: 11px; color: ${p === '1P' ? '#60a5fa' : '#f87171'}; margin-bottom: 4px;">【${p} 発動効果】</div>`;
+  if (effectMap.size === 0) {
 
-      if (aggregatedList.length === 0) {
-        html += `<div style="font-size: 11px; color: #64748b; padding-left: 8px;">発動中の効果なし</div>`;
-      } else {
-        html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
-        aggregatedList.forEach(item => {
-          const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
-          const countText = item.count > 1 ? ` <span style="font-weight: bold; color: #facc15;">×${item.count}</span>` : '';
-          html += `<li style="margin-bottom: 2px;">
-            <span style="color: #94a3b8;">[${item.speciesList.join(', ')}]</span>
-            <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>${countText}
-          </li>`;
-        });
-        html += `</ul>`;
-      }
-      html += `</div>`;
-    });
+    html += `
+      <div style="
+        font-size: 11px;
+        color: #64748b;
+      ">
+        発動中の効果なし
+      </div>
+    `;
+
   } else {
-    // ノーマル・道場（一括表示）
-    const rawList = playerEffects['1P'];
-    const aggregatedList = aggregateEffects(rawList);
-    html += `<div class="buff-player-section">`;
-    if (aggregatedList.length === 0) {
-      html += `<div style="font-size: 11px; color: #64748b;">発動中の効果なし</div>`;
-    } else {
-      html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
-      aggregatedList.forEach(item => {
-        const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
-        const countText = item.count > 1 ? ` <span style="font-weight: bold; color: #facc15;">×${item.count}</span>` : '';
-        html += `<li style="margin-bottom: 2px;">
-          <span style="color: #94a3b8;">[${item.speciesList.join(', ')}]</span>
-          <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>${countText}
-        </li>`;
-      });
-      html += `</ul>`;
-    }
-    html += `</div>`;
+
+    html += `
+      <ul style="
+        margin: 0;
+        padding-left: 18px;
+        font-size: 11px;
+        color: #cbd5e1;
+      ">
+    `;
+
+
+    effectMap.forEach(effect => {
+
+      const badgeColor =
+        effect.type === 'buff'
+          ? '#22c55e'
+          : effect.type === 'debuff'
+            ? '#ef4444'
+            : '#3b82f6';
+
+
+      // ------------------------------------
+      // 発動元をまとめる
+      // ------------------------------------
+
+      const sourceText =
+        effect.sources
+          .map(source => {
+
+            return `
+              <span style="
+                color: #94a3b8;
+                font-size: 10px;
+              ">
+                [${source.species}]
+              </span>
+            `;
+
+          })
+          .join(' ');
+
+
+      html += `
+        <li style="
+          margin-bottom: 4px;
+        ">
+
+          <span style="
+            color: ${badgeColor};
+            font-weight: 600;
+          ">
+            ${effect.text}
+          </span>
+
+          <span style="
+            margin-left: 5px;
+          ">
+            ${sourceText}
+          </span>
+
+        </li>
+      `;
+
+    });
+
+
+    html += `
+      </ul>
+    `;
+
   }
 
-  content.innerHTML = html;
+
+  content.innerHTML =
+    html;
 }
 
 // ========================================
