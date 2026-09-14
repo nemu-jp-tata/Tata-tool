@@ -1,20 +1,21 @@
-// monsterData.js
+// speciesData.js
 
 /**
  * 種族ごとの発動効果（バフ・デバフ）マスタデータ
  * 
  * - baseEffects: その種族のモンスターが持つ基本効果
- * - tierEffects: 特定のTier以上で追加開放される効果（例: T3で解放されるバフ）
+ * - tierEffects: 特定のTier以上で追加開放される効果（例: T2やT3で解放される効果）
  */
 const speciesEffectsMaster = {
   "チーシェル種": {
     baseEffects: [
       { type: "debuff", text: "減速" }
-    ], 
+    ]
   },
   "カピラス種": {
     baseEffects: [
-      { type: "buff", text: "「ミカン-ダメージ増加」「ミカン-攻撃力増加」" }
+      { type: "buff", text: "ミカン-ダメージ増加" },
+      { type: "buff", text: "ミカン-攻撃力増加" }
     ],
     tierEffects: {
       2: [
@@ -24,8 +25,9 @@ const speciesEffectsMaster = {
   },
   "ネコオリ種": {
     baseEffects: [
-      { type: "debuff", text: "「減速」「凍結」" }
-    ],
+      { type: "debuff", text: "減速" },
+      { type: "debuff", text: "凍結" }
+    ]
   },
   "ナミアシカ種": {
     baseEffects: [
@@ -39,7 +41,9 @@ const speciesEffectsMaster = {
   },
   "ウミミ種": {
     baseEffects: [
-      { type: "debuff", text: "「減速」「睡眠」「超被ダメージ増加」" }
+      { type: "debuff", text: "減速" },
+      { type: "debuff", text: "睡眠" },
+      { type: "debuff", text: "超被ダメージ増加" }
     ],
     tierEffects: {
       2: [
@@ -49,17 +53,21 @@ const speciesEffectsMaster = {
   },
   "ツヨカニ種": {
     baseEffects: [
-      { type: "なし", text: "" }
+      { type: "debuff", text: "ノックバック" }
     ],
     tierEffects: {
       2: [
         { type: "debuff", text: "裂傷" }
       ],
-      tierEffects: {
       3: [
         { type: "buff", text: "ツヨカニのみ攻撃力増加" }
       ]
     }
+  },
+  "ポタカゲ種": {
+    baseEffects: [
+      { type: "debuff", text: "減速" }
+    ]
   },
   "ヒバイヌ種": {
     baseEffects: [
@@ -81,5 +89,4 @@ const speciesEffectsMaster = {
       ]
     }
   }
-  // ※他の種族も同様に baseEffects / tierEffects(3など) を追加して設定可能です
 };
