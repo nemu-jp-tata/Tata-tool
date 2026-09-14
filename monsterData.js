@@ -69,23 +69,92 @@ const speciesEffectsMaster = {
       { type: "debuff", text: "減速" }
     ]
   },
-  "ヒバイヌ種": {
+  "ネムクラゲ種": {
     baseEffects: [
-      { type: "debuff", text: "対面敵の防御力 -10%" }
+      { type: "heal", text: "回復" },
+      { type: "debuff", text: "スタン" }
+    ]
+  },
+  "シズクジ種": {
+    baseEffects: [
+      { type: "debuff", text: "減速" },
+      { type: "debuff", text: "睡眠" }
+    ]
+  },
+  "スケダコ種": {
+    baseEffects: [
+      { type: "debuff", text: "視界妨害" },
+      { type: "buff", text: "被ダメージ減少" }
+    ]
+  },
+  "ホネギョ種": {
+    baseEffects: [
+      { type: "debuff", text: "減速" },
+      { type: "debuff", text: "スタン" },
+      { type: "debuff", text: "潮流-被ダメージ増加" }
     ],
     tierEffects: {
+      2: [
+        { type: "buff", text: "潮流-被ダメージ減少" }
+      ]
+    }
+  },
+  "パクマ種": {
+    baseEffects: [
+      { type: "buff", text: "コーラ-ダメージ増加" },
+      { type: "buff", text: "コーラ-攻防増加" }
+    ]
+  },
+  "トスリス種": {
+    baseEffects: [
+      { type: "debuff", text: "スタン" }
+    ]
+  },
+  "スズメラ種": {
+    baseEffects: [
+      { type: "debuff", text: "燃焼" }
+    ]
+  },
+  "ヒバイヌ種": {
+    baseEffects: [],
+    tierEffects: {
       3: [
-        { type: "buff", text: "【T3以上】炎属性の攻撃力 +15%" }
+        { type: "debuff", text: "ダメージ減少" }
+      ]
+    }
+  },
+  "ヒモリ種": {
+    baseEffects: [
+      { type: "debuff", text: "燃焼" }
+    ]
+  },
+  "ヒノムシ種": {
+    baseEffects: [
+      { type: "heal", text: "回復" },
+      { type: "debuff", text: "火の蝶-被ダメージ増加" },
+      { type: "buff", text: "蝶の翅-全ステータス増加" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "buff", text: "潮流-被ダメージ減少" }
+      ]
+    }
+  },
+  "ヒエビ種": {
+    baseEffects: [],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "燃焼" }
       ]
     }
   },
   "コマキリ種": {
     baseEffects: [
-      { type: "buff", text: "攻撃速度 +5%" }
+      { type: "buff", text: "攻撃" }
     ],
     tierEffects: {
       3: [
-        { type: "buff", text: "【T3以上】与えるダメージ +10%" }
+        { type: "buff", text: "" }
       ]
     }
   }
