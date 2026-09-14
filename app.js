@@ -90,25 +90,51 @@ function updateBuffSummary() {
 
   container.style.display = 'block';
 
+  // 効果テキストごとに集約するヘルパー関数
+  const aggregateEffects = (list) => {
+    const map = new Map();
+    list.forEach(item => {
+      // 同じ効果テキスト（typeとtext）のものをまとめる
+      const key = `${item.type}_${item.text}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          ...item,
+          count: 1,
+          speciesList: [item.species]
+        });
+      } else {
+        const entry = map.get(key);
+        entry.count++;
+        if (!entry.speciesList.includes(item.species)) {
+          entry.speciesList.push(item.species);
+        }
+      }
+    });
+    return Array.from(map.values());
+  };
+
   // HTMLの組み立て
   let html = '';
 
   if (currentGridType === '6') {
     // ゾンビラッシュ（1P / 2P 別に表示）
     ['1P', '2P'].forEach(p => {
-      const list = playerEffects[p];
+      const rawList = playerEffects[p];
+      const aggregatedList = aggregateEffects(rawList);
+
       html += `<div class="buff-player-section" style="margin-bottom: 8px;">`;
       html += `<div style="font-weight: bold; font-size: 11px; color: ${p === '1P' ? '#60a5fa' : '#f87171'}; margin-bottom: 4px;">【${p} 発動効果】</div>`;
 
-      if (list.length === 0) {
+      if (aggregatedList.length === 0) {
         html += `<div style="font-size: 11px; color: #64748b; padding-left: 8px;">発動中の効果なし</div>`;
       } else {
         html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
-        list.forEach(item => {
+        aggregatedList.forEach(item => {
           const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
+          const countText = item.count > 1 ? ` <span style="font-weight: bold; color: #facc15;">×${item.count}</span>` : '';
           html += `<li style="margin-bottom: 2px;">
-            <span style="color: #94a3b8;">[${item.species}]</span>
-            <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>
+            <span style="color: #94a3b8;">[${item.speciesList.join(', ')}]</span>
+            <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>${countText}
           </li>`;
         });
         html += `</ul>`;
@@ -117,17 +143,19 @@ function updateBuffSummary() {
     });
   } else {
     // ノーマル・道場（一括表示）
-    const list = playerEffects['1P'];
+    const rawList = playerEffects['1P'];
+    const aggregatedList = aggregateEffects(rawList);
     html += `<div class="buff-player-section">`;
-    if (list.length === 0) {
+    if (aggregatedList.length === 0) {
       html += `<div style="font-size: 11px; color: #64748b;">発動中の効果なし</div>`;
     } else {
       html += `<ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">`;
-      list.forEach(item => {
+      aggregatedList.forEach(item => {
         const badgeColor = item.type === 'buff' ? '#22c55e' : item.type === 'debuff' ? '#ef4444' : '#3b82f6';
+        const countText = item.count > 1 ? ` <span style="font-weight: bold; color: #facc15;">×${item.count}</span>` : '';
         html += `<li style="margin-bottom: 2px;">
-          <span style="color: #94a3b8;">[${item.species}]</span>
-          <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>
+          <span style="color: #94a3b8;">[${item.speciesList.join(', ')}]</span>
+          <span style="color: ${badgeColor}; font-weight: 500;">${item.text}</span>${countText}
         </li>`;
       });
       html += `</ul>`;
@@ -137,25 +165,6 @@ function updateBuffSummary() {
 
   content.innerHTML = html;
 }
-
-// ========================================
-// 発動効果コンテナの折りたたみ初期化
-// ========================================
-function initBuffSummaryToggle() {
-  const header = document.getElementById('buffSummaryHeader');
-  const content = document.getElementById('buffSummaryContent');
-  const icon = document.getElementById('buffToggleIcon');
-
-  if (header && content && icon) {
-    header.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = content.style.display === 'none';
-      content.style.display = isHidden ? 'block' : 'none';
-      icon.textContent = isHidden ? '▲' : '▼';
-    });
-  }
-}
-
 
 // ========================================
 // チップセットエリアの表示・非表示
