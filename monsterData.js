@@ -197,12 +197,121 @@ const speciesEffectsMaster = {
       { type: "debuff", text: "スタン" }
     ]
   },
-  "フタのみバード種": {
+  "フタバード種": {
     baseEffects: [
       { type: "heal", text: "回復" }
     ]
   },
+  "フルッグ種": {
+    baseEffects: [],
+    tierEffects: {
+      3: [
+        { type: "debuff", text: "減速" }
+      ]
+    }
+  },
   "コマキリ種": {
+    baseEffects: [
+      { type: "heal", text: "自己回復" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "debuff", text: "被ダメージ増加" }
+      ]
+    }
+  },
+  "グリンビィ種": {
+    baseEffects: [
+      { type: "buff", text: "無敵" },
+      { type: "buff", text: "ガス-ダメージ増加" },
+      { type: "buff", text: "ガス-攻撃力増加" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "被ダメージ増加" }
+      ],
+      3: [
+        { type: "debuff", text: "ノックバック" }
+      ]
+    }
+  },
+  "コパンダ種": {
+    baseEffects: [
+      { type: "debuff", text: "減速" },
+      { type: "buff", text: "酒-攻撃力増加＆攻撃速度増加" },
+      { type: "buff", text: "ダメージ増加" },
+      { type: "buff", text: "被ダメージ減少" }
+    ]
+  },
+  "ヒマワリン種": {
+    baseEffects: [
+      { type: "heal", text: "回復" },
+      { type: "buff", text: "陽だまり-攻撃力増加" },
+      { type: "debuff", text: "スタン" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "buff", text: "陽だまり-攻防増加" }
+      ]
+  },
+    "フクログモ種": {
+    baseEffects: [
+      { type: "buff", text: "雫シールド" },
+      { type: "debuff", text: "クモの巣-束縛" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "スタン" }
+      ]
+  },
+      "サボール種": {
+    baseEffects: [
+      { type: "debuff", text: "トゲ刺し" }
+    ]
+  },
+      "マルッシュ種": {
+    baseEffects: [
+      { type: "buff", text: "胞子-攻撃速度増加" },
+      { type: "debuff", text: "被ダメージ増加" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "debuff", text: "胞子-被ダメージ増加" },
+        { type: "buff", text: "胞子-被ダメージ減少" }
+      ]
+  },
+    "ベロパカ種": {
+    baseEffects: [
+      { type: "buff", text: "ダメージ増加" },
+      { type: "debuff", text: "強力減速エリア" },
+      { type: "debuff", text: "減速" }
+    ],
+    tierEffects: {
+      2: [
+        { type: "debuff", text: "束縛" }
+      ],
+      tierEffects: {
+      3: [
+        { type: "debuff", text: "減速エリア" }
+      ]
+  },
+      "フリコー種": {
+    baseEffects: [
+      { type: "heal", text: "回復" },
+      { type: "debuff", text: "スロウクロック" }
+    ]
+  },
+      "ヤミノメ種": {
+    baseEffects: [
+      { type: "debuff", text: "毒" },
+      { type: "debuff", text: "寄生毒" }
+    ],
+    tierEffects: {
+      3: [
+        { type: "debuff", text: "毒エリア" }
+      ]
+  },
+  "コマリ種": {
     baseEffects: [
       { type: "buff", text: "攻撃" }
     ],
