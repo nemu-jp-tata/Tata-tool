@@ -1185,64 +1185,115 @@ document.getElementById('clearBtn')?.addEventListener('click', (e) => {
   updateBuffSummary();
 });
 // ========================================
-// 画像保存（修正版）
+// 画像保存（発動効果の表示切替対応）
 // ========================================
 document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
-  e.stopPropagation();
+  e.preventDefault();
+
   const boardFrame = document.getElementById('boardFrame');
-  const titleInput = document.getElementById('appTitleInput');
+  const appTitleInput = document.getElementById('appTitleInput');
   const playerSwitchContainer = document.getElementById('playerSwitchContainer');
+
   if (!boardFrame) {
     alert('盤面が見つかりません。');
     return;
   }
-  let titleText = 'タタ配置ツール';
-  if (titleInput && titleInput.value.trim() !== '') {
-    titleText = titleInput.value.trim();
+
+  const titleText = appTitleInput?.value?.trim() || 'タタ配置ツール';
+
+  // ----------------------------------------
+  // 発動効果を画像に含めるか
+  // ゾンビラッシュのみ確認
+  // ----------------------------------------
+  let includeBuffSummary = true;
+
+  if (currentGridType === '6') {
+    includeBuffSummary = confirm(
+      '発動効果を画像に含めますか？\n\n「OK」→ 含める\n「キャンセル」→ 含めない'
+    );
   }
-  const originalPlayerSwitchDisplay = playerSwitchContainer ? playerSwitchContainer.style.display : '';
+
+  // プレイヤー切り替えを一時的に非表示
   if (playerSwitchContainer) {
-    playerSwitchContainer.style.display = 'none';
+    playerSwitchContainer.style.visibility = 'hidden';
   }
+
+  // ----------------------------------------
+  // キャプチャ用コンテナ作成
+  // ----------------------------------------
   const captureContainer = document.createElement('div');
   captureContainer.style.position = 'absolute';
-  captureContainer.style.top = '-9999px';
-  captureContainer.style.left = '-9999px';
+  captureContainer.style.left = '-99999px';
+  captureContainer.style.top = '0';
   captureContainer.style.width = `${boardFrame.offsetWidth}px`;
-  captureContainer.style.background = '#181a29';
-  captureContainer.style.padding = '16px';
-  captureContainer.style.boxSizing = 'border-box';
-  captureContainer.style.borderRadius = '12px';
-  const titleEl = document.createElement('div');
-  titleEl.textContent = titleText;
-  titleEl.style.fontSize = '20px';
-  titleEl.style.fontWeight = 'bold';
-  titleEl.style.color = '#f8fafc';
-  titleEl.style.textAlign = 'center';
-  titleEl.style.marginBottom = '12px';
-  titleEl.style.fontFamily = 'sans-serif';
+  captureContainer.style.backgroundColor = '#181a29';
+  captureContainer.style.zIndex = '-1';
+
+  // 盤面を複製
   const boardClone = boardFrame.cloneNode(true);
+
   // ----------------------------------------
-  // 2. アコーディオン（発動効果）強制展開処理
+  // 発動効果の画像表示設定
   // ----------------------------------------
-  const buffSummaryContent = boardClone.querySelector('#buffSummaryContent');
-  const buffToggleIcon = boardClone.querySelector('#buffToggleIcon');
-  if (buffSummaryContent) {
-    buffSummaryContent.style.setProperty('display', 'block', 'important');
-    buffSummaryContent.style.height = 'auto';
-    buffSummaryContent.style.visibility = 'visible';
-    buffSummaryContent.style.opacity = '1';
+  const buffSummaryContainer =
+    boardClone.querySelector('#buffSummaryContainer');
+
+  const buffSummaryContent =
+    boardClone.querySelector('#buffSummaryContent');
+
+  const buffToggleIcon =
+    boardClone.querySelector('#buffToggleIcon');
+
+  if (currentGridType === '6') {
+    if (includeBuffSummary) {
+      // 発動効果を画像に含める
+      if (buffSummaryContainer) {
+        buffSummaryContainer.style.setProperty(
+          'display',
+          'block',
+          'important'
+        );
+      }
+
+      if (buffSummaryContent) {
+        buffSummaryContent.style.setProperty(
+          'display',
+          'block',
+          'important'
+        );
+        buffSummaryContent.style.height = 'auto';
+        buffSummaryContent.style.visibility = 'visible';
+        buffSummaryContent.style.opacity = '1';
+      }
+
+      if (buffToggleIcon) {
+        buffToggleIcon.textContent = '▲';
+      }
+    } else {
+      // 発動効果を画像に含めない
+      if (buffSummaryContainer) {
+        buffSummaryContainer.style.setProperty(
+          'display',
+          'none',
+          'important'
+        );
+      }
+    }
   }
-  if (buffToggleIcon) {
-    buffToggleIcon.textContent = '▲';
-  }
+
+  // ----------------------------------------
+  // 盤面セルの画像表示調整
+  // ----------------------------------------
   const cells = boardClone.querySelectorAll('.cell');
+
   cells.forEach(cell => {
     cell.style.aspectRatio = '1 / 1';
     cell.style.display = 'flex';
     cell.style.alignItems = 'center';
     cell.style.justifyContent = 'center';
+
     const img = cell.querySelector('.placed-monster-image');
+
     if (img) {
       img.style.maxWidth = '100%';
       img.style.maxHeight = '100%';
@@ -1253,37 +1304,58 @@ document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
       img.style.margin = 'auto';
     }
   });
-  captureContainer.appendChild(titleEl);
+
   captureContainer.appendChild(boardClone);
   document.body.appendChild(captureContainer);
+
   // DOMレンダリング確定待ち
-  await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
+  await new Promise(resolve =>
+    requestAnimationFrame(() => setTimeout(resolve, 50))
+  );
+
   try {
+    // ----------------------------------------
+    // html2canvasで画像化
+    // ----------------------------------------
     const canvas = await html2canvas(captureContainer, {
       backgroundColor: '#181a29',
       scale: 3,
       useCORS: true,
       logging: false
     });
-    document.body.removeChild(captureContainer);
+
+    // ----------------------------------------
+    // 後始末
+    // ----------------------------------------
+    captureContainer.remove();
+
     if (playerSwitchContainer) {
-      playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+      playerSwitchContainer.style.visibility = '';
     }
+
+    // ----------------------------------------
+    // WebPとして保存
+    // ----------------------------------------
     const imageURL = canvas.toDataURL('image/webp', 0.98);
+
     const downloadLink = document.createElement('a');
     downloadLink.href = imageURL;
     downloadLink.download = `${titleText}-${currentGridType}.webp`;
+
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+
   } catch (err) {
     console.error('画像保存エラー:', err);
     alert('画像の保存に失敗しました。');
+
     if (playerSwitchContainer) {
-      playerSwitchContainer.style.display = originalPlayerSwitchDisplay;
+      playerSwitchContainer.style.visibility = '';
     }
+
     if (document.body.contains(captureContainer)) {
-      document.body.removeChild(captureContainer);
+      captureContainer.remove();
     }
   }
 });
