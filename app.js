@@ -121,22 +121,22 @@ function updateBuffSummary() {
       <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #cbd5e1;">
     `;
     const effectOrder = {
-  buff: 1,
-  debuff: 2,
-  heal: 3
-};
-const sortedEffects = Array.from(effectMap.values()).sort((a, b) => {
-  return (effectOrder[a.type] || 99) - (effectOrder[b.type] || 99);
-});
-sortedEffects.forEach(effect => {
-  const badgeColor =
-    effect.type === 'buff'
-      ? '#ef4444'
-      : effect.type === 'debuff'
-        ? '#3b82f6'
-        : effect.type === 'heal'
-          ? '#22c55e'
-          : '#94a3b8';
+      buff: 1,
+      debuff: 2,
+      heal: 3
+    };
+    const sortedEffects = Array.from(effectMap.values()).sort((a, b) => {
+      return (effectOrder[a.type] || 99) - (effectOrder[b.type] || 99);
+    });
+    sortedEffects.forEach(effect => {
+      const badgeColor =
+        effect.type === 'buff'
+          ? '#ef4444'
+          : effect.type === 'debuff'
+            ? '#3b82f6'
+            : effect.type === 'heal'
+              ? '#22c55e'
+              : '#94a3b8';
       // ------------------------------------
       // 発動元をまとめる
       // ------------------------------------
@@ -373,21 +373,44 @@ const selectedNameEl = document.getElementById('selectedName');
 const boardNotice = document.getElementById('boardNotice');
 const boardFrame = document.getElementById('boardFrame');
 const monsterGrid = document.getElementById('monsterGrid');
-let rafId = null;
-let pendingX = 0;
-let pendingY = 0;
 // ========================================
-// ドラッグゴースト
+// ドラッグ処理用変数
 // ========================================
-function updateGhostPosition(x, y) {
-  pendingX = x;
-  pendingY = y;
-  if (!rafId) {
-    rafId = requestAnimationFrame(() => {
-      dragGhost.style.transform = `translate3d(${pendingX - 25}px, ${pendingY - 25}px, 0)`;
-      rafId = null;
-    });
+let dragRafId = null;
+let dragPendingX = 0;
+let dragPendingY = 0;
+let dragUpdatePending = false;
+// ========================================
+// ドラッグ中のゴースト＋ホバー処理
+// 1フレームに1回だけ実行
+// ========================================
+function scheduleDragUpdate(x, y) {
+  dragPendingX = x;
+  dragPendingY = y;
+  if (dragUpdatePending) {
+    return;
   }
+  dragUpdatePending = true;
+  dragRafId = requestAnimationFrame(() => {
+    dragUpdatePending = false;
+    dragRafId = null;
+    const currentX = dragPendingX;
+    const currentY = dragPendingY;
+    if (dragGhost) {
+      dragGhost.style.transform = `translate3d(${currentX - 25}px, ${currentY - 25}px, 0)`;
+    }
+    updateHoverHighlight(currentX, currentY);
+  });
+}
+// ========================================
+// ドラッグ処理キャンセル
+// ========================================
+function cancelDragUpdate() {
+  if (dragRafId !== null) {
+    cancelAnimationFrame(dragRafId);
+    dragRafId = null;
+  }
+  dragUpdatePending = false;
 }
 // ========================================
 // ドラッグ中のセル強調
@@ -398,12 +421,15 @@ function updateHoverHighlight(x, y) {
   const targetCell = dropTarget ? dropTarget.closest('.cell, .board-slot') : null;
   if (targetCell && mainGrid.contains(targetCell)) {
     if (currentHoveredCell !== targetCell) {
-      clearHoverHighlight();
+      if (currentHoveredCell) {
+        currentHoveredCell.classList.remove('drag-over');
+      }
       targetCell.classList.add('drag-over');
       currentHoveredCell = targetCell;
     }
-  } else {
-    clearHoverHighlight();
+  } else if (currentHoveredCell) {
+    currentHoveredCell.classList.remove('drag-over');
+    currentHoveredCell = null;
   }
 }
 function clearHoverHighlight() {
@@ -411,6 +437,13 @@ function clearHoverHighlight() {
     currentHoveredCell.classList.remove('drag-over');
     currentHoveredCell = null;
   }
+  cancelDragUpdate();
+}
+// ========================================
+// 互換用ゴースト位置更新
+// ========================================
+function updateGhostPosition(x, y) {
+  scheduleDragUpdate(x, y);
 }
 // ========================================
 // セル内の「キャラクター本体」を取得
@@ -605,7 +638,7 @@ function fillCellWithMonster(cell, data) {
           dragGhost.style.display = 'block';
           dragGhost.style.left = '0px';
           dragGhost.style.top = '0px';
-          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+          scheduleDragUpdate(moveEvent.clientX, moveEvent.clientY);
           cell.innerHTML = '';
           cell.className = 'cell';
         }
@@ -614,14 +647,14 @@ function fillCellWithMonster(cell, data) {
         if (moveEvent.cancelable) {
           moveEvent.preventDefault();
         }
-        updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-        updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
+        scheduleDragUpdate(moveEvent.clientX, moveEvent.clientY);
       }
     }
     function onUp(upEvent) {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
+      cancelDragUpdate();
       try {
         targetEl.releasePointerCapture(pointerId);
       } catch (err) {}
@@ -992,21 +1025,21 @@ function renderMonsters() {
             dragGhost.style.display = 'block';
             dragGhost.style.left = '0px';
             dragGhost.style.top = '0px';
-            updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
+            scheduleDragUpdate(moveEvent.clientX, moveEvent.clientY);
           }
         }
         if (isDragging) {
           if (moveEvent.cancelable) {
             moveEvent.preventDefault();
           }
-          updateGhostPosition(moveEvent.clientX, moveEvent.clientY);
-          updateHoverHighlight(moveEvent.clientX, moveEvent.clientY);
+          scheduleDragUpdate(moveEvent.clientX, moveEvent.clientY);
         }
       }
       function onUp(upEvent) {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         window.removeEventListener('pointercancel', onUp);
+        cancelDragUpdate();
         try {
           item.releasePointerCapture(pointerId);
         } catch (err) {}
@@ -1389,7 +1422,6 @@ document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
     }
   }
 });
-
 // ========================================
 // 1P / 2P切り替え
 // ========================================
