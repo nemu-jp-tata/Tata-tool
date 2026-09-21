@@ -16,7 +16,7 @@ let selectedChipsMap = {
 // ゾンビラッシュのみ使用
 // ----------------------------------------
 let levelMode = false;
-const MAX_LEVEL = 7;
+const MAX_LEVEL = 8;
 // ========================================
 // 発動効果一覧（Buff Summary）の集計・更新
 // ゾンビラッシュのみ表示
