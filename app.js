@@ -1185,7 +1185,7 @@ document.getElementById('clearBtn')?.addEventListener('click', (e) => {
   updateBuffSummary();
 });
 // ========================================
-// 画像保存（発動効果の表示切替対応）
+// 画像保存（タイトル・発動効果の表示切替対応）
 // ========================================
 document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
   e.preventDefault();
@@ -1228,8 +1228,31 @@ document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
   captureContainer.style.width = `${boardFrame.offsetWidth}px`;
   captureContainer.style.backgroundColor = '#181a29';
   captureContainer.style.zIndex = '-1';
+  captureContainer.style.boxSizing = 'border-box';
 
+  // ----------------------------------------
+  // 画像保存用タイトル作成
+  // 画面上の入力欄は変更せず、
+  // 保存画像の中にだけタイトルを追加する
+  // ----------------------------------------
+  const captureTitle = document.createElement('div');
+  captureTitle.textContent = titleText;
+  captureTitle.style.width = '100%';
+  captureTitle.style.backgroundColor = '#181a29';
+  captureTitle.style.color = '#f8fafc';
+  captureTitle.style.fontSize = '18px';
+  captureTitle.style.fontWeight = 'bold';
+  captureTitle.style.lineHeight = '1.4';
+  captureTitle.style.padding = '8px 12px';
+  captureTitle.style.textAlign = 'center';
+  captureTitle.style.boxSizing = 'border-box';
+  captureTitle.style.borderRadius = '8px 8px 0 0';
+  captureTitle.style.overflow = 'hidden';
+  captureTitle.style.wordBreak = 'break-word';
+
+  // ----------------------------------------
   // 盤面を複製
+  // ----------------------------------------
   const boardClone = boardFrame.cloneNode(true);
 
   // ----------------------------------------
@@ -1305,10 +1328,17 @@ document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
     }
   });
 
+  // ----------------------------------------
+  // タイトル → 盤面の順番で追加
+  // ----------------------------------------
+  captureContainer.appendChild(captureTitle);
   captureContainer.appendChild(boardClone);
+
   document.body.appendChild(captureContainer);
 
+  // ----------------------------------------
   // DOMレンダリング確定待ち
+  // ----------------------------------------
   await new Promise(resolve =>
     requestAnimationFrame(() => setTimeout(resolve, 50))
   );
@@ -1359,6 +1389,7 @@ document.getElementById('saveBtn')?.addEventListener('click', async (e) => {
     }
   }
 });
+
 // ========================================
 // 1P / 2P切り替え
 // ========================================
