@@ -377,7 +377,7 @@ const monsterGrid = document.getElementById('monsterGrid');
 // ガオデン種 7回タップ機能
 // 再読み込みすると0回にリセット
 // ========================================
-let gaodenTapCount = 0;
+const gaodenTapCounts = new WeakMap();
 const GAODEN_TAP_MAX = 7;
 const GAODEN_SPECIES = 'ガオデン種';
 const GAODEN_ACCESSORY_SRC = 'アクセガオデン.webp';
@@ -396,16 +396,19 @@ function handleGaodenTap(monsterEl) {
     return;
   }
 
-  gaodenTapCount++;
+  let tapCount = gaodenTapCounts.get(monsterEl) || 0;
+  tapCount++;
 
-  if (gaodenTapCount >= GAODEN_TAP_MAX) {
+  if (tapCount >= GAODEN_TAP_MAX) {
     monsterEl.dataset.originalSrc =
       monsterEl.dataset.src || monsterEl.src;
 
     monsterEl.src = GAODEN_ACCESSORY_SRC;
     monsterEl.dataset.gaodenAccessory = '1';
 
-    gaodenTapCount = 0;
+    gaodenTapCounts.delete(monsterEl);
+  } else {
+    gaodenTapCounts.set(monsterEl, tapCount);
   }
 }
 // ========================================
