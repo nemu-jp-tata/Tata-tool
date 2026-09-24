@@ -30,6 +30,7 @@
       overflow: hidden;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .start-banner-container img {
       width: 100%;
       height: auto;
@@ -38,7 +39,7 @@
     }
 
     /* プログレスバー用スタイル */
-    .progress-wrapper { margin-bottom: 16px; display: none; } /* 初期画面では非表示 */
+    .progress-wrapper { margin-bottom: 16px; display: none; }
     .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
     .progress-container { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; }
     .progress-bar { height: 100%; width: 0%; background-color: #2563eb; transition: width 0.3s ease; }
@@ -287,7 +288,7 @@ function resetAll() {
   const defaultRadio = document.querySelector('input[name="progress"][value="t2"]');
   if (defaultRadio) defaultRadio.checked = true;
 
-  nextStep(0); // 最初（初期画面）に戻る
+  nextStep(0);
 }
 
 function notifyWikiHeight() {
@@ -335,15 +336,22 @@ window.addEventListener('DOMContentLoaded', () => {
       <img src="${IMAGE_BASE_URL}${encodeURIComponent(displayName)}.webp" alt="${displayName}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=${encodeURIComponent(displayName)}';">
       <div class="monster-name">${displayName}</div>
     `;
+
+    /*
+     * 修正：
+     * 「ヒノムシ」「プラビ」という種族名ではなく、
+     * 実際に画面に表示しているタタ名を保存する。
+     */
     item.addEventListener('click', () => {
-      if (selectedSubMonsters.has(name)) {
-        selectedSubMonsters.delete(name);
+      if (selectedSubMonsters.has(displayName)) {
+        selectedSubMonsters.delete(displayName);
         item.classList.remove('selected');
       } else {
-        selectedSubMonsters.add(name);
+        selectedSubMonsters.add(displayName);
         item.classList.add('selected');
       }
     });
+
     subGrid.appendChild(item);
   });
 
@@ -457,8 +465,18 @@ function checkTankProgress() {
 }
 
 function checkSubProgress() {
-  const hasHinomushi = selectedSubMonsters.has('ヒノムシ');
-  const hasPurabi = selectedSubMonsters.has('プラビ');
+  /*
+   * 修正：
+   * selectedSubMonstersには実際のタタ名が入っているので、
+   * ここでは「名前」で判定する。
+   */
+  const hasHinomushi = Array.from(selectedSubMonsters).some(name =>
+    name.includes('ヒノムシ')
+  );
+
+  const hasPurabi = Array.from(selectedSubMonsters).some(name =>
+    name.includes('プラビ')
+  );
 
   if (hasHinomushi && hasPurabi) {
     nextStep('step-2-a-3');
@@ -570,15 +588,29 @@ function renderRadarChart(attrCounts, datasetLabel) {
 function diagnoseAttributeBalance() {
   lastStepBeforeResult = 'step-2-a-3';
 
-  const tankMonsters = rawMonstersData.filter(m => selectedTanks.has(m.name));
-  const subMonsters = rawMonstersData.filter(m => {
-    return Array.from(selectedSubMonsters).some(sName => m.name.includes(sName) || m.species.includes(sName));
-  });
-  const otherMonsters = rawMonstersData.filter(m => selectedOtherMonsters.has(m.name));
+  /*
+   * 修正：
+   * 各選択Setに入っている「実際のタタ名」だけを使う。
+   * 種族名からrawMonstersDataを検索して全進化形を拾う処理はしない。
+   */
+  const selectedNames = new Set([
+    ...selectedTanks,
+    ...selectedSubMonsters,
+    ...selectedOtherMonsters
+  ]);
 
-  const allSelectedMonsters = Array.from(new Set([...tankMonsters, ...subMonsters, ...otherMonsters]));
+  /*
+   * 選択された名前と完全一致するタタだけを取得。
+   * これにより、
+   * 「1体選択 → 1体カウント」
+   * が保証される。
+   */
+  const allSelectedMonsters = rawMonstersData.filter(m =>
+    selectedNames.has(m.name)
+  );
 
   const attrCounts = { '炎': 0, '水': 0, '草': 0, '雷': 0, '岩': 0 };
+
   allSelectedMonsters.forEach(m => {
     if (attrCounts[m.type] !== undefined) {
       attrCounts[m.type]++;
@@ -598,6 +630,7 @@ function diagnoseAttributeBalance() {
       maxCount = attrCounts[a];
       maxAttr = a;
     }
+
     if (attrCounts[a] < minCount) {
       minCount = attrCounts[a];
       minAttr = a;
@@ -711,6 +744,10 @@ function diagnoseAttributeBalance() {
 function diagnoseT3() {
   lastStepBeforeResult = 'step-2-b';
 
+  /*
+   * T3側も従来通り、選択した名前と完全一致するものだけを取得。
+   * これで選択数とレーダーの数が一致する。
+   */
   const userList = Array.from(selectedT3Monsters);
   const myT3Monsters = rawMonstersData.filter(m => userList.includes(m.name));
 
@@ -748,6 +785,7 @@ function diagnoseT3() {
       </div>
       ${chartHTML}
     `;
+
     document.getElementById('diag-output').innerHTML = outputHTML;
     nextStep(3);
     if (totalT3Count > 0) renderRadarChart(attrCounts, 'T3所持数');
