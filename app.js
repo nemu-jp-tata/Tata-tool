@@ -374,6 +374,41 @@ const boardNotice = document.getElementById('boardNotice');
 const boardFrame = document.getElementById('boardFrame');
 const monsterGrid = document.getElementById('monsterGrid');
 // ========================================
+// ガオデン種 7回タップ機能
+// 再読み込みすると0回にリセット
+// ========================================
+let gaodenTapCount = 0;
+const GAODEN_TAP_MAX = 7;
+const GAODEN_SPECIES = 'ガオデン種';
+const GAODEN_ACCESSORY_SRC = 'アクセガオデン.webp';
+
+function handleGaodenTap(monsterEl) {
+  if (!monsterEl || !monsterEl.dataset) {
+    return;
+  }
+
+  if (monsterEl.dataset.species !== GAODEN_SPECIES) {
+    return;
+  }
+
+  // すでにアクセガオデンになっている場合は何もしない
+  if (monsterEl.dataset.gaodenAccessory === '1') {
+    return;
+  }
+
+  gaodenTapCount++;
+
+  if (gaodenTapCount >= GAODEN_TAP_MAX) {
+    monsterEl.dataset.originalSrc =
+      monsterEl.dataset.src || monsterEl.src;
+
+    monsterEl.src = GAODEN_ACCESSORY_SRC;
+    monsterEl.dataset.gaodenAccessory = '1';
+
+    gaodenTapCount = 0;
+  }
+}
+// ========================================
 // ドラッグ処理用変数
 // ========================================
 let dragRafId = null;
@@ -533,8 +568,12 @@ function saveBoardState() {
         tier: monsterEl.dataset ? monsterEl.dataset.tier : ''
       });
       cellsData.push({
-        index: index,
-        src: monsterEl.dataset && monsterEl.dataset.src ? monsterEl.dataset.src : (monsterEl.src || ''),
+  index: index,
+  src: monsterEl.dataset && monsterEl.dataset.originalSrc
+    ? monsterEl.dataset.originalSrc
+    : (monsterEl.dataset && monsterEl.dataset.src
+        ? monsterEl.dataset.src
+        : (monsterEl.src || '')),
         species: monsterEl.dataset ? monsterEl.dataset.species : '',
         tier: monsterEl.dataset ? monsterEl.dataset.tier : '',
         player: monsterEl.dataset ? monsterEl.dataset.player : '',
@@ -595,6 +634,13 @@ function fillCellWithMonster(cell, data) {
   if (!targetEl) {
     return;
   }
+  // ========================================
+// ガオデン種 7回タップ
+// ========================================
+targetEl.addEventListener('click', (e) => {
+  e.stopPropagation();
+  handleGaodenTap(targetEl);
+});
   targetEl.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     if (e.button !== 0 && e.pointerType === 'mouse') {
