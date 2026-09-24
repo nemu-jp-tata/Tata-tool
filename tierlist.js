@@ -34,7 +34,7 @@ let useImagesFolder = false;
 // Supabase の初期化
 // ==========================================
 const SUPABASE_URL = 'https://vtvlocbzbejslbrpubfr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0dmxvY2J6YmVqc2xicnB1YmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5Nzc0MDksImV4cCI6MjEwMzU1MzQwOX0.W9t-qkr0CE7JSbgjXmzE3KUKkDSNqJ7nhbC8HKCKG-E';
+const SUPABASE_ANON_KEY = 'sb_publishable_W9MfR2K_T_bdly1vWnHejQ_5MQg7FzO';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
