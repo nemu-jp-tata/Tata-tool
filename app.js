@@ -650,8 +650,6 @@ function saveBoardState() {
     JSON.stringify(selectedChipsMap)
   );
 
-  // 保存のタイミングで発動効果一覧も更新
-  updateBuffSummary();
 }
 
 // ========================================
@@ -683,7 +681,6 @@ function loadBoardState() {
   }
 
   applyChipsToSlots();
-  updateBuffSummary();
 }
 
 // ========================================
@@ -2052,7 +2049,6 @@ document
 
     applyChipsToSlots();
     renderMonsters();
-    updateBuffSummary();
   });
 
 // ========================================
