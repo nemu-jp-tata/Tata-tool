@@ -2534,6 +2534,5 @@ dojoStageBtn?.addEventListener(
 // ========================================
 // 初期化
 // ========================================
-initBuffSummaryToggle();
 buildBoard(currentGridType);
 renderMonsters();
