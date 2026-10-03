@@ -2269,18 +2269,6 @@ document
       appTitleInput?.value?.trim() ||
       'タタ配置ツール';
 
-    // ----------------------------------------
-    // 発動効果を画像に含めるか
-    // ゾンビラッシュのみ確認
-    // ----------------------------------------
-    let includeBuffSummary = true;
-
-    if (currentGridType === '6') {
-      includeBuffSummary = confirm(
-        '発動効果を画像に含めますか？\n\n「OK」→ 含める\n「キャンセル」→ 含めない'
-      );
-    }
-
     // プレイヤー切り替えを一時的に非表示
     if (playerSwitchContainer) {
       playerSwitchContainer.style.visibility =
@@ -2364,66 +2352,6 @@ document
     // ----------------------------------------
     const boardClone =
       boardFrame.cloneNode(true);
-
-    // ----------------------------------------
-    // 発動効果の画像表示設定
-    // ----------------------------------------
-    const buffSummaryContainer =
-      boardClone.querySelector(
-        '#buffSummaryContainer'
-      );
-
-    const buffSummaryContent =
-      boardClone.querySelector(
-        '#buffSummaryContent'
-      );
-
-    const buffToggleIcon =
-      boardClone.querySelector(
-        '#buffToggleIcon'
-      );
-
-    if (currentGridType === '6') {
-      if (includeBuffSummary) {
-        if (buffSummaryContainer) {
-          buffSummaryContainer.style.setProperty(
-            'display',
-            'block',
-            'important'
-          );
-        }
-
-        if (buffSummaryContent) {
-          buffSummaryContent.style.setProperty(
-            'display',
-            'block',
-            'important'
-          );
-
-          buffSummaryContent.style.height =
-            'auto';
-
-          buffSummaryContent.style.visibility =
-            'visible';
-
-          buffSummaryContent.style.opacity =
-            '1';
-        }
-
-        if (buffToggleIcon) {
-          buffToggleIcon.textContent =
-            '▲';
-        }
-      } else {
-        if (buffSummaryContainer) {
-          buffSummaryContainer.style.setProperty(
-            'display',
-            'none',
-            'important'
-          );
-        }
-      }
-    }
 
     // ----------------------------------------
     // 盤面セルの画像表示調整
