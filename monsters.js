@@ -199,7 +199,7 @@ const rawMonstersData = [
   { name: "サトリッサム", species: "サトリッサム種", type: "岩", role: "タンク", T: 1 },
   { name: "コモリッサム", species: "サトリッサム種", type: "岩", role: "タンク", T: 2 },
   { name: "フタリッサム", species: "サトリッサム種", type: "岩", role: "タンク", T: 3 },
-  { name: "ファミリッサム", species: "ファミリッサム種", type: "岩", role: "タンク", T: 4 },
+  { name: "ファミリッサム", species: "サトリッサム種", type: "岩", role: "タンク", T: 4 },
   { name: "ビパピー", species: "ビパピー種", type: "雷", role: "ファイター", T: 1 },
   { name: "ビビドッグ", species: "ビパピー種", type: "雷", role: "ファイター", T: 2 },
   { name: "ノロマズ", species: "ノロマズ種", type: "雷", role: "ダメージ", T: 1 },
