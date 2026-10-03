@@ -2531,29 +2531,6 @@ dojoStageBtn?.addEventListener(
   }
 );
 
-// ========================================
-// 発動効果一覧 アコーディオン
-// ========================================
-function initBuffSummaryToggle() {
-  const container =
-    document.getElementById(
-      'buffSummaryContainer'
-    );
-
-  const content =
-    document.getElementById(
-      'buffSummaryContent'
-    );
-
-  const icon =
-    document.getElementById(
-      'buffToggleIcon'
-    );
-
-  if (!container || !content) {
-    return;
-  }
-
   // ----------------------------------------
   // ヘッダー部分を取得
   // contentの直前にある要素をヘッダーとして使用
