@@ -48,6 +48,13 @@
             font-size: 0.9rem;
             margin-bottom: 25px;
         }
+        .start-screen {
+            display: none;
+            text-align: center;
+        }
+        .start-screen.active {
+            display: block;
+        }
         .quiz-box {
             display: none;
         }
@@ -137,9 +144,6 @@
             color: var(--accent);
             margin: 20px 0;
         }
-        .start-screen {
-            text-align: center;
-        }
         .start-btn {
             background-color: var(--accent);
             color: #0f172a;
@@ -162,7 +166,7 @@
         <h1>モンスターサバイバル</h1>
         <div class="subtitle">タタのシュール生態クイズ（ランダム出題版）</div>
 
-        <div id="startScreen" class="start-screen">
+        <div id="startScreen" class="start-screen active">
             <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">
                 タタたちの図鑑説明に隠されたシュールで笑える生態やエピソードから、ランダムでクイズが出題されます。あなたは何問正解できるか！？
             </p>
@@ -170,7 +174,7 @@
         </div>
 
         <div id="quizScreen" class="quiz-box">
-            <div class="progress" id="progressText">第 1 問 / 全 5 問</div>
+            <div class="progress" id="progressText">第 1 問 / 全 10 問</div>
             <div class="question-text" id="questionText">問題文がここに表示されます</div>
             <div class="options" id="optionsContainer"></div>
             <div class="explanation" id="explanationText">解説がここに表示されます</div>
@@ -180,7 +184,7 @@
         <div id="resultScreen" class="result-screen">
             <h2>クイズ終了！</h2>
             <p style="color: var(--text-muted);">あなたの正解数は...</p>
-            <div class="score-display" id="scoreDisplay">0 / 5</div>
+            <div class="score-display" id="scoreDisplay">0 / 10</div>
             <p id="commentDisplay" style="margin-bottom: 25px; line-height: 1.5;"></p>
             <button class="restart-btn" style="display: block;" onclick="startQuiz()">もう一度挑戦する</button>
         </div>
@@ -204,7 +208,9 @@
         }
 
         function startQuiz() {
-            currentQuestions = shuffle([...allQuestions]).slice(0, 5);
+            // 全10問をランダムに抽出し、データ数が足りない場合は全問にする
+            const count = Math.min(10, allQuestions.length);
+            currentQuestions = shuffle([...allQuestions]).slice(0, count);
             currentIndex = 0;
             score = 0;
 
@@ -280,8 +286,8 @@
 
             let comment = "";
             if (score === currentQuestions.length) {
-                comment = "完璧です！あなたはりっぱなタタ博士、あるいはマニアックなテイマーですね！";
-            } else if (score >= 3) {
+                comment = "全問パーフェクトです！あなたこそ真のタタ博士、究極のマスターテイマーですね！";
+            } else if (score >= 7) {
                 comment = "お見事！タタたちのシュールな生態をかなり深く理解していますね！";
             } else {
                 comment = "もう少しでタタたちの奇妙な世界を理解できそう！何度でも遊んでマスターしよう！";
