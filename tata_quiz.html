@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モンスターサバイバル：タタのシュール生態クイズ</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        .quiz-box {
+            display: none;
+        }
+        .quiz-box.active {
+            display: block;
+        }
+        .progress {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            background-color: #334155;
+            color: var(--text-color);
+            border: 2px solid transparent;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #475569;
+            border-color: var(--primary);
+        }
+        .option-btn.correct {
+            background-color: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: #34d399;
+        }
+        .option-btn.incorrect {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #f87171;
+        }
+        .explanation {
+            background-color: #0f172a;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            display: none;
+        }
+        .next-btn, .restart-btn {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: none;
+        }
+        .next-btn:hover, .restart-btn:hover {
+            background-color: var(--primary-hover);
+        }
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+        .result-screen.active {
+            display: block;
+        }
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+        .start-screen {
+            text-align: center;
+        }
+        .start-btn {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 20px;
+        }
+        .start-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>モンスターサバイバル</h1>
+        <div class="subtitle">タタのシュール生態クイズ（ランダム出題版）</div>
+
+        <div id="startScreen" class="start-screen">
+            <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">
+                タタたちの図鑑説明に隠されたシュールで笑える生態やエピソードから、ランダムでクイズが出題されます。あなたは何問正解できるか！？
+            </p>
+            <button class="start-btn" onclick="startQuiz()">クイズをはじめる</button>
+        </div>
+
+        <div id="quizScreen" class="quiz-box">
+            <div class="progress" id="progressText">第 1 問 / 全 5 問</div>
+            <div class="question-text" id="questionText">問題文がここに表示されます</div>
+            <div class="options" id="optionsContainer"></div>
+            <div class="explanation" id="explanationText">解説がここに表示されます</div>
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()">次の問題へ</button>
+        </div>
+
+        <div id="resultScreen" class="result-screen">
+            <h2>クイズ終了！</h2>
+            <p style="color: var(--text-muted);">あなたの正解数は...</p>
+            <div class="score-display" id="scoreDisplay">0 / 5</div>
+            <p id="commentDisplay" style="margin-bottom: 25px; line-height: 1.5;"></p>
+            <button class="restart-btn" style="display: block;" onclick="startQuiz()">もう一度挑戦する</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            {
+                q: "ジュラゴン（コロジュー種T4）に挑んだタタがいましたが、決闘はあっけなく幕を閉じてしまいました。なぜでしょうか？",
+                options: [
+                    "ジュラゴンが背中のかゆさに夢中で、崖の端に体をこすりつけるだけで気づかなかったから",
+                    "ジュラゴンの一言で圧倒され、戦う前に逃げ出してしまったから",
+                    "周囲が青いビームの速さに圧倒されて誰も近づけなかったから",
+                    "ジュラゴンが途中で眠ってしまい、そのまま朝を迎えたから"
+                ],
+                correct: 0,
+                explanation: "【正解】ジュラゴンが背中のかゆさに夢中で、崖の端に体をこすりつけるだけで気づかなかったから[cite: 2]。かつて挑んだタタは、そのシュールすぎる理由で無視されてしまいました。"
+            },
+            {
+                q: "ボウズヘビが、他のタタの昼ごはんを盗み食いしたときにとる「謎の言い訳（ごまかし方）」とは何でしょう？",
+                options: [
+                    "「大丈夫、大丈夫」と言って自分の頭を棒でポクポク叩く",
+                    "「これでお互い徳を積んだね」と微笑む",
+                    "お経を唱えながらゾンビのせいにする",
+                    "「ポクポク」と言いながら後ろ向きに歩いて去る"
+                ],
+                correct: 0,
+                explanation: "【正解】「大丈夫、大丈夫」と言って自分の頭を棒でポクポク叩く[cite: 2]。棒で頭を叩くことで「徳を積んだから許される」と本気で信じているお坊さんヘビです。"
+            },
+            {
+                q: "スカラーべ（コロタマ種T3）にとって、この世のタタは大きく分けて「何と何」の2種類でしょうか？",
+                options: [
+                    "うんち料理が好きなタタ と まだ試したことのないタタ",
+                    "信者になったタタ と これから信者にするタタ",
+                    "岩属性のタタ と それ以外のタタ",
+                    "熟成年数が分かるタタ と 分からないタタ"
+                ],
+                correct: 0,
+                explanation: "【正解】うんち料理が好きなタタ と まだ試したことのないタタ[cite: 2]。コロタマ種の食へのこだわりは、すでに神の領域（あるいは狂気）に達しています。"
+            },
+            {
+                q: "マドブヒ種のマドブヒが語る、ブタの一生に関する「熱い信条」の空欄に入る言葉は何でしょう？「泥の中で転げ回ったこともなく、気に入らない奴に泥を投げつけたこともないブタの一生なんて、〇〇なものだ。」",
+                options: [
+                    "不完全なものだ",
+                    "退屈なものだ",
+                    "汚れたものだ",
+                    "平和すぎるものだ"
+                ],
+                correct: 0,
+                explanation: "【正解】不完全なものだ[cite: 3]。泥まみれになることと泥を投げることに全人生をかける、謎にアグレッシブな美学を持っています。"
+            },
+            {
+                q: "ナンモナイシの頭の中はいつもどうなっているでしょうか？",
+                options: [
+                    "妙な心配事でいっぱい（まだ一度も働いたことがないのに）",
+                    "次にどの木から枝を折るかについての計画でいっぱい",
+                    "真っ黒な物質の熟成年数について考えでいっぱい",
+                    "お腹いっぱいのドラゴンフルーツの夢でいっぱい"
+                ],
+                correct: 0,
+                explanation: "【正解】妙な心配事でいっぱい（まだ一度も働いたことがないのに）[cite: 3]。働いたことがないのに将来の心配ばかりしているという、謎の哲学的ニート気質です。"
+            },
+            {
+                q: "ポタカゲが「クッションにぴったり伏せて同化していた」とき、不運にも何が起きたでしょうか？",
+                options: [
+                    "別のタタにそのままお尻で座られた",
+                    "ゾンビに踏み潰されて大慌てで逃げ出した",
+                    "あまりに気配が消えすぎて存在を忘れられた",
+                    "水溜りと間違えられて水をかけられた"
+                ],
+                correct: 0,
+                explanation: "【正解】別のタタにそのままお尻で座られた[cite: 5]。一生懸命みんなを避けてるつもりなのに、なぜか見つかってしまう不憫なポタカゲのエピソードです。"
+            },
+            {
+                q: "マルッシュ種の一番の夢は何でしょう？",
+                options: [
+                    "薄暗くて湿った隅っこを見つけて、そこで一万年眠ること",
+                    "最強の幻想世界を作り上げてすべてのゾンビを眠らせること",
+                    "アロハシャツを着て砂浜でひたすら日光浴をすること",
+                    "幻のキノコを求めて世界中の洞窟を踏破すること"
+                ],
+                correct: 0,
+                explanation: "【正解】薄暗くて湿った隅っこを見つけて、そこで一万年眠ること[cite: 6]。誰かに邪魔して起こされたら来世紀まで会ってくれないインドア派です。"
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            currentQuestions = shuffle([...allQuestions]).slice(0, 5);
+            currentIndex = 0;
+            score = 0;
+
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const qData = currentQuestions[currentIndex];
+            document.getElementById('progressText').innerText = `第 ${currentIndex + 1} 問 / 全 ${currentQuestions.length} 問`;
+            document.getElementById('questionText').innerText = qData.q;
+
+            let optionsWithIndex = qData.options.map((opt, idx) => ({ text: opt, originalIdx: idx }));
+            optionsWithIndex = shuffle(optionsWithIndex);
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            optionsWithIndex.forEach((optObj) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = optObj.text;
+                btn.onclick = () => selectOption(optObj.originalIdx, qData.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('explanationText').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectOption(selectedIdx, correctIdx, clickedBtn) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (selectedIdx === correctIdx) {
+                clickedBtn.classList.add('correct');
+                score++;
+            } else {
+                clickedBtn.classList.add('incorrect');
+            }
+
+            const qData = currentQuestions[currentIndex];
+            buttons.forEach(btn => {
+                if (btn.innerText === qData.options[qData.correct]) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            const expDiv = document.getElementById('explanationText');
+            expDiv.innerText = qData.explanation;
+            expDiv.style.display = 'block';
+
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+
+            document.getElementById('scoreDisplay').innerText = `${score} / ${currentQuestions.length}`;
+
+            let comment = "";
+            if (score === currentQuestions.length) {
+                comment = "完璧です！あなたはりっぱなタタ博士、あるいはマニアックなテイマーですね！";
+            } else if (score >= 3) {
+                comment = "お見事！タタたちのシュールな生態をかなり深く理解していますね！";
+            } else {
+                comment = "もう少しでタタたちの奇妙な世界を理解できそう！何度でも遊んでマスターしよう！";
+            }
+            document.getElementById('commentDisplay').innerText = comment;
+        }
+    </script>
+</body>
+</html>
