@@ -239,7 +239,7 @@ const rawMonstersData = [
   { name: "エレキネコ", species: "エレキネコ種", type: "雷", role: "ファイター", T: 1 },
   { name: "デンニャン", species: "エレキネコ種", type: "雷", role: "ファイター", T: 2 },
   { name: "スピニャット", species: "エレキネコ種", type: "雷", role: "ファイター", T: 3 },
-  { name: "トコヨニャット", species: "エレキネコ種", type: "雷", role: "ファイター", T: 3 },
+  { name: "トコヨニャット", species: "エレキネコ種", type: "雷", role: "ファイター", T: 4 },
   { name: "ビリモ", species: "ビリモ種", type: "雷", role: "スペシャル", T: 1 },
   { name: "ビリモリ", species: "ビリモ種", type: "雷", role: "スペシャル", T: 2 },
   { name: "パルバット", species: "ビリモ種", type: "雷", role: "スペシャル", T: 3 },
