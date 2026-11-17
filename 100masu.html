@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>100マス計算トレーニング</title>
+    <title>81マス計算トレーニング</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Noto Sans JP -->
@@ -13,24 +13,21 @@
     <style>
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            touch-action: manipulation; /* ダブルタップによるズームを防止 */
+            touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        /* テーブルセルのアスペクト比やスクロールバーの微調整 */
         .calc-cell {
             transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
         }
         .calc-cell:active {
             transform: scale(0.95);
         }
-        /* 選択中のセルのアニメーション */
         .cell-selected {
             background-color: #fef08a !important; /* yellow-200 */
             box-shadow: inset 0 0 0 3px #eab308; /* yellow-500 */
             z-index: 10;
             position: relative;
         }
-        /* 正解・不正解のスタイル */
         .cell-correct {
             background-color: #dcfce7 !important; /* green-100 */
             color: #166534 !important; /* green-800 */
@@ -41,7 +38,6 @@
             color: #991b1b !important; /* red-800 */
             box-shadow: inset 0 0 0 1px #fca5a5;
         }
-        /* テンキーのアニメーション */
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -63,7 +59,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        <span>100マス計算</span>
+                        <span>81マス計算 (1〜9)</span>
                     </h1>
                     <!-- タイマー表示 -->
                     <div class="bg-slate-100 px-3 py-1 rounded-full text-sm font-semibold text-slate-700 flex items-center gap-1.5 border border-slate-200">
@@ -101,24 +97,23 @@
                 </div>
             </div>
 
-            <!-- 結果通知バナー（チェック押下時に表示） -->
+            <!-- 結果通知バナー -->
             <div id="result-banner" class="hidden mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base">
                 <div class="flex items-center gap-2 font-bold text-indigo-900">
                     <span id="result-icon" class="text-xl">🎉</span>
-                    <span id="result-text">100問中 0問正解！</span>
+                    <span id="result-text">81問中 0問正解！</span>
                 </div>
                 <span id="result-time" class="text-xs sm:text-sm font-semibold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-100"></span>
             </div>
         </div>
     </header>
 
-    <!-- メインコンテンツ：100マス計算グリッド -->
+    <!-- メインコンテンツ：81マス計算グリッド -->
     <main class="flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-72 sm:pb-80">
-        <div class="w-full max-w-2xl bg-white p-1.5 sm:p-4 rounded-2xl shadow-md border border-slate-200">
-            <!-- グリッドコンテナ（横幅にフィットさせつつ最小サイズを確保） -->
+        <div class="w-full max-w-xl bg-white p-1.5 sm:p-4 rounded-2xl shadow-md border border-slate-200">
             <div class="w-full overflow-x-auto">
                 <table id="calc-grid" class="w-full border-collapse table-fixed select-none">
-                    <!-- JavaScriptで11x11のテーブルを生成 -->
+                    <!-- JavaScriptで10x10（ヘッダー含む9x9マス）のテーブルを生成 -->
                 </table>
             </div>
             <p class="text-xs text-slate-400 text-center mt-2.5">
@@ -127,11 +122,10 @@
         </div>
     </main>
 
-    <!-- フローティングテンキー（マス選択時に表示） -->
+    <!-- フローティングテンキー -->
     <div id="numpad-container" class="hidden fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none p-2 sm:p-4">
         <div class="numpad-enter pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.15)] border border-slate-200 p-3 sm:p-4">
             
-            <!-- テンキー上部情報バー（現在の計算式と閉じるボタン） -->
             <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">選択中</span>
@@ -140,21 +134,19 @@
                     </span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <!-- 次のマスへ移動ボタン -->
                     <button id="btn-next-cell" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
                         <span>次へ</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <!-- 閉じるボタン -->
                     <button id="btn-close-numpad" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition cursor-pointer">
                         閉じる
                     </button>
                 </div>
             </div>
 
-            <!-- 0〜9 数字ボタン + 消去ボタン グリッド -->
+            <!-- 0〜9 数字ボタン（0も完備） -->
             <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
                 <button type="button" data-num="1" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">1</button>
                 <button type="button" data-num="2" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">2</button>
@@ -169,7 +161,6 @@
                 <button type="button" data-num="0" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">0</button>
             </div>
 
-            <!-- 下段：消去（クリア）ボタン -->
             <div class="mt-2">
                 <button type="button" id="btn-clear" class="w-full bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 font-bold text-sm sm:text-base py-2.5 rounded-xl border border-rose-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -182,24 +173,18 @@
     </div>
 
     <script>
-        /**
-         * 100マス計算アプリケーションのメインロジック
-         */
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 状態管理 ---
-            let colNumbers = []; // 上端ヘッダーの10個の数字 (0〜9)
-            let rowNumbers = []; // 左端ヘッダーの10個の数字 (0〜9)
-            let userAnswers = Array.from({ length: 10 }, () => Array(10).fill('')); // 10x10のユーザー入力値
+            let colNumbers = []; // 9個の数字 (1〜9)
+            let rowNumbers = []; // 9個の数字 (1〜9 または 引き算用)
+            let userAnswers = Array.from({ length: 9 }, () => Array(9).fill('')); // 9x9のユーザー入力値
             let selectedCell = null; // { row: number, col: number }
-            let calcMode = 'add'; // 'add' | 'sub' | 'mul'
-            let isChecked = false; // チェック済みフラグ
+            let calcMode = 'add';
+            let isChecked = false;
 
-            // タイマー関連
             let timerInterval = null;
             let elapsedSeconds = 0;
             let isTimerRunning = false;
 
-            // --- DOM要素の取得 ---
             const gridTable = document.getElementById('calc-grid');
             const modeSelect = document.getElementById('calc-mode');
             const btnGenerate = document.getElementById('btn-generate');
@@ -210,7 +195,6 @@
             const resultText = document.getElementById('result-text');
             const resultTime = document.getElementById('result-time');
 
-            // テンキー関連DOM
             const numpadContainer = document.getElementById('numpad-container');
             const currentEquation = document.getElementById('current-equation');
             const btnNextCell = document.getElementById('btn-next-cell');
@@ -218,14 +202,11 @@
             const btnClear = document.getElementById('btn-clear');
             const numButtons = document.querySelectorAll('.num-btn');
 
-            // --- ユーティリティ関数 ---
-
             /**
-             * 0〜9の重複なしのランダム配列（10個）を生成する
-             * 100マス計算の標準的な出題形式（0〜9が1回ずつ出現）を採用
+             * 1〜9の重複なしのランダム配列（9個）を生成する
              */
             function generateShuffledDigits() {
-                const digits = [ 1, 2, 3, 4, 5, 6, 7, 8, 9];
+                const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
                 for (let i = digits.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [digits[i], digits[j]] = [digits[j], digits[i]];
@@ -234,21 +215,16 @@
             }
 
             /**
-             * 引き算モード用：答えが負にならないように左端（引かれる数）を10〜19にするか、
-             * または標準の0〜9の引き算（負の数あり/なし）を調整。
-             * ここでは小学生でも解きやすいよう、引き算モード時は左端を「10〜19」のシャッフルにする。
+             * 引き算モード用：答えが負にならないように左端（引かれる数）を10〜18にする
              */
             function generateRowDigits(mode) {
                 const base = generateShuffledDigits();
                 if (mode === 'sub') {
-                    return base.map(n => n + 10); // 10〜19にすることで必ず 0以上の答えになる
+                    return base.map(n => n + 9); // 10〜18の範囲
                 }
                 return base;
             }
 
-            /**
-             * 記号の取得
-             */
             function getOperatorSymbol(mode) {
                 switch (mode) {
                     case 'add': return '＋';
@@ -258,9 +234,6 @@
                 }
             }
 
-            /**
-             * 正解の計算
-             */
             function calculateExpected(rowVal, colVal, mode) {
                 switch (mode) {
                     case 'add': return rowVal + colVal;
@@ -270,7 +243,6 @@
                 }
             }
 
-            // --- タイマー制御 ---
             function startTimer() {
                 if (isTimerRunning) return;
                 isTimerRunning = true;
@@ -304,20 +276,14 @@
                 timerDisplay.textContent = formatTime(elapsedSeconds);
             }
 
-            // --- グリッドの生成と描画 ---
-
-            /**
-             * 新しい問題をランダム生成して初期化する
-             */
             function initGame() {
                 calcMode = modeSelect.value;
                 colNumbers = generateShuffledDigits();
                 rowNumbers = generateRowDigits(calcMode);
-                userAnswers = Array.from({ length: 10 }, () => Array(10).fill(''));
+                userAnswers = Array.from({ length: 9 }, () => Array(9).fill(''));
                 selectedCell = null;
                 isChecked = false;
 
-                // UIリセット
                 resultBanner.classList.add('hidden');
                 hideNumpad();
                 resetTimer();
@@ -326,52 +292,52 @@
             }
 
             /**
-             * 11x11のテーブルHTMLを構築
+             * 10x10（ヘッダー含む9x9マス）のテーブルHTMLを構築
              */
             function renderGrid() {
                 gridTable.innerHTML = '';
                 const opSymbol = getOperatorSymbol(calcMode);
+                const cellWidthPercent = `${(100 / 10).toFixed(2)}%`;
 
-                // 1. ヘッダー行 (1行目: 左上記号 + 上端10個の数字)
+                // 1. ヘッダー行 (1行目: 左上記号 + 上端9個の数字)
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
 
-                // 左上の演算子セル
                 const cornerTh = document.createElement('th');
-                cornerTh.className = 'w-[9.09%] aspect-square bg-indigo-600 text-white font-bold text-base sm:text-xl border border-indigo-700 rounded-tl-lg select-none';
+                cornerTh.style.width = cellWidthPercent;
+                cornerTh.className = 'aspect-square bg-indigo-600 text-white font-bold text-base sm:text-xl border border-indigo-700 rounded-tl-lg select-none';
                 cornerTh.textContent = opSymbol;
                 headerRow.appendChild(cornerTh);
 
-                // 上端の数字セル (0〜9列)
                 colNumbers.forEach((num, cIdx) => {
                     const th = document.createElement('th');
-                    th.className = `w-[9.09%] aspect-square bg-indigo-100 text-indigo-900 font-bold text-sm sm:text-lg border border-indigo-200 ${cIdx === 9 ? 'rounded-tr-lg' : ''}`;
+                    th.style.width = cellWidthPercent;
+                    th.className = `aspect-square bg-indigo-100 text-indigo-900 font-bold text-sm sm:text-lg border border-indigo-200 ${cIdx === 8 ? 'rounded-tr-lg' : ''}`;
                     th.textContent = num;
                     headerRow.appendChild(th);
                 });
                 thead.appendChild(headerRow);
                 gridTable.appendChild(thead);
 
-                // 2. データ行 (10行: 左端ヘッダー数字 + 10個の回答マス)
+                // 2. データ行 (9行: 左端ヘッダー数字 + 9個の回答マス)
                 const tbody = document.createElement('tbody');
                 rowNumbers.forEach((rowNum, rIdx) => {
                     const tr = document.createElement('tr');
 
-                    // 左端ヘッダーセル
                     const rowTh = document.createElement('th');
-                    rowTh.className = `aspect-square bg-indigo-100 text-indigo-900 font-bold text-sm sm:text-lg border border-indigo-200 ${rIdx === 9 ? 'rounded-bl-lg' : ''}`;
+                    rowTh.style.width = cellWidthPercent;
+                    rowTh.className = `aspect-square bg-indigo-100 text-indigo-900 font-bold text-sm sm:text-lg border border-indigo-200 ${rIdx === 8 ? 'rounded-bl-lg' : ''}`;
                     rowTh.textContent = rowNum;
                     tr.appendChild(rowTh);
 
-                    // 10個の回答マス
-                    for (let cIdx = 0; cIdx < 10; cIdx++) {
+                    for (let cIdx = 0; cIdx < 9; cIdx++) {
                         const td = document.createElement('td');
+                        td.style.width = cellWidthPercent;
                         td.dataset.row = rIdx;
                         td.dataset.col = cIdx;
-                        td.className = `calc-cell aspect-square text-center font-bold text-sm sm:text-lg border border-slate-300 bg-white cursor-pointer hover:bg-slate-50 ${rIdx === 9 && cIdx === 9 ? 'rounded-br-lg' : ''}`;
+                        td.className = `calc-cell aspect-square text-center font-bold text-sm sm:text-lg border border-slate-300 bg-white cursor-pointer hover:bg-slate-50 ${rIdx === 8 && cIdx === 8 ? 'rounded-br-lg' : ''}`;
                         td.textContent = userAnswers[rIdx][cIdx];
 
-                        // タップ（クリック）イベント
                         td.addEventListener('click', () => {
                             selectCell(rIdx, cIdx);
                         });
@@ -383,18 +349,11 @@
                 gridTable.appendChild(tbody);
             }
 
-            // --- セル選択・テンキー操作 ---
-
-            /**
-             * 指定した行・列のセルを選択状態にする
-             */
             function selectCell(row, col) {
-                // まだタイマーが動いていなければ開始（チェック前のみ）
                 if (!isChecked && !isTimerRunning) {
                     startTimer();
                 }
 
-                // 前の選択ハイライトを解除
                 if (selectedCell) {
                     const prevTd = getCellElement(selectedCell.row, selectedCell.col);
                     if (prevTd) prevTd.classList.remove('cell-selected');
@@ -404,7 +363,6 @@
                 const currentTd = getCellElement(row, col);
                 if (currentTd) {
                     currentTd.classList.add('cell-selected');
-                    // テンキーに隠れないようにスクロール位置を調整
                     ensureCellVisible(currentTd);
                 }
 
@@ -412,12 +370,9 @@
                 showNumpad();
             }
 
-            /**
-             * 選択されたセルがテンキーに隠れないようスムーズにスクロール
-             */
             function ensureCellVisible(cellEl) {
                 const rect = cellEl.getBoundingClientRect();
-                const numpadHeight = 260; // テンキーのおおよその高さ
+                const numpadHeight = 260;
                 const viewportHeight = window.innerHeight;
                 if (rect.bottom > viewportHeight - numpadHeight) {
                     window.scrollBy({
@@ -444,9 +399,6 @@
                 }
             }
 
-            /**
-             * テンキー上部の式表示を更新
-             */
             function updateEquationDisplay() {
                 if (!selectedCell) return;
                 const { row, col } = selectedCell;
@@ -457,27 +409,21 @@
                 currentEquation.textContent = `${rVal} ${op} ${cVal} = ${ans}`;
             }
 
-            /**
-             * 数字入力処理（最大3桁まで追記）
-             */
             function inputDigit(digitStr) {
                 if (!selectedCell) return;
                 const { row, col } = selectedCell;
 
-                // チェック済み状態ならスタイルをリセットして再編集可能にする
                 const td = getCellElement(row, col);
                 if (td) {
                     td.classList.remove('cell-correct', 'cell-incorrect');
                 }
 
                 let currentVal = userAnswers[row][col];
-                // 先頭が0でさらに数字が押された場合は上書き（例: "0" -> "5"）
                 if (currentVal === '0') {
                     currentVal = digitStr;
                 } else if (currentVal.length < 3) {
                     currentVal += digitStr;
                 } else {
-                    // 3桁に達している場合は新しい数字で置き換え
                     currentVal = digitStr;
                 }
 
@@ -486,9 +432,6 @@
                 updateEquationDisplay();
             }
 
-            /**
-             * 現在のマスの入力を消去
-             */
             function clearCurrentCell() {
                 if (!selectedCell) return;
                 const { row, col } = selectedCell;
@@ -501,9 +444,6 @@
                 updateEquationDisplay();
             }
 
-            /**
-             * 次のマスへ移動（右へ進み、右端なら次の行の左端へ）
-             */
             function moveToNextCell() {
                 if (!selectedCell) {
                     selectCell(0, 0);
@@ -511,28 +451,27 @@
                 }
                 let { row, col } = selectedCell;
                 col++;
-                if (col >= 10) {
+                if (col >= 9) {
                     col = 0;
                     row++;
                 }
-                if (row >= 10) {
-                    // 100マス目まで終わったらテンキーを閉じる
+                if (row >= 9) {
                     hideNumpad();
                     return;
                 }
                 selectCell(row, col);
             }
 
-            // --- 正誤チェック機能 ---
             function checkAnswers() {
                 stopTimer();
                 hideNumpad();
                 isChecked = true;
 
                 let correctCount = 0;
+                const totalCells = 81;
 
-                for (let r = 0; r < 10; r++) {
-                    for (let c = 0; c < 10; c++) {
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
                         const td = getCellElement(r, c);
                         if (!td) continue;
 
@@ -551,36 +490,28 @@
                     }
                 }
 
-                // 結果バナーの表示更新
                 resultBanner.classList.remove('hidden');
                 resultTime.textContent = `タイム: ${formatTime(elapsedSeconds)}`;
 
-                if (correctCount === 100) {
+                if (correctCount === totalCells) {
                     resultIcon.textContent = '🏆';
-                    resultText.textContent = `パーフェクト！ 100問中 100問正解！`;
+                    resultText.textContent = `パーフェクト！ 81問中 81問正解！`;
                     resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-sm sm:text-base';
                     resultText.className = 'font-bold text-emerald-900';
                 } else {
-                    resultIcon.textContent = correctCount >= 80 ? '👏' : '📝';
-                    resultText.textContent = `100問中 ${correctCount}問正解！`;
+                    resultIcon.textContent = correctCount >= 70 ? '👏' : '📝';
+                    resultText.textContent = `81問中 ${correctCount}問正解！`;
                     resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base';
                     resultText.className = 'font-bold text-indigo-900';
                 }
 
-                // 画面上部へスクロールして結果を見やすくする
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
-            // --- イベントリスナーの登録 ---
-
-            // ランダム生成 & モード切替
             btnGenerate.addEventListener('click', initGame);
             modeSelect.addEventListener('change', initGame);
-
-            // チェックボタン
             btnCheck.addEventListener('click', checkAnswers);
 
-            // テンキーの数字ボタン (0〜9)
             numButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -589,7 +520,6 @@
                 });
             });
 
-            // テンキーの消去・次へ・閉じるボタン
             btnClear.addEventListener('click', (e) => {
                 e.stopPropagation();
                 clearCurrentCell();
@@ -605,43 +535,32 @@
                 hideNumpad();
             });
 
-            // PC用：物理キーボード操作のサポート
             document.addEventListener('keydown', (e) => {
                 if (!selectedCell) return;
 
-                // 数字キー (0-9)
                 if (e.key >= '0' && e.key <= '9') {
                     e.preventDefault();
                     inputDigit(e.key);
-                }
-                // Backspace / Delete で消去
-                else if (e.key === 'Backspace' || e.key === 'Delete') {
+                } else if (e.key === 'Backspace' || e.key === 'Delete') {
                     e.preventDefault();
                     clearCurrentCell();
-                }
-                // Enter / Tab で次のマスへ
-                else if (e.key === 'Enter' || e.key === 'Tab') {
+                } else if (e.key === 'Enter' || e.key === 'Tab') {
                     e.preventDefault();
                     moveToNextCell();
-                }
-                // Escape でテンキーを閉じる
-                else if (e.key === 'Escape') {
+                } else if (e.key === 'Escape') {
                     e.preventDefault();
                     hideNumpad();
-                }
-                // 矢印キーで上下左右移動
-                else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                     e.preventDefault();
                     let { row, col } = selectedCell;
                     if (e.key === 'ArrowUp' && row > 0) row--;
-                    if (e.key === 'ArrowDown' && row < 9) row++;
+                    if (e.key === 'ArrowDown' && row < 8) row++;
                     if (e.key === 'ArrowLeft' && col > 0) col--;
-                    if (e.key === 'ArrowRight' && col < 9) col++;
+                    if (e.key === 'ArrowRight' && col < 8) col++;
                     selectCell(row, col);
                 }
             });
 
-            // 初回起動時にランダム問題を生成
             initGame();
         });
     </script>
