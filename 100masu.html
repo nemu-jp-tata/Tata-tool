@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>81マス計算トレーニング</title>
+    <title>マス計算トレーニング (9×9 / 19×19)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Noto Sans JP -->
@@ -16,48 +16,97 @@
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        /* 各マスのサイズを正方形に固定するための設定 */
-        .calc-grid-table {
-            table-layout: fixed;
-            width: 100%;
-            aspect-ratio: 10 / 10; /* 全体として10x10の正方形ベースにする */
-        }
-        .calc-cell, .calc-header {
-            width: 10%;
-            height: 0;
-            padding-bottom: 10%; /* CSSテクニック：横幅に対する高さの割合を100%（正方形）にする */
+        /* スクロールコンテナ：19x19でも縦横スクロールでヘッダーを固定できるようにする */
+        .grid-scroll-wrapper {
+            max-height: 68vh;
+            overflow: auto;
             position: relative;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
         }
-        .cell-content {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .calc-grid-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: max-content;
+            min-width: 100%;
+        }
+        /* 9x9モード時は画面幅にフィットさせつつ正方形を維持 */
+        .calc-grid-table.mode-9 {
             width: 100%;
-            height: 100%;
+            table-layout: fixed;
+        }
+        .calc-grid-table.mode-9 .cell-box {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+        /* 19x19モード時はタップしやすい最小正方形サイズ(42px)を確保してスクロール */
+        .calc-grid-table.mode-19 .cell-box {
+            width: 42px;
+            height: 42px;
+        }
+        @media (min-width: 640px) {
+            .calc-grid-table.mode-19 .cell-box {
+                width: 46px;
+                height: 46px;
+            }
+        }
+        .cell-box {
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
+        /* 1行目（上端ヘッダー）の固定 */
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        /* 1列目（左端ヘッダー）の固定 */
+        .sticky-left {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+        }
+        /* 左上の演算子セル（最前面に固定） */
+        .sticky-corner {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 30;
+        }
+
         .calc-cell {
-            transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+            transition: background-color 0.12s ease;
+            border-right: 1px solid #cbd5e1;
+            border-bottom: 1px solid #cbd5e1;
         }
-        .calc-cell:active {
-            transform: scale(0.95);
+        .calc-header-top {
+            border-right: 1px solid #c7d2fe;
+            border-bottom: 2px solid #818cf8;
         }
+        .calc-header-left {
+            border-right: 2px solid #818cf8;
+            border-bottom: 1px solid #c7d2fe;
+        }
+        .calc-corner {
+            border-right: 2px solid #4338ca;
+            border-bottom: 2px solid #4338ca;
+        }
+
         .cell-selected {
             background-color: #fef08a !important; /* yellow-200 */
             box-shadow: inset 0 0 0 3px #eab308; /* yellow-500 */
             z-index: 10;
+            position: relative;
         }
         .cell-correct {
             background-color: #dcfce7 !important; /* green-100 */
             color: #166534 !important; /* green-800 */
-            box-shadow: inset 0 0 0 1px #86efac;
         }
         .cell-incorrect {
             background-color: #fee2e2 !important; /* red-100 */
             color: #991b1b !important; /* red-800 */
-            box-shadow: inset 0 0 0 1px #fca5a5;
         }
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
@@ -71,8 +120,8 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
     <!-- 上部ヘッダー & コントロールパネル -->
-    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
-        <div class="max-w-4xl mx-auto px-3 py-3 sm:px-6">
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-3 py-3 sm:px-6">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <!-- タイトルとタイマー -->
                 <div class="flex items-center gap-3">
@@ -80,7 +129,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        <span>81マス計算 (1〜9)</span>
+                        <span id="app-title">81マス計算 (9×9)</span>
                     </h1>
                     <!-- タイマー表示 -->
                     <div class="bg-slate-100 px-3 py-1 rounded-full text-sm font-semibold text-slate-700 flex items-center gap-1.5 border border-slate-200">
@@ -93,8 +142,14 @@
 
                 <!-- アクションボタン群 -->
                 <div class="flex items-center gap-2 flex-wrap">
+                    <!-- マス数（サイズ）選択 -->
+                    <select id="grid-size" aria-label="マスのサイズ" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
+                        <option value="9" selected>9×9 (81マス)</option>
+                        <option value="19">19×19 (361マス)</option>
+                    </select>
+
                     <!-- 計算モード選択 -->
-                    <select id="calc-mode" aria-label="計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-3 py-2 font-bold cursor-pointer">
+                    <select id="calc-mode" aria-label="計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
                         <option value="add" selected>＋ たし算</option>
                         <option value="sub">－ ひき算</option>
                         <option value="mul">× かけ算</option>
@@ -129,12 +184,12 @@
         </div>
     </header>
 
-    <!-- メインコンテンツ：81マス計算グリッド -->
+    <!-- メインコンテンツ：マス計算グリッド -->
     <main class="flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-72 sm:pb-80">
-        <div class="w-full max-w-lg bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200">
-            <div class="w-full overflow-hidden">
-                <table id="calc-grid" class="calc-grid-table border-collapse select-none">
-                    <!-- JavaScriptで10x10の正方形テーブルを生成 -->
+        <div id="grid-card" class="w-full max-w-lg bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200 transition-all">
+            <div id="grid-scroll-container" class="grid-scroll-wrapper">
+                <table id="calc-grid" class="calc-grid-table mode-9 select-none">
+                    <!-- JavaScriptでテーブルを生成 -->
                 </table>
             </div>
             <p class="text-xs text-slate-400 text-center mt-3">
@@ -144,7 +199,7 @@
     </main>
 
     <!-- フローティングテンキー -->
-    <div id="numpad-container" class="hidden fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none p-2 sm:p-4">
+    <div id="numpad-container" class="hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none p-2 sm:p-4">
         <div class="numpad-enter pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.15)] border border-slate-200 p-3 sm:p-4">
             
             <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
@@ -195,9 +250,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            let gridSize = 9; // 9 or 19
             let colNumbers = [];
             let rowNumbers = [];
-            let userAnswers = Array.from({ length: 9 }, () => Array(9).fill(''));
+            let userAnswers = [];
             let selectedCell = null;
             let calcMode = 'add';
             let isChecked = false;
@@ -206,7 +262,11 @@
             let elapsedSeconds = 0;
             let isTimerRunning = false;
 
+            const appTitle = document.getElementById('app-title');
+            const gridCard = document.getElementById('grid-card');
+            const gridScrollContainer = document.getElementById('grid-scroll-container');
             const gridTable = document.getElementById('calc-grid');
+            const sizeSelect = document.getElementById('grid-size');
             const modeSelect = document.getElementById('calc-mode');
             const btnGenerate = document.getElementById('btn-generate');
             const btnCheck = document.getElementById('btn-check');
@@ -223,8 +283,11 @@
             const btnClear = document.getElementById('btn-clear');
             const numButtons = document.querySelectorAll('.num-btn');
 
-            function generateShuffledDigits() {
-                const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            /**
+             * 1〜size の重複なしランダム配列を生成
+             */
+            function generateShuffledDigits(size) {
+                const digits = Array.from({ length: size }, (_, i) => i + 1);
                 for (let i = digits.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [digits[i], digits[j]] = [digits[j], digits[i]];
@@ -232,10 +295,13 @@
                 return digits;
             }
 
-            function generateRowDigits(mode) {
-                const base = generateShuffledDigits();
+            /**
+             * ひき算時は答えが負にならないよう左端の数値を +size する
+             */
+            function generateRowDigits(size, mode) {
+                const base = generateShuffledDigits(size);
                 if (mode === 'sub') {
-                    return base.map(n => n + 9);
+                    return base.map(n => n + size);
                 }
                 return base;
             }
@@ -292,40 +358,60 @@
             }
 
             function initGame() {
+                gridSize = parseInt(sizeSelect.value, 10);
                 calcMode = modeSelect.value;
-                colNumbers = generateShuffledDigits();
-                rowNumbers = generateRowDigits(calcMode);
-                userAnswers = Array.from({ length: 9 }, () => Array(9).fill(''));
+
+                // タイトルとカード幅の調整
+                const totalQuestions = gridSize * gridSize;
+                appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
+                if (gridSize === 19) {
+                    gridCard.classList.remove('max-w-lg');
+                    gridCard.classList.add('max-w-4xl');
+                    gridTable.classList.remove('mode-9');
+                    gridTable.classList.add('mode-19');
+                } else {
+                    gridCard.classList.remove('max-w-4xl');
+                    gridCard.classList.add('max-w-lg');
+                    gridTable.classList.remove('mode-19');
+                    gridTable.classList.add('mode-9');
+                }
+
+                colNumbers = generateShuffledDigits(gridSize);
+                rowNumbers = generateRowDigits(gridSize, calcMode);
+                userAnswers = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
                 selectedCell = null;
                 isChecked = false;
 
                 resultBanner.classList.add('hidden');
                 hideNumpad();
                 resetTimer();
+                gridScrollContainer.scrollTo(0, 0);
 
                 renderGrid();
             }
 
             /**
-             * 10x10の正方形レイアウトに対応したグリッド構築
+             * 1行目・1列目固定対応の正方形テーブルを構築
              */
             function renderGrid() {
                 gridTable.innerHTML = '';
                 const opSymbol = getOperatorSymbol(calcMode);
 
-                // 1. ヘッダー行
+                // 1. ヘッダー行 (1行目：sticky-top)
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
 
+                // 左上の演算子セル (sticky-corner)
                 const cornerTh = document.createElement('th');
-                cornerTh.className = 'calc-header bg-indigo-600 text-white font-bold text-sm sm:text-lg border border-indigo-700 rounded-tl-lg select-none';
-                cornerTh.innerHTML = `<div class="cell-content">${opSymbol}</div>`;
+                cornerTh.className = 'sticky-corner calc-corner bg-indigo-600 text-white font-bold text-sm sm:text-lg p-0 select-none';
+                cornerTh.innerHTML = `<div class="cell-box">${opSymbol}</div>`;
                 headerRow.appendChild(cornerTh);
 
-                colNumbers.forEach((num, cIdx) => {
+                // 上端の数字セル (sticky-top)
+                colNumbers.forEach((num) => {
                     const th = document.createElement('th');
-                    th.className = `calc-header bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base border border-indigo-200 ${cIdx === 8 ? 'rounded-tr-lg' : ''}`;
-                    th.innerHTML = `<div class="cell-content">${num}</div>`;
+                    th.className = 'sticky-top calc-header-top bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
+                    th.innerHTML = `<div class="cell-box">${num}</div>`;
                     headerRow.appendChild(th);
                 });
                 thead.appendChild(headerRow);
@@ -336,19 +422,21 @@
                 rowNumbers.forEach((rowNum, rIdx) => {
                     const tr = document.createElement('tr');
 
+                    // 左端ヘッダーセル (sticky-left)
                     const rowTh = document.createElement('th');
-                    rowTh.className = `calc-header bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base border border-indigo-200 ${rIdx === 8 ? 'rounded-bl-lg' : ''}`;
-                    rowTh.innerHTML = `<div class="cell-content">${rowNum}</div>`;
+                    rowTh.className = 'sticky-left calc-header-left bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
+                    rowTh.innerHTML = `<div class="cell-box">${rowNum}</div>`;
                     tr.appendChild(rowTh);
 
-                    for (let cIdx = 0; cIdx < 9; cIdx++) {
+                    // 回答マス
+                    for (let cIdx = 0; cIdx < gridSize; cIdx++) {
                         const td = document.createElement('td');
                         td.dataset.row = rIdx;
                         td.dataset.col = cIdx;
-                        td.className = `calc-cell text-center font-bold text-xs sm:text-base border border-slate-300 bg-white cursor-pointer hover:bg-slate-50 ${rIdx === 8 && cIdx === 8 ? 'rounded-br-lg' : ''}`;
+                        td.className = 'calc-cell text-center font-bold text-xs sm:text-base bg-white cursor-pointer hover:bg-slate-50 p-0';
                         
                         const div = document.createElement('div');
-                        div.className = 'cell-content';
+                        div.className = 'cell-box';
                         div.textContent = userAnswers[rIdx][cIdx];
                         td.appendChild(div);
 
@@ -384,13 +472,46 @@
                 showNumpad();
             }
 
+            /**
+             * スクロールコンテナ内および画面全体で選択セルが見切れないよう調整
+             */
             function ensureCellVisible(cellEl) {
-                const rect = cellEl.getBoundingClientRect();
-                const numpadHeight = 260;
+                // スクロールコンテナ内での自動スクロール（固定ヘッダー分の余白を考慮）
+                const containerRect = gridScrollContainer.getBoundingClientRect();
+                const cellRect = cellEl.getBoundingClientRect();
+                const headerOffset = cellEl.offsetWidth + 8;
+
+                if (cellRect.left < containerRect.left + headerOffset) {
+                    gridScrollContainer.scrollBy({
+                        left: cellRect.left - (containerRect.left + headerOffset),
+                        behavior: 'smooth'
+                    });
+                } else if (cellRect.right > containerRect.right - 8) {
+                    gridScrollContainer.scrollBy({
+                        left: cellRect.right - containerRect.right + 8,
+                        behavior: 'smooth'
+                    });
+                }
+
+                if (cellRect.top < containerRect.top + headerOffset) {
+                    gridScrollContainer.scrollBy({
+                        top: cellRect.top - (containerRect.top + headerOffset),
+                        behavior: 'smooth'
+                    });
+                } else if (cellRect.bottom > containerRect.bottom - 8) {
+                    gridScrollContainer.scrollBy({
+                        top: cellRect.bottom - containerRect.bottom + 8,
+                        behavior: 'smooth'
+                    });
+                }
+
+                // 画面下部のフローティングテンキーに隠れないようにウィンドウをスクロール
+                const updatedRect = cellEl.getBoundingClientRect();
+                const numpadHeight = 270;
                 const viewportHeight = window.innerHeight;
-                if (rect.bottom > viewportHeight - numpadHeight) {
+                if (updatedRect.bottom > viewportHeight - numpadHeight) {
                     window.scrollBy({
-                        top: rect.bottom - (viewportHeight - numpadHeight) + 20,
+                        top: updatedRect.bottom - (viewportHeight - numpadHeight) + 20,
                         behavior: 'smooth'
                     });
                 }
@@ -442,7 +563,7 @@
                 }
 
                 userAnswers[row][col] = currentVal;
-                const div = td.querySelector('.cell-content');
+                const div = td.querySelector('.cell-box');
                 if (div) div.textContent = currentVal;
                 updateEquationDisplay();
             }
@@ -453,7 +574,7 @@
                 userAnswers[row][col] = '';
                 const td = getCellElement(row, col);
                 if (td) {
-                    const div = td.querySelector('.cell-content');
+                    const div = td.querySelector('.cell-box');
                     if (div) div.textContent = '';
                     td.classList.remove('cell-correct', 'cell-incorrect');
                 }
@@ -467,11 +588,11 @@
                 }
                 let { row, col } = selectedCell;
                 col++;
-                if (col >= 9) {
+                if (col >= gridSize) {
                     col = 0;
                     row++;
                 }
-                if (row >= 9) {
+                if (row >= gridSize) {
                     hideNumpad();
                     return;
                 }
@@ -484,10 +605,10 @@
                 isChecked = true;
 
                 let correctCount = 0;
-                const totalCells = 81;
+                const totalCells = gridSize * gridSize;
 
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
+                for (let r = 0; r < gridSize; r++) {
+                    for (let c = 0; c < gridSize; c++) {
                         const td = getCellElement(r, c);
                         if (!td) continue;
 
@@ -511,12 +632,13 @@
 
                 if (correctCount === totalCells) {
                     resultIcon.textContent = '🏆';
-                    resultText.textContent = `パーフェクト！ 81問中 81問正解！`;
+                    resultText.textContent = `パーフェクト！ ${totalCells}問中 ${totalCells}問正解！`;
                     resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-sm sm:text-base';
                     resultText.className = 'font-bold text-emerald-900';
                 } else {
-                    resultIcon.textContent = correctCount >= 70 ? '👏' : '📝';
-                    resultText.textContent = `81問中 ${correctCount}問正解！`;
+                    const ratio = correctCount / totalCells;
+                    resultIcon.textContent = ratio >= 0.85 ? '👏' : '📝';
+                    resultText.textContent = `${totalCells}問中 ${correctCount}問正解！`;
                     resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base';
                     resultText.className = 'font-bold text-indigo-900';
                 }
@@ -525,6 +647,7 @@
             }
 
             btnGenerate.addEventListener('click', initGame);
+            sizeSelect.addEventListener('change', initGame);
             modeSelect.addEventListener('change', initGame);
             btnCheck.addEventListener('click', checkAnswers);
 
@@ -570,9 +693,9 @@
                     e.preventDefault();
                     let { row, col } = selectedCell;
                     if (e.key === 'ArrowUp' && row > 0) row--;
-                    if (e.key === 'ArrowDown' && row < 8) row++;
+                    if (e.key === 'ArrowDown' && row < gridSize - 1) row++;
                     if (e.key === 'ArrowLeft' && col > 0) col--;
-                    if (e.key === 'ArrowRight' && col < 8) col++;
+                    if (e.key === 'ArrowRight' && col < gridSize - 1) col++;
                     selectCell(row, col);
                 }
             });
