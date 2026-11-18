@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>マス計算トレーニング (9×9 / 19×19)</title>
+    <title>マス計算トレーニング & 19×19一覧表</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Noto Sans JP -->
@@ -16,7 +16,7 @@
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        /* スクロールコンテナ：19x19でも縦横スクロールでヘッダーを固定できるようにする */
+        /* スクロールコンテナ：縦横スクロールでヘッダーを固定 */
         .grid-scroll-wrapper {
             max-height: 68vh;
             overflow: auto;
@@ -39,7 +39,7 @@
             width: 100%;
             aspect-ratio: 1 / 1;
         }
-        /* 19x19モード時はタップしやすい最小正方形サイズ(42px)を確保してスクロール */
+        /* 19x19モード時はタップしやすい最小正方形サイズを確保 */
         .calc-grid-table.mode-19 .cell-box {
             width: 42px;
             height: 42px;
@@ -108,6 +108,26 @@
             background-color: #fee2e2 !important; /* red-100 */
             color: #991b1b !important; /* red-800 */
         }
+
+        /* 一覧表のハイライト用スタイル */
+        .ref-highlight-cross {
+            background-color: #eef2ff !important; /* indigo-50 */
+        }
+        .ref-highlight-header {
+            background-color: #6366f1 !important; /* indigo-500 */
+            color: #ffffff !important;
+        }
+        .ref-highlight-target {
+            background-color: #fde047 !important; /* yellow-300 */
+            color: #1e1b4b !important;
+            font-weight: 800;
+            box-shadow: inset 0 0 0 2px #ca8a04;
+        }
+        .ref-diagonal {
+            background-color: #f8fafc;
+            color: #4338ca;
+        }
+
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -123,16 +143,27 @@
     <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-3 py-3 sm:px-6">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <!-- タイトルとタイマー -->
-                <div class="flex items-center gap-3">
+                <!-- タイトルと画面切替タブ -->
+                <div class="flex items-center gap-3 flex-wrap">
                     <h1 class="text-lg sm:text-xl font-bold text-indigo-600 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
                         <span id="app-title">81マス計算 (9×9)</span>
                     </h1>
-                    <!-- タイマー表示 -->
-                    <div class="bg-slate-100 px-3 py-1 rounded-full text-sm font-semibold text-slate-700 flex items-center gap-1.5 border border-slate-200">
+
+                    <!-- モード切替スイッチ（トレーニング / 一覧表） -->
+                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200" role="group">
+                        <button type="button" id="tab-train" class="px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer">
+                            トレーニング
+                        </button>
+                        <button type="button" id="tab-ref" class="px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                            19×19一覧表
+                        </button>
+                    </div>
+
+                    <!-- タイマー表示（トレーニング時のみ表示） -->
+                    <div id="timer-badge" class="bg-slate-100 px-3 py-1 rounded-full text-sm font-semibold text-slate-700 flex items-center gap-1.5 border border-slate-200">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -140,22 +171,19 @@
                     </div>
                 </div>
 
-                <!-- アクションボタン群 -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <!-- マス数（サイズ）選択 -->
+                <!-- アクションボタン群（トレーニング用） -->
+                <div id="train-controls" class="flex items-center gap-2 flex-wrap">
                     <select id="grid-size" aria-label="マスのサイズ" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
                         <option value="9" selected>9×9 (81マス)</option>
                         <option value="19">19×19 (361マス)</option>
                     </select>
 
-                    <!-- 計算モード選択 -->
                     <select id="calc-mode" aria-label="計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
                         <option value="add" selected>＋ たし算</option>
                         <option value="sub">－ ひき算</option>
                         <option value="mul">× かけ算</option>
                     </select>
 
-                    <!-- ランダム生成ボタン -->
                     <button id="btn-generate" class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-2 px-3.5 sm:px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -163,7 +191,6 @@
                         <span>ランダム生成</span>
                     </button>
 
-                    <!-- チェックボタン -->
                     <button id="btn-check" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-2 px-3.5 sm:px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -171,9 +198,17 @@
                         <span>チェック</span>
                     </button>
                 </div>
+
+                <!-- アクションボタン群（一覧表用） -->
+                <div id="ref-controls" class="hidden flex items-center gap-2 flex-wrap">
+                    <select id="ref-calc-mode" aria-label="一覧表の計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-3 py-2 font-bold cursor-pointer">
+                        <option value="mul" selected>× かけ算 (19×19九九)</option>
+                        <option value="add">＋ たし算 (19×19)</option>
+                    </select>
+                </div>
             </div>
 
-            <!-- 結果通知バナー -->
+            <!-- 結果通知バナー（トレーニング用） -->
             <div id="result-banner" class="hidden mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base">
                 <div class="flex items-center gap-2 font-bold text-indigo-900">
                     <span id="result-icon" class="text-xl">🎉</span>
@@ -184,8 +219,8 @@
         </div>
     </header>
 
-    <!-- メインコンテンツ：マス計算グリッド -->
-    <main class="flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-72 sm:pb-80">
+    <!-- メインコンテンツ：トレーニングビュー -->
+    <main id="view-train" class="flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-72 sm:pb-80">
         <div id="grid-card" class="w-full max-w-lg bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200 transition-all">
             <div id="grid-scroll-container" class="grid-scroll-wrapper">
                 <table id="calc-grid" class="calc-grid-table mode-9 select-none">
@@ -194,6 +229,28 @@
             </div>
             <p class="text-xs text-slate-400 text-center mt-3">
                 マスをタップして下のテンキー（またはキーボード）で数字を入力してください
+            </p>
+        </div>
+    </main>
+
+    <!-- メインコンテンツ：19×19一覧表ビュー -->
+    <main id="view-ref" class="hidden flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-16">
+        <div class="w-full max-w-4xl bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200">
+            <!-- 選択中の式の確認バー -->
+            <div class="flex items-center justify-between mb-3 px-1">
+                <span class="text-xs sm:text-sm font-bold text-slate-500">1〜19の計算一覧表（タップで縦横ハイライト）</span>
+                <div id="ref-formula-display" class="text-sm sm:text-lg font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100">
+                    マスをタップして式を確認
+                </div>
+            </div>
+
+            <div class="grid-scroll-wrapper">
+                <table id="ref-grid" class="calc-grid-table mode-19 select-none">
+                    <!-- JavaScriptで19×19の一覧表を生成 -->
+                </table>
+            </div>
+            <p class="text-xs text-slate-400 text-center mt-3">
+                縦横にスクロールしても1行目と1列目は固定表示されます（薄い背景は同じ数同士の計算です）
             </p>
         </div>
     </main>
@@ -250,7 +307,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let gridSize = 9; // 9 or 19
+            // --- 共通・状態管理 ---
+            let activeTab = 'train'; // 'train' | 'ref'
+            let gridSize = 9;
             let colNumbers = [];
             let rowNumbers = [];
             let userAnswers = [];
@@ -262,7 +321,16 @@
             let elapsedSeconds = 0;
             let isTimerRunning = false;
 
+            // --- DOM要素 ---
             const appTitle = document.getElementById('app-title');
+            const tabTrain = document.getElementById('tab-train');
+            const tabRef = document.getElementById('tab-ref');
+            const timerBadge = document.getElementById('timer-badge');
+            const trainControls = document.getElementById('train-controls');
+            const refControls = document.getElementById('ref-controls');
+            const viewTrain = document.getElementById('view-train');
+            const viewRef = document.getElementById('view-ref');
+
             const gridCard = document.getElementById('grid-card');
             const gridScrollContainer = document.getElementById('grid-scroll-container');
             const gridTable = document.getElementById('calc-grid');
@@ -276,6 +344,12 @@
             const resultText = document.getElementById('result-text');
             const resultTime = document.getElementById('result-time');
 
+            // 一覧表用DOM
+            const refGridTable = document.getElementById('ref-grid');
+            const refCalcModeSelect = document.getElementById('ref-calc-mode');
+            const refFormulaDisplay = document.getElementById('ref-formula-display');
+
+            // テンキー用DOM
             const numpadContainer = document.getElementById('numpad-container');
             const currentEquation = document.getElementById('current-equation');
             const btnNextCell = document.getElementById('btn-next-cell');
@@ -283,9 +357,134 @@
             const btnClear = document.getElementById('btn-clear');
             const numButtons = document.querySelectorAll('.num-btn');
 
-            /**
-             * 1〜size の重複なしランダム配列を生成
-             */
+            // --- タブ切り替え処理 ---
+            function switchTab(tab) {
+                activeTab = tab;
+                if (tab === 'train') {
+                    tabTrain.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer';
+                    tabRef.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+                    
+                    timerBadge.classList.remove('hidden');
+                    trainControls.classList.remove('hidden');
+                    refControls.classList.add('hidden');
+                    viewTrain.classList.remove('hidden');
+                    viewRef.classList.add('hidden');
+
+                    const totalQuestions = gridSize * gridSize;
+                    appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
+                } else {
+                    // 一覧表を開く際はタイマーを一時停止しテンキーを隠す
+                    stopTimer();
+                    hideNumpad();
+
+                    tabRef.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer';
+                    tabTrain.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+
+                    timerBadge.classList.add('hidden');
+                    trainControls.classList.add('hidden');
+                    refControls.classList.remove('hidden');
+                    viewTrain.classList.add('hidden');
+                    viewRef.classList.remove('hidden');
+                    resultBanner.classList.add('hidden');
+
+                    appTitle.textContent = '19×19 計算一覧表';
+                    renderReferenceTable();
+                }
+            }
+
+            tabTrain.addEventListener('click', () => switchTab('train'));
+            tabRef.addEventListener('click', () => switchTab('ref'));
+
+            // --- 19×19 一覧表の描画ロジック ---
+            function renderReferenceTable() {
+                const mode = refCalcModeSelect.value; // 'mul' | 'add'
+                const opSymbol = getOperatorSymbol(mode);
+                refGridTable.innerHTML = '';
+                refFormulaDisplay.textContent = 'マスをタップして式を確認';
+
+                // 1. ヘッダー行 (1〜19)
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                const cornerTh = document.createElement('th');
+                cornerTh.className = 'sticky-corner calc-corner bg-indigo-600 text-white font-bold text-sm sm:text-lg p-0 select-none';
+                cornerTh.innerHTML = `<div class="cell-box">${opSymbol}</div>`;
+                headerRow.appendChild(cornerTh);
+
+                for (let c = 1; c <= 19; c++) {
+                    const th = document.createElement('th');
+                    th.dataset.refColHeader = c;
+                    th.className = 'sticky-top calc-header-top bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0 transition-colors';
+                    th.innerHTML = `<div class="cell-box">${c}</div>`;
+                    headerRow.appendChild(th);
+                }
+                thead.appendChild(headerRow);
+                refGridTable.appendChild(thead);
+
+                // 2. データ行 (1〜19)
+                const tbody = document.createElement('tbody');
+                for (let r = 1; r <= 19; r++) {
+                    const tr = document.createElement('tr');
+
+                    const rowTh = document.createElement('th');
+                    rowTh.dataset.refRowHeader = r;
+                    rowTh.className = 'sticky-left calc-header-left bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0 transition-colors';
+                    rowTh.innerHTML = `<div class="cell-box">${r}</div>`;
+                    tr.appendChild(rowTh);
+
+                    for (let c = 1; c <= 19; c++) {
+                        const val = mode === 'mul' ? r * c : r + c;
+                        const td = document.createElement('td');
+                        td.dataset.r = r;
+                        td.dataset.c = c;
+                        const isDiag = r === c ? 'ref-diagonal font-bold' : 'bg-white font-semibold text-slate-700';
+                        td.className = `calc-cell text-center text-xs sm:text-base cursor-pointer p-0 ${isDiag}`;
+                        td.innerHTML = `<div class="cell-box">${val}</div>`;
+
+                        td.addEventListener('click', () => {
+                            highlightReferenceCell(r, c, val, opSymbol);
+                        });
+
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+                refGridTable.appendChild(tbody);
+            }
+
+            function highlightReferenceCell(targetR, targetC, val, opSymbol) {
+                // 既存のハイライトをクリア
+                refGridTable.querySelectorAll('.ref-highlight-cross, .ref-highlight-target').forEach(el => {
+                    el.classList.remove('ref-highlight-cross', 'ref-highlight-target');
+                });
+                refGridTable.querySelectorAll('.ref-highlight-header').forEach(el => {
+                    el.classList.remove('ref-highlight-header');
+                });
+
+                // 行・列ヘッダーのハイライト
+                const colTh = refGridTable.querySelector(`th[data-ref-col-header="${targetC}"]`);
+                const rowTh = refGridTable.querySelector(`th[data-ref-row-header="${targetR}"]`);
+                if (colTh) colTh.classList.add('ref-highlight-header');
+                if (rowTh) rowTh.classList.add('ref-highlight-header');
+
+                // 十字ハイライトと対象セルの強調
+                refGridTable.querySelectorAll('td').forEach(td => {
+                    const r = parseInt(td.dataset.r, 10);
+                    const c = parseInt(td.dataset.c, 10);
+                    if (r === targetR && c === targetC) {
+                        td.classList.add('ref-highlight-target');
+                    } else if (r === targetR || c === targetC) {
+                        td.classList.add('ref-highlight-cross');
+                    }
+                });
+
+                // 上部の式表示を更新
+                refFormulaDisplay.textContent = `${targetR} ${opSymbol} ${targetC} = ${val}`;
+            }
+
+            refCalcModeSelect.addEventListener('change', renderReferenceTable);
+
+            // --- トレーニング用ロジック ---
             function generateShuffledDigits(size) {
                 const digits = Array.from({ length: size }, (_, i) => i + 1);
                 for (let i = digits.length - 1; i > 0; i--) {
@@ -295,9 +494,6 @@
                 return digits;
             }
 
-            /**
-             * ひき算時は答えが負にならないよう左端の数値を +size する
-             */
             function generateRowDigits(size, mode) {
                 const base = generateShuffledDigits(size);
                 if (mode === 'sub') {
@@ -361,9 +557,11 @@
                 gridSize = parseInt(sizeSelect.value, 10);
                 calcMode = modeSelect.value;
 
-                // タイトルとカード幅の調整
                 const totalQuestions = gridSize * gridSize;
-                appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
+                if (activeTab === 'train') {
+                    appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
+                }
+
                 if (gridSize === 19) {
                     gridCard.classList.remove('max-w-lg');
                     gridCard.classList.add('max-w-4xl');
@@ -390,24 +588,19 @@
                 renderGrid();
             }
 
-            /**
-             * 1行目・1列目固定対応の正方形テーブルを構築
-             */
             function renderGrid() {
                 gridTable.innerHTML = '';
                 const opSymbol = getOperatorSymbol(calcMode);
 
-                // 1. ヘッダー行 (1行目：sticky-top)
+                // 1. ヘッダー行
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
 
-                // 左上の演算子セル (sticky-corner)
                 const cornerTh = document.createElement('th');
                 cornerTh.className = 'sticky-corner calc-corner bg-indigo-600 text-white font-bold text-sm sm:text-lg p-0 select-none';
                 cornerTh.innerHTML = `<div class="cell-box">${opSymbol}</div>`;
                 headerRow.appendChild(cornerTh);
 
-                // 上端の数字セル (sticky-top)
                 colNumbers.forEach((num) => {
                     const th = document.createElement('th');
                     th.className = 'sticky-top calc-header-top bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
@@ -422,13 +615,11 @@
                 rowNumbers.forEach((rowNum, rIdx) => {
                     const tr = document.createElement('tr');
 
-                    // 左端ヘッダーセル (sticky-left)
                     const rowTh = document.createElement('th');
                     rowTh.className = 'sticky-left calc-header-left bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
                     rowTh.innerHTML = `<div class="cell-box">${rowNum}</div>`;
                     tr.appendChild(rowTh);
 
-                    // 回答マス
                     for (let cIdx = 0; cIdx < gridSize; cIdx++) {
                         const td = document.createElement('td');
                         td.dataset.row = rIdx;
@@ -472,11 +663,7 @@
                 showNumpad();
             }
 
-            /**
-             * スクロールコンテナ内および画面全体で選択セルが見切れないよう調整
-             */
             function ensureCellVisible(cellEl) {
-                // スクロールコンテナ内での自動スクロール（固定ヘッダー分の余白を考慮）
                 const containerRect = gridScrollContainer.getBoundingClientRect();
                 const cellRect = cellEl.getBoundingClientRect();
                 const headerOffset = cellEl.offsetWidth + 8;
@@ -505,7 +692,6 @@
                     });
                 }
 
-                // 画面下部のフローティングテンキーに隠れないようにウィンドウをスクロール
                 const updatedRect = cellEl.getBoundingClientRect();
                 const numpadHeight = 270;
                 const viewportHeight = window.innerHeight;
@@ -675,7 +861,7 @@
             });
 
             document.addEventListener('keydown', (e) => {
-                if (!selectedCell) return;
+                if (activeTab !== 'train' || !selectedCell) return;
 
                 if (e.key >= '0' && e.key <= '9') {
                     e.preventDefault();
