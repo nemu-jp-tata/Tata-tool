@@ -111,7 +111,297 @@
     <div class="monster-grid" id="monsterGrid"></div>
   </div>
 </div>
+<!-- ========================================
+     操作説明ウィンドウ
+======================================== -->
 
+<div
+  class="help-overlay"
+  id="helpOverlay"
+  aria-hidden="true">
+
+  <section
+    class="help-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="helpTitle">
+
+    <!-- ヘッダー -->
+    <div class="help-header">
+
+      <div>
+        <div class="help-eyebrow">
+          HOW TO USE
+        </div>
+
+        <div class="help-title" id="helpTitle">
+          タタ配置ツールの使い方
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="help-close-btn"
+        id="helpCloseBtn"
+        aria-label="閉じる">
+        ×
+      </button>
+
+    </div>
+
+    <!-- 説明本文 -->
+    <div class="help-content">
+
+      <p class="help-intro">
+        タタ配置ツールの基本操作を説明します。
+        タタを配置・進化させて、自分だけの編成を作成しましょう。
+      </p>
+
+
+      <!-- 基本操作 -->
+      <section class="help-section">
+
+        <div class="help-section-title">
+          基本操作
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">1</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              タタを選択する
+            </div>
+
+            <div class="help-step-text">
+              タタ一覧から好きなタタをタップすると選択できます。
+              選択中のタタは緑色の枠で表示されます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">2</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              タップで進化する
+            </div>
+
+            <div class="help-step-text">
+              選択中のタタと同じタタをもう一度タップすると、
+              次の進化段階に切り替わります。
+              最終段階の次にタップすると選択が解除されます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">3</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              盤面に配置する
+            </div>
+
+            <div class="help-step-text">
+              タタを選択した状態で盤面の空いているマスをタップすると配置できます。
+              タタ一覧から盤面へ直接ドラッグして配置することもできます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">4</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              移動・削除する
+            </div>
+
+            <div class="help-step-text">
+              盤面に配置したタタをタップすると削除できます。
+              ドラッグすると別のマスへ移動できます。
+              移動先に別のタタがいる場合は入れ替わります。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">5</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              絞り込みを使う
+            </div>
+
+            <div class="help-step-text">
+              属性やタイプのボタンを選択すると、
+              条件に合ったタタだけを表示できます。
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ステージ -->
+      <section class="help-section">
+
+        <div class="help-section-title">
+          ステージについて
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">5×5</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              ノーマルステージ
+            </div>
+
+            <div class="help-step-text">
+              5×5の盤面です。
+              タタは最大15体まで配置できます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">6×6</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              ゾンビラッシュ
+            </div>
+
+            <div class="help-step-text">
+              6×6の盤面です。
+              1P・2Pそれぞれ最大15体まで配置できます。
+              画面上部のボタンでプレイヤーを切り替えます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">3×4</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              道場
+            </div>
+
+            <div class="help-step-text">
+              3×4の盤面です。
+              タタは最大12体まで配置できます。
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ゾンビラッシュ -->
+      <section class="help-section">
+
+        <div class="help-section-title">
+          ゾンビラッシュ専用機能
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">1</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              チップ選択
+            </div>
+
+            <div class="help-step-text">
+              「タタ選択」と「チップ選択」を切り替えられます。
+              チップ選択では、使いたいチップをタップして選択します。
+              もう一度タップすると選択解除できます。
+              チップは最大3枚まで選択でき、
+              「セットする」を押すと反映されます。
+              1P・2Pそれぞれ別々に設定できます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">2</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              レベル設定
+            </div>
+
+            <div class="help-step-text">
+              「レベル」ボタンを押してレベルモードにします。
+              盤面のタタをタップするたびにLv.1からLv.8まで上がります。
+              Lv.8の次はレベル表示が解除されます。
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- その他 -->
+      <section class="help-section">
+
+        <div class="help-section-title">
+          その他の機能
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">画像</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              画像保存
+            </div>
+
+            <div class="help-step-text">
+              「画像保存」を押すと、
+              現在の盤面を画像として保存できます。
+              タイトル欄の文字も画像に反映されます。
+            </div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-number">注意</div>
+
+          <div class="help-step-body">
+            <div class="help-step-title">
+              盤面クリア
+            </div>
+
+            <div class="help-step-text">
+              「盤面クリア」を押すと、
+              現在の盤面とチップ設定がリセットされます。
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <div class="help-note">
+        タタ選択中に盤面以外をクリックすると、
+        選択が解除される場合があります。
+        また、盤面の外でドラッグを離すと元の位置に戻ります。
+      </div>
+
+    </div>
+
+    <div class="help-footer">
+      タタ配置ツール
+    </div>
+
+  </section>
+
+</div>
 <div id="dragGhost" class="drag-ghost"></div>
 
 <div class="drawer-overlay" id="drawerOverlay">
