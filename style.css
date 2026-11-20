@@ -892,3 +892,350 @@ body {
   padding-top: 6px;
   border-top: 1px dashed #334155;
 }
+/* ========================================
+   テーマ切り替え
+   SOFT WHITE MODE
+======================================== */
+
+.theme-switch-panel {
+  background: #0f111a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 18px;
+}
+
+.theme-switch-label {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.theme-switch-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-option {
+  flex: 1;
+  padding: 9px 5px;
+  border: 1px solid #334155;
+  border-radius: 7px;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.theme-option.active {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+}
+
+.theme-switch-note {
+  color: #64748b;
+  font-size: 10px;
+  margin-top: 7px;
+}
+
+/* ========================================
+   ドラッグ軽量化
+======================================== */
+
+.drag-ghost {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  filter: none;
+  transition: none;
+}
+
+.cell,
+.board-slot {
+  transition:
+    border-color 0.1s ease,
+    background-color 0.1s ease;
+}
+
+.cell.drag-over,
+.board-slot.drag-over {
+  transform: none;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 200, 255, 0.75) !important;
+}
+
+/* ========================================
+   ホワイトモード
+======================================== */
+
+body.theme-light {
+  color-scheme: light;
+  background-color: #edf2f7;
+  color: #475569;
+}
+
+/* タイトル */
+.theme-light .app-title-input {
+  background: #ffffff;
+  border-color: #d5dfeb;
+  color: #26364b;
+}
+
+.theme-light .app-title-input:focus {
+  background: #ffffff;
+  border-color: #60a5fa;
+}
+
+/* ヘッダーボタン */
+.theme-light .btn,
+.theme-light .menu-btn {
+  background: #e4ebf3;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.theme-light .btn:active {
+  background: #d5dfeb;
+}
+
+.theme-light .menu-btn span {
+  background: #334155;
+}
+
+/* プレイヤー切り替え */
+.theme-light .player-btn {
+  background: #ffffff;
+  color: #64748b;
+  border-color: #d5dfeb;
+}
+
+/* 盤面 */
+.theme-light .board-frame {
+  background: #f8fafc;
+  border-color: #d5dfeb;
+}
+
+/* 盤面のお知らせ */
+.theme-light .board-notice {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+/* 盤面マス */
+.theme-light .cell,
+.theme-light .board-slot {
+  background: #e9eff6;
+  border-color: #cbd5e1;
+}
+
+.theme-light .cell.p1-cell {
+  background: rgba(239, 68, 68, 0.09);
+}
+
+.theme-light .cell.p2-cell {
+  background: rgba(59, 130, 246, 0.10);
+}
+
+/* タタ選択エリア */
+.theme-light .monster-frame {
+  background: #f8fafc;
+  border-color: #d5dfeb;
+}
+
+.theme-light .monster-title {
+  color: #26364b;
+}
+
+/* フィルター */
+.theme-light .filter-details {
+  background: #eef3f8;
+  border-color: #d5dfeb;
+}
+
+.theme-light .filter-summary {
+  color: #475569;
+}
+
+.theme-light .filter-section {
+  border-color: #d5dfeb;
+}
+
+.theme-light .filter-label {
+  color: #64748b;
+}
+
+.theme-light .filter-btn {
+  background: #ffffff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.theme-light .filter-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* タタ一覧 */
+.theme-light .monster-item {
+  background: #ffffff;
+  border-color: #d5dfeb;
+}
+
+.theme-light .monster-item[data-attr="水"] {
+  background: rgba(37, 99, 235, 0.10);
+}
+
+.theme-light .monster-item[data-attr="炎"] {
+  background: rgba(239, 68, 68, 0.10);
+}
+
+.theme-light .monster-item[data-attr="草"] {
+  background: rgba(34, 197, 94, 0.10);
+}
+
+.theme-light .monster-item[data-attr="岩"] {
+  background: rgba(202, 138, 4, 0.12);
+}
+
+.theme-light .monster-item[data-attr="雷"] {
+  background: rgba(168, 85, 247, 0.10);
+}
+
+.theme-light .monster-name {
+  color: #334155;
+}
+
+.theme-light .monster-grid::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.theme-light .monster-grid::-webkit-scrollbar-thumb {
+  background: #a8b6c7;
+}
+
+/* 選択中のタタ */
+.theme-light .monster-item.active {
+  background: #dbeafe !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18) !important;
+}
+
+/* ドロワーメニュー */
+.theme-light .drawer-menu {
+  background: #f8fafc;
+  border-color: #d5dfeb;
+  box-shadow: -4px 0 15px rgba(15, 23, 42, 0.15);
+}
+
+.theme-light .drawer-title {
+  color: #26364b;
+  border-color: #d5dfeb;
+}
+
+.theme-light .drawer-item {
+  background: #eef3f8;
+  color: #475569;
+  border-color: #d5dfeb;
+}
+
+.theme-light .drawer-item:hover,
+.theme-light .drawer-item.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.theme-light .drawer-footer {
+  color: #94a3b8;
+}
+
+/* テーマ切り替えパネル */
+.theme-light .theme-switch-panel {
+  background: #eef3f8;
+  border-color: #d5dfeb;
+}
+
+.theme-light .theme-switch-label {
+  color: #334155;
+}
+
+.theme-light .theme-option {
+  background: #ffffff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.theme-light .theme-option.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.theme-light .theme-switch-note {
+  color: #8492a6;
+}
+
+/* 操作ヒント */
+.theme-light .drawer-help-box {
+  background: #eef3f8 !important;
+  color: #475569 !important;
+  border-color: #d5dfeb !important;
+}
+
+.theme-light .drawer-help-title {
+  color: #2563eb;
+}
+
+/* チップセット */
+.theme-light .chipset-container {
+  background: #eef3f8;
+  border-color: #d5dfeb;
+}
+
+.theme-light .chipset-title {
+  color: #475569;
+}
+
+.theme-light .chipset-slot {
+  background: #e4ebf3;
+}
+
+/* レベルボタン */
+.theme-light .level-btn {
+  background: #e4ebf3;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* 発動効果一覧 */
+.theme-light .buff-summary-card {
+  background: #eef3f8;
+  border-color: #d5dfeb;
+}
+
+.theme-light .buff-summary-header {
+  color: #475569;
+}
+
+.theme-light .buff-toggle-icon {
+  color: #8492a6;
+}
+
+.theme-light .buff-summary-content {
+  border-color: #cbd5e1;
+}
+
+/* チップ選択画面の上部操作エリア */
+.theme-light #monsterGrid > div[style*="background: #1e293b"] {
+  background: #eef3f8 !important;
+  border: 1px solid #d5dfeb !important;
+}
+
+.theme-light #monsterGrid > div[style*="background: #1e293b"] span {
+  color: #475569 !important;
+}
