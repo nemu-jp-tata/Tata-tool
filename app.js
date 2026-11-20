@@ -133,21 +133,26 @@ function renderChips() {
 
   const selectedChips = selectedChipsMap[currentPlayer];
 
+  // ----------------------------------------
+  // チップ操作エリア
+  // ----------------------------------------
   const actionArea = document.createElement('div');
 
-  actionArea.style.cssText =
-    'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; background: #1e293b; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 10;';
+  actionArea.className = 'chip-action-area';
 
   actionArea.innerHTML = `
-    <span style="font-size: 12px; color: #cbd5e1; white-space: nowrap;">
+    <span class="chip-count">
       [${currentPlayer}] 選択中:
-      <strong id="selectedChipCount" style="color: #4ade80;">
+      <strong class="chip-count-number" id="selectedChipCount">
         ${selectedChips.length}
       </strong>
       / 3枚
     </span>
 
-    <button id="setChipsBtn" class="btn" style="background: #2563eb; border-color: #3b82f6; color: #fff; padding: 6px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+    <button
+      id="setChipsBtn"
+      class="btn chip-set-btn"
+      type="button">
       セットする
     </button>
   `;
@@ -159,28 +164,54 @@ function renderChips() {
     applyChipsToSlots();
   });
 
+  // ----------------------------------------
+  // チップ一覧
+  // ----------------------------------------
   chipsetList.forEach(chip => {
+
     const isSelected = selectedChips.some(c => c.id === chip.id);
 
     const item = document.createElement('div');
 
-    item.className = `monster-item ${isSelected ? 'active' : ''}`;
-
-    item.style.cssText =
-      'position: relative; aspect-ratio: 1 / 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y; padding: 2px; box-sizing: border-box;';
+    item.className =
+      `monster-item chip-item ${isSelected ? 'active' : ''}`;
 
     item.innerHTML = `
-      <img class="monster-thumb" src="${chip.img}" alt="${chip.name}" draggable="false" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; pointer-events: none; display: block; margin: auto;" onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
+      <img
+        class="monster-thumb"
+        src="${chip.img}"
+        alt="${chip.name}"
+        draggable="false"
+        loading="lazy"
+        decoding="async"
+        style="
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: auto;
+          object-fit: contain;
+          pointer-events: none;
+          display: block;
+          margin: auto;
+        "
+        onerror="this.outerHTML='<div class=\\'no-image-badge\\'>🌸 no image 🌸</div>';">
     `;
 
+    // --------------------------------------
+    // 選択・選択解除
+    // --------------------------------------
     item.addEventListener('click', (e) => {
+
       e.stopPropagation();
 
       const index = selectedChips.findIndex(c => c.id === chip.id);
 
       if (index > -1) {
+
         selectedChips.splice(index, 1);
+
       } else {
+
         if (selectedChips.length >= 3) {
           alert('チップは最大3枚までしか選択できません。');
           return;
@@ -195,7 +226,6 @@ function renderChips() {
     monsterGrid.appendChild(item);
   });
 }
-
 // ========================================
 // チップをスロットへ反映
 // ========================================
