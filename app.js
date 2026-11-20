@@ -2084,6 +2084,14 @@ document
     const titleText =
       appTitleInput?.value?.trim() ||
       'タタ配置ツール';
+    const isLightTheme =
+  document.body.classList.contains('theme-light');
+
+const captureBackground =
+  isLightTheme ? '#f1f5f9' : '#181a29';
+
+const captureText =
+  isLightTheme ? '#26364b' : '#f8fafc';
 
     // プレイヤー切り替えを一時的に非表示
     if (playerSwitchContainer) {
