@@ -2634,3 +2634,110 @@ dojoStageBtn?.addEventListener(
 // ========================================
 buildBoard(currentGridType);
 renderMonsters();
+// ========================================
+// 操作説明ウィンドウ
+// ========================================
+
+const helpOpenBtn =
+  document.getElementById('helpOpenBtn');
+
+const helpCloseBtn =
+  document.getElementById('helpCloseBtn');
+
+const helpOverlay =
+  document.getElementById('helpOverlay');
+
+
+// ----------------------------------------
+// 説明画面を開く
+// ----------------------------------------
+
+function openHelpWindow() {
+
+  if (!helpOverlay) {
+    return;
+  }
+
+  helpOverlay.classList.add('open');
+
+  helpOverlay.setAttribute(
+    'aria-hidden',
+    'false'
+  );
+
+  helpCloseBtn?.focus();
+}
+
+
+// ----------------------------------------
+// 説明画面を閉じる
+// ----------------------------------------
+
+function closeHelpWindow() {
+
+  if (!helpOverlay) {
+    return;
+  }
+
+  helpOverlay.classList.remove('open');
+
+  helpOverlay.setAttribute(
+    'aria-hidden',
+    'true'
+  );
+
+  helpOpenBtn?.focus();
+}
+
+
+// ----------------------------------------
+// ボタン操作
+// ----------------------------------------
+
+helpOpenBtn?.addEventListener('click', (e) => {
+
+  e.stopPropagation();
+
+  openHelpWindow();
+
+});
+
+
+helpCloseBtn?.addEventListener('click', (e) => {
+
+  e.stopPropagation();
+
+  closeHelpWindow();
+
+});
+
+
+// ----------------------------------------
+// 背景部分をクリックして閉じる
+// ----------------------------------------
+
+helpOverlay?.addEventListener('click', (e) => {
+
+  if (e.target === helpOverlay) {
+    closeHelpWindow();
+  }
+
+});
+
+
+// ----------------------------------------
+// ESCキーで閉じる
+// ----------------------------------------
+
+document.addEventListener('keydown', (e) => {
+
+  if (
+    e.key === 'Escape' &&
+    helpOverlay?.classList.contains('open')
+  ) {
+
+    closeHelpWindow();
+
+  }
+
+});
