@@ -1600,3 +1600,65 @@ body.theme-light {
     font-size: 10px;
   }
 }
+/* ========================================
+   ホワイトモード：P1・P2の色を維持
+======================================== */
+
+/* 1P */
+body.theme-light .cell.p1-cell:not(.drag-over) {
+  border: 2px solid #ef4444 !important;
+  background: rgba(239, 68, 68, 0.10) !important;
+}
+
+/* 2P */
+body.theme-light .cell.p2-cell:not(.drag-over) {
+  border: 2px solid #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+
+
+/* ========================================
+   バッジ共通：主張を抑える
+======================================== */
+
+.tier-badge,
+.cell .placed-level {
+  background: rgba(30, 41, 59, 0.76);
+  color: #f8fafc;
+
+  font-size: 7px;
+  font-weight: 600;
+
+  padding: 2px 3px;
+  border-radius: 3px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+
+  text-shadow: none;
+}
+
+/* 道場は盤面が大きいため少し大きく */
+.grid-3x4 .tier-badge,
+.grid-3x4 .placed-level {
+  font-size: 10px;
+  padding: 2px 3px;
+}
+
+
+/* ========================================
+   ホワイトモード：バッジを柔らかく
+======================================== */
+
+.theme-light .tier-badge,
+.theme-light .cell .placed-level {
+  background: rgba(226, 232, 240, 0.92);
+  color: #334155;
+
+  border-color: rgba(100, 116, 139, 0.20);
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+
+  text-shadow: none;
+}
