@@ -27,11 +27,27 @@
         <span style="font-size: 11px; color: #94a3b8;">選択中: <strong id="selectedName" style="color:#4ade80;">なし</strong></span>
       </div>
       
-      <button class="menu-btn" id="menuOpenBtn" aria-label="メニューを開く">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div class="header-actions">
+
+  <button
+    class="help-btn"
+    id="helpOpenBtn"
+    type="button"
+    aria-label="使い方を開く">
+    ？ 使い方
+  </button>
+
+  <button
+    class="menu-btn"
+    id="menuOpenBtn"
+    type="button"
+    aria-label="メニューを開く">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+</div>
     </div>
 
     <div class="player-switch-container" id="playerSwitchContainer">
@@ -125,12 +141,15 @@
       <div class="drawer-item" id="zombieStageBtn">ゾンビラッシュ (6×6)</div>
       <div class="drawer-item" id="dojoStageBtn">道場 (3×4)</div>
 
-      <div style="margin-top: 24px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #cbd5e1; line-height: 1.5; border: 1px solid #334155;">
-        <div style="font-weight: bold; color: #4ade80; margin-bottom: 4px;">💡 操作のヒント</div>
-        ・タタをタップ選択、または直接ドラッグして盤面に配置できます。<br>
-        ・盤面のタタをタップで削除、長押しドラッグで移動できます。<br>
-        ・タタ選択ボックス上でドロップすると元の位置に戻り（削除され）、盤面外では元の位置を維持します。
-      </div>
+      <div class="drawer-help-box">
+
+  <div class="drawer-help-title">
+    操作ガイド
+  </div>
+
+  詳しい操作方法は、画面上部の「？ 使い方」から確認できます。
+
+</div>
     </div>
 
     <div class="drawer-footer" style="margin-top: auto; padding-top: 16px; text-align: center; font-size: 10px; color: #475569; letter-spacing: 0.5px;">
