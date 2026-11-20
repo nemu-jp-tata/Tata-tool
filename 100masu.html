@@ -26,7 +26,7 @@ button{cursor:pointer}
 .top-actions{display:flex;gap:7px}
 .icon-btn{border:1px solid var(--line);background:#202746;color:var(--text);border-radius:12px;min-height:40px;padding:0 11px;font-weight:800}
 .icon-btn:active,.btn:active,.key:active{transform:translateY(1px) scale(.98)}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:5px;background:#0b1022;border:1px solid #303a60;border-radius:15px;margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:5px;background:#0b1022;border:1px solid #303a60;border-radius:15px;margin-bottom:12px}
 .tab{border:0;border-radius:11px;background:transparent;color:var(--muted);padding:11px 8px;font-weight:900}
 .tab.active{color:#101426;background:linear-gradient(100deg,var(--cyan),#9df4ff);box-shadow:0 4px 15px #55e7ff44}
 .panel{background:linear-gradient(145deg,#202747,#171d37);border:1px solid #35416a;border-radius:20px;box-shadow:var(--shadow)}
@@ -120,7 +120,54 @@ body.keypad-open{padding-bottom:300px}
  .keypad{padding:9px}
  .key{min-height:44px}
 }
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Sequential floating-card battle */
+#view-battle{display:none}
+.battle-setup{padding:13px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.battle-setup .battle-actions{grid-column:1/-1}
+.battle-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px}
+.battle-stat{padding:10px 6px;text-align:center;background:#1a2140;border:1px solid #35416a;border-radius:14px}
+.battle-stat b{display:block;color:var(--yellow);font-size:clamp(18px,4vw,24px);font-variant-numeric:tabular-nums}
+.battle-stat span{font-size:10px;color:var(--muted);font-weight:800}
+.battle-arena{position:relative;overflow:hidden;min-height:320px;padding:16px 12px 20px;margin-bottom:12px;background:radial-gradient(ellipse at 50% 40%,#344779 0%,#1b2444 52%,#131a32 100%);border:1px solid #4a5b8d;border-radius:22px;box-shadow:inset 0 0 35px #05081766,var(--shadow)}
+.battle-arena:before,.battle-arena:after{content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(1px);opacity:.55}
+.battle-arena:before{width:110px;height:110px;left:-35px;top:35px;background:#55e7ff22;box-shadow:0 0 45px 18px #55e7ff22}
+.battle-arena:after{width:140px;height:140px;right:-55px;bottom:15px;background:#9c83ff22;box-shadow:0 0 50px 20px #9c83ff22}
+.battle-progress-line{position:relative;z-index:1;display:flex;justify-content:space-between;gap:8px;color:#cbd6ff;font-size:11px;font-weight:900;margin-bottom:13px}
+.battle-track{height:8px;border-radius:99px;background:#0c132b;overflow:hidden;margin-bottom:18px;border:1px solid #526087}
+.battle-track-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink));border-radius:99px;transition:width .3s}
+.battle-card-stage{position:relative;z-index:1;display:grid;place-items:center;min-height:190px;perspective:800px}
+.battle-card{width:min(68%,260px);min-height:170px;padding:17px 14px;border-radius:22px;border:2px solid #8da8ff;background:linear-gradient(145deg,#43558a,#27345e 60%,#20294c);box-shadow:0 12px 0 #111a38,0 22px 38px #05081799,inset 0 0 25px #b9d2ff22;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transform:translateY(0) rotate(-2deg);animation:cardFloat 2.8s ease-in-out infinite}
+.battle-card:before{content:"";position:absolute;inset:7px;border:1px solid #c9d7ff55;border-radius:15px;pointer-events:none}
+.battle-card .card-label{font-size:10px;letter-spacing:.18em;color:#d4e0ff;font-weight:1000}
+.battle-card .card-equation{font-size:clamp(30px,8vw,46px);line-height:1.1;color:#fff;font-weight:1000;text-shadow:0 3px 0 #17213f,0 0 18px #55e7ff77}
+.battle-card .card-question{font-size:13px;color:#dce7ff;font-weight:900}
+.battle-card.shatter{animation:cardShatter .48s ease-in forwards}
+@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+@keyframes cardShatter{0%{transform:scale(1) rotate(0);opacity:1;filter:brightness(1)}35%{transform:scale(1.12) rotate(5deg);opacity:1;filter:brightness(2)}100%{transform:scale(.35) rotate(-18deg);opacity:0;filter:blur(8px)}}
+.battle-message{position:relative;z-index:1;min-height:24px;margin-top:10px;text-align:center;color:var(--cyan);font-size:13px;font-weight:950}
+.battle-lives{color:var(--pink);letter-spacing:.18em;font-size:20px}
+.battle-answer-panel{padding:12px;margin-bottom:12px}
+.battle-answer-label{color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.12em}
+.battle-answer-display{min-height:52px;margin:7px 0 10px;padding:8px 12px;display:flex;align-items:center;justify-content:center;border:1px solid #526087;border-radius:13px;background:#111831;color:var(--yellow);font-size:30px;font-weight:1000;letter-spacing:.08em}
+.battle-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.battle-key{min-height:48px;border:1px solid #526087;border-radius:12px;background:linear-gradient(180deg,#f7f8ff,#cbd5f4);color:#17203e;font-size:21px;font-weight:1000;box-shadow:0 3px 0 #8995b8}
+.battle-key.erase{background:linear-gradient(180deg,#ffc4d0,#ff829d);color:#521b2a}
+.battle-key.submit{grid-column:span 2;background:linear-gradient(135deg,var(--green),#a0f6b5);color:#103b35;box-shadow:0 4px 0 #269c76}
+.battle-key:disabled{opacity:.4;cursor:not-allowed}
+.battle-end{display:none;padding:18px;text-align:center;margin-bottom:12px}
+.battle-end.show{display:block}
+.battle-end h2{margin:0 0 8px;font-size:24px;color:var(--yellow)}
+.battle-end p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.7}
+@media(max-width:420px){
+ .battle-arena{min-height:290px;padding:13px 10px 16px}
+ .battle-card{width:76%;min-height:155px}
+ .battle-stage{min-height:165px}
+ .battle-key{min-height:45px}
+ .battle-setup{padding:10px;gap:7px}
+}
+
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -129,7 +176,7 @@ body.keypad-open{padding-bottom:300px}
   <div class="brand"><div class="brand-mark">＋</div><div><small>ARCADE LEARNING</small><h1>マス計算アーケード</h1></div></div>
   <div class="top-actions"><button class="icon-btn" id="reset-record" type="button">記録リセット</button></div>
  </header>
- <nav class="tabs"><button class="tab active" id="tab-train" type="button">🎮 トレーニング</button><button class="tab" id="tab-ref" type="button">📚 計算一覧表</button></nav>
+ <nav class="tabs"><button class="tab active" id="tab-train" type="button">🎮 トレーニング</button><button class="tab" id="tab-battle" type="button">⚔️ カードバトル</button><button class="tab" id="tab-ref" type="button">📚 計算一覧表</button></nav>
  <section id="view-train">
   <div class="panel controls">
    <div class="field"><label for="grid-size">マスの数</label><select id="grid-size"><option value="9">9×9 ・ 81マス</option><option value="19">19×19 ・ 361マス</option></select></div>
@@ -154,6 +201,56 @@ body.keypad-open{padding-bottom:300px}
    <div class="grid-foot"><span>マスを選択 → 数字を入力</span><span>キーボードにも対応</span></div>
   </section>
  </section>
+
+ <section id="view-battle">
+  <div class="panel battle-setup">
+   <div class="field"><label for="battle-size">チャレンジコース</label><select id="battle-size"><option value="9">9×9 ・ 全81枚</option><option value="19">19×19 ・ 全361枚</option></select></div>
+   <div class="field"><label>ルール</label><div class="hint" style="padding:13px 3px">間違いは3回まで</div></div>
+   <div class="battle-actions"><button class="btn primary" id="battle-start" type="button">▶ ゲームスタート</button></div>
+  </div>
+  <div class="battle-stats">
+   <div class="battle-stat"><b id="battle-count">0 / 81</b><span>撃破カード</span></div>
+   <div class="battle-stat"><b class="battle-lives" id="battle-lives">♥ ♥ ♥</b><span>残りライフ</span></div>
+   <div class="battle-stat"><b id="battle-time">00:00</b><span>TIME</span></div>
+  </div>
+  <div class="battle-arena">
+   <div class="battle-progress-line"><span id="battle-stage">READY</span><span id="battle-percent">0%</span></div>
+   <div class="battle-track"><div class="battle-track-fill" id="battle-track-fill"></div></div>
+   <div class="battle-card-stage">
+    <div class="battle-card" id="battle-card">
+     <div class="card-label">FLOATING ENEMY</div>
+     <div class="card-equation" id="battle-equation">1 × 1</div>
+     <div class="card-question">このカードを撃破せよ！</div>
+    </div>
+   </div>
+   <div class="battle-message" id="battle-message">スタートを押してカードバトル開始！</div>
+  </div>
+  <div class="panel battle-answer-panel">
+   <div class="battle-answer-label">YOUR ANSWER</div>
+   <div class="battle-answer-display" id="battle-answer">?</div>
+   <div class="battle-keys" id="battle-keys">
+    <button class="battle-key" data-battle-num="1" type="button">1</button>
+    <button class="battle-key" data-battle-num="2" type="button">2</button>
+    <button class="battle-key" data-battle-num="3" type="button">3</button>
+    <button class="battle-key" data-battle-num="4" type="button">4</button>
+    <button class="battle-key" data-battle-num="5" type="button">5</button>
+    <button class="battle-key" data-battle-num="6" type="button">6</button>
+    <button class="battle-key" data-battle-num="7" type="button">7</button>
+    <button class="battle-key" data-battle-num="8" type="button">8</button>
+    <button class="battle-key" data-battle-num="9" type="button">9</button>
+    <button class="battle-key erase" id="battle-delete" type="button">⌫</button>
+    <button class="battle-key" data-battle-num="0" type="button">0</button>
+    <button class="battle-key submit" id="battle-submit" type="button">カードを攻撃！</button>
+   </div>
+  </div>
+  <div class="panel battle-end" id="battle-end">
+   <h2 id="battle-end-title">GAME OVER</h2>
+   <p id="battle-end-text"></p>
+   <button class="btn primary" id="battle-retry" type="button">もう一度挑戦</button>
+  </div>
+  <p class="note">1×1 → 1×2 → 1×3 … 1×9 → 2×1 → 2×2 … の順番で進みます。正解するとカードを撃破して次へ進みます。間違えるとライフが1つ減り、3回間違えると終了です。</p>
+ </section>
+
  <section id="view-ref">
   <div class="panel ref-info"><div><div class="section-title">📚 1〜19 計算一覧表</div><div class="hint">マスをタップすると式を確認できます</div></div><div><select id="ref-mode"><option value="mul">× かけ算</option><option value="add">＋ たし算</option></select><div class="ref-equation" id="ref-equation">式を選択</div></div></div>
   <section class="panel grid-panel"><div class="grid-scroll" id="ref-scroll"><table id="ref-grid"></table></div><p class="note">縦横にスクロールできます。上端と左端の数字はスクロール中も固定されます。同じ数字同士の計算は斜めのマスです。</p></section>
@@ -241,12 +338,16 @@ function check(){
  else updateStats();window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchTab(tab){
- state.tab=tab;const train=tab==='train';
+ state.tab=tab;
+ const train=tab==='train',battle=tab==='battle',ref=tab==='ref';
  $('view-train').style.display=train?'block':'none';
- $('view-ref').style.display=train?'none':'block';
+ $('view-battle').style.display=battle?'block':'none';
+ $('view-ref').style.display=ref?'block':'none';
  $('tab-train').classList.toggle('active',train);
- $('tab-ref').classList.toggle('active',!train);
- if(!train){hidePad();renderRef()}
+ $('tab-battle').classList.toggle('active',battle);
+ $('tab-ref').classList.toggle('active',ref);
+ if(!train)hidePad();
+ if(ref)renderRef();
 }
 function renderRef(){
  const mode=$('ref-mode').value,t=$('ref-grid');t.innerHTML='';$('ref-equation').textContent='式を選択';state.refSelected=null;
@@ -258,9 +359,126 @@ function highlightRef(r,c,v,mode){
  const t=$('ref-grid');t.querySelectorAll('td').forEach(td=>{td.classList.remove('cross','target');if(Number(td.dataset.r)===r&&Number(td.dataset.c)===c)td.classList.add('target');else if(Number(td.dataset.r)===r||Number(td.dataset.c)===c)td.classList.add('cross')});
  t.querySelectorAll('th').forEach(th=>th.classList.remove('hot'));const rh=t.querySelector(`th[data-rh="${r}"]`),ch=t.querySelector(`th[data-ch="${c}"]`);if(rh)rh.classList.add('hot');if(ch)ch.classList.add('hot');$('ref-equation').textContent=`${r} ${mode==='mul'?'×':'＋'} ${c} = ${v}`;
 }
+
+/* Card battle: multiplication questions in row-major order */
+const battle={size:9,index:0,lives:3,answer:'',active:false,locked:false,ended:false,elapsed:0,timer:null};
+function battleFmt(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function battleUpdate(){
+ const total=battle.size*battle.size;
+ $('battle-count').textContent=`${battle.index} / ${total}`;
+ $('battle-lives').textContent=Array.from({length:3},(_,i)=>i<battle.lives?'♥':'♡').join(' ');
+ $('battle-time').textContent=battleFmt(battle.elapsed);
+ $('battle-percent').textContent=`${Math.floor(battle.index/total*100)}%`;
+ $('battle-track-fill').style.width=`${battle.index/total*100}%`;
+}
+function battleStopTimer(){if(battle.timer){clearInterval(battle.timer);battle.timer=null}}
+function battleStartTimer(){
+ if(battle.timer||!battle.active)return;
+ battle.timer=setInterval(()=>{battle.elapsed++;$('battle-time').textContent=battleFmt(battle.elapsed)},1000);
+}
+function battleSetMessage(msg){$('battle-message').textContent=msg}
+function battleSetInput(value){
+ battle.answer=value.slice(0,3);
+ $('battle-answer').textContent=battle.answer||'?';
+}
+function battleSetKeysEnabled(enabled){
+ document.querySelectorAll('[data-battle-num],#battle-delete,#battle-submit').forEach(el=>el.disabled=!enabled);
+}
+function battleShowCard(){
+ const row=Math.floor(battle.index/battle.size)+1;
+ const col=battle.index%battle.size+1;
+ $('battle-equation').textContent=`${row} × ${col}`;
+ $('battle-stage').textContent=`STAGE ${battle.index+1} / ${battle.size*battle.size}`;
+ $('battle-card').classList.remove('shatter');
+ battleSetInput('');
+ battleSetKeysEnabled(true);
+ battleUpdate();
+}
+function battleStart(){
+ battleStopTimer();
+ battle.size=Number($('battle-size').value);
+ battle.index=0;battle.lives=3;battle.answer='';
+ battle.active=true;battle.locked=false;battle.ended=false;battle.elapsed=0;
+ $('battle-end').classList.remove('show');
+ $('battle-start').textContent='↻ 最初からやり直す';
+ battleShowCard();
+ battleSetMessage('カードが出現した！答えを入力して攻撃！');
+ battleStartTimer();
+}
+function battleFinish(win){
+ battleStopTimer();
+ battle.active=false;battle.locked=true;battle.ended=true;
+ battleSetKeysEnabled(false);
+ $('battle-end').classList.add('show');
+ $('battle-end-title').textContent=win?'ALL CLEAR!!':'GAME OVER';
+ $('battle-end-text').textContent=win
+  ? `全${battle.size*battle.size}枚のカードを撃破！タイムは ${battleFmt(battle.elapsed)} です。`
+  : `${battle.index+1}枚目のカードで終了。${battle.index}枚撃破、タイムは ${battleFmt(battle.elapsed)} です。あと少し！`;
+ battleSetMessage(win?'すべてのカードを撃破した！':'ライフがなくなってしまった…');
+ if(win){$('battle-percent').textContent='100%';$('battle-track-fill').style.width='100%';}
+}
+function battleSubmit(){
+ if(!battle.active||battle.locked)return;
+ if(!battle.answer){battleSetMessage('答えを入力してください');return;}
+ const row=Math.floor(battle.index/battle.size)+1;
+ const col=battle.index%battle.size+1;
+ const correct=row*col;
+ if(Number(battle.answer)===correct){
+  battle.locked=true;battle.index++;
+  battleSetKeysEnabled(false);
+  $('battle-card').classList.add('shatter');
+  battleSetMessage('撃破成功！ 次のカードが出現！');
+  battleUpdate();
+  if(battle.index>=battle.size*battle.size){
+   setTimeout(()=>battleFinish(true),520);
+  }else{
+   setTimeout(()=>{
+    battle.locked=false;
+    battleShowCard();
+    battleSetMessage('次のカードだ！');
+   },520);
+  }
+ }else{
+  battle.lives--;
+  battleSetInput('');
+  battleUpdate();
+  if(battle.lives<=0){
+   battleFinish(false);
+  }else{
+   $('battle-card').animate(
+    [{transform:'translateX(0)'},{transform:'translateX(-9px)'},{transform:'translateX(9px)'},{transform:'translateX(-6px)'},{transform:'translateX(0)'}],
+    {duration:260}
+   );
+   battleSetMessage(`ミス！ 残りライフ ${battle.lives}。もう一度！`);
+  }
+ }
+}
+function battleDigit(d){
+ if(!battle.active||battle.locked||battle.answer.length>=3)return;
+ battleSetInput(battle.answer+d);
+}
+function battleDelete(){
+ if(!battle.active||battle.locked)return;
+ battleSetInput(battle.answer.slice(0,-1));
+}
+
 $('btn-generate').addEventListener('click',()=>{init();toast('新しい問題を作成しました')});
 $('grid-size').addEventListener('change',init);$('calc-mode').addEventListener('change',init);$('btn-check').addEventListener('click',check);
-$('tab-train').addEventListener('click',()=>switchTab('train'));$('tab-ref').addEventListener('click',()=>switchTab('ref'));$('ref-mode').addEventListener('change',renderRef);
+$('tab-train').addEventListener('click',()=>switchTab('train'));
+$('tab-battle').addEventListener('click',()=>switchTab('battle'));
+$('battle-start').addEventListener('click',battleStart);
+$('battle-retry').addEventListener('click',battleStart);
+$('battle-submit').addEventListener('click',battleSubmit);
+$('battle-delete').addEventListener('click',battleDelete);
+document.querySelectorAll('[data-battle-num]').forEach(btn=>btn.addEventListener('click',()=>battleDigit(btn.dataset.battleNum)));
+document.addEventListener('keydown',e=>{
+ if(state.tab!=='battle'||!battle.active||battle.locked)return;
+ if(/^[0-9]$/.test(e.key)){e.preventDefault();battleDigit(e.key)}
+ else if(e.key==='Backspace'){e.preventDefault();battleDelete()}
+ else if(e.key==='Enter'){e.preventDefault();battleSubmit()}
+});
+
+$('tab-ref').addEventListener('click',()=>switchTab('ref'));$('ref-mode').addEventListener('change',renderRef);
 document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',()=>enterDigit(b.dataset.num)));
 $('delete-key').addEventListener('click',()=>{if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
 $('clear-key').addEventListener('click',clearAnswer);$('next-key').addEventListener('click',moveNext);$('close-keypad').addEventListener('click',hidePad);
