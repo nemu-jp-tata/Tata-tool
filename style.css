@@ -1239,3 +1239,287 @@ body.theme-light {
 .theme-light #monsterGrid > div[style*="background: #1e293b"] span {
   color: #475569 !important;
 }
+/* ========================================
+   操作説明ウィンドウ
+   表示・非表示の修正
+======================================== */
+
+/* 通常時は完全に非表示 */
+#helpOverlay {
+  display: none !important;
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.72);
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 開いたときだけ表示 */
+#helpOverlay.open {
+  display: flex !important;
+}
+
+/* 説明ウィンドウ本体 */
+#helpOverlay .help-dialog {
+  width: 100%;
+  max-width: 620px;
+
+  max-height: calc(100vh - 28px);
+  max-height: calc(100dvh - 28px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #181a29;
+  border: 1px solid #3b4261;
+  border-radius: 14px;
+
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.45);
+
+  color: #cbd5e1;
+}
+
+/* ヘッダー */
+#helpOverlay .help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+  padding: 16px 18px;
+
+  background: #20263a;
+  border-bottom: 1px solid #334155;
+
+  flex-shrink: 0;
+}
+
+#helpOverlay .help-eyebrow {
+  color: #60a5fa;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+}
+
+#helpOverlay .help-title {
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+#helpOverlay .help-close-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+
+  background: #334155;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* 説明本文 */
+#helpOverlay .help-content {
+  padding: 16px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#helpOverlay .help-intro {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+#helpOverlay .help-section {
+  margin-bottom: 18px;
+}
+
+#helpOverlay .help-section-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #60a5fa;
+
+  padding-bottom: 7px;
+  margin-bottom: 9px;
+
+  border-bottom: 1px solid #334155;
+}
+
+#helpOverlay .help-step {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 7px;
+
+  background: #20263a;
+  border: 1px solid #303a50;
+  border-radius: 9px;
+}
+
+#helpOverlay .help-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 25px;
+  width: 25px;
+  min-height: 25px;
+  flex-shrink: 0;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#helpOverlay .help-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+#helpOverlay .help-step-title {
+  color: #f1f5f9;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+#helpOverlay .help-step-text {
+  color: #aebbd0;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* 注意事項 */
+#helpOverlay .help-note {
+  background: rgba(37, 99, 235, 0.10);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 8px;
+
+  padding: 10px;
+  margin-top: 10px;
+
+  color: #bfdbfe;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* フッター */
+#helpOverlay .help-footer {
+  padding: 11px 16px;
+  text-align: center;
+
+  border-top: 1px solid #334155;
+
+  color: #64748b;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+
+/* ========================================
+   ホワイトモード
+======================================== */
+
+.theme-light #helpOverlay .help-dialog {
+  background: #f8fafc;
+  border-color: #d5dfeb;
+  color: #475569;
+
+  box-shadow: 0 15px 50px rgba(15, 23, 42, 0.2);
+}
+
+.theme-light #helpOverlay .help-header {
+  background: #e7eef7;
+  border-color: #d5dfeb;
+}
+
+.theme-light #helpOverlay .help-eyebrow {
+  color: #2563eb;
+}
+
+.theme-light #helpOverlay .help-title {
+  color: #26364b;
+}
+
+.theme-light #helpOverlay .help-close-btn {
+  background: #d5dfeb;
+  color: #334155;
+}
+
+.theme-light #helpOverlay .help-intro {
+  color: #64748b;
+}
+
+.theme-light #helpOverlay .help-section-title {
+  color: #2563eb;
+  border-color: #d5dfeb;
+}
+
+.theme-light #helpOverlay .help-step {
+  background: #ffffff;
+  border-color: #dce5ef;
+}
+
+.theme-light #helpOverlay .help-step-title {
+  color: #26364b;
+}
+
+.theme-light #helpOverlay .help-step-text {
+  color: #64748b;
+}
+
+.theme-light #helpOverlay .help-note {
+  background: #eaf2ff;
+  border-color: #c5d9fa;
+  color: #334e78;
+}
+
+.theme-light #helpOverlay .help-footer {
+  border-color: #d5dfeb;
+  color: #94a3b8;
+}
+
+
+/* ========================================
+   スマートフォン調整
+======================================== */
+
+@media (max-width: 380px) {
+  #helpOverlay .help-content {
+    padding: 12px;
+  }
+
+  #helpOverlay .help-header {
+    padding: 13px;
+  }
+
+  #helpOverlay .help-title {
+    font-size: 15px;
+  }
+}
