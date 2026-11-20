@@ -222,14 +222,14 @@ body.keypad-open{padding-bottom:300px}
   .tab{padding:10px 4px;font-size:12px}
 }
 
-/* Sequential floating-card battle (GPU-light) */
+/* Sequential floating-card battle (with lightweight float) */
 #view-battle{display:none}
 .battle-setup{padding:13px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px;border-color:#a855ff66}
 .battle-setup .battle-actions{grid-column:1/-1}
 .battle-answer-panel{padding:12px;margin-bottom:12px}
 
 .battle-arena{
-  position:relative;overflow:hidden;min-height:330px;padding:16px 12px 20px;
+  position:relative;overflow:hidden;min-height:335px;padding:16px 12px 22px;
   margin-bottom:12px;
   background:radial-gradient(ellipse at 50% 42%,#143d5c 0%,#0a162c 55%,#040814 100%);
   border:1px solid #00eaff;border-radius:12px;
@@ -268,7 +268,7 @@ body.keypad-open{padding-bottom:300px}
 
 .battle-card-stage{
   position:relative;z-index:2;display:grid;place-items:center;
-  min-height:190px;
+  min-height:195px;
 }
 .shockwave{
   position:absolute;width:86px;height:86px;border-radius:50%;
@@ -287,7 +287,9 @@ body.keypad-open{padding-bottom:300px}
   background:linear-gradient(145deg,#123d58,#101a39 62%,#260f3c);
   box-shadow:0 10px 0 #030916,0 16px 26px #000a;
   text-align:center;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:8px;transform:rotate(-1.5deg);
+  justify-content:center;gap:8px;
+  transform:translate3d(0,0,0) rotate(-2deg);
+  animation:cardFloat 2.8s ease-in-out infinite;
   will-change:transform,opacity;
 }
 .battle-card.streak-hot{
@@ -304,16 +306,24 @@ body.keypad-open{padding-bottom:300px}
   text-shadow:0 0 8px #00eaff88,2px 2px 0 #ff2bd688;
 }
 .battle-card .card-question{font-size:13px;color:#ff9aeb;font-weight:900}
-.battle-card.spawn{animation:cardSpawn .24s ease-out forwards}
-.battle-card.shatter{animation:cardShatter .34s ease-in forwards}
+.battle-card.spawn{
+  animation:cardSpawn .24s ease-out forwards,cardFloat 2.8s ease-in-out .24s infinite;
+}
+.battle-card.shatter{
+  animation:cardShatter .34s ease-in forwards;
+}
 
+@keyframes cardFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(-2deg)}
+  50%{transform:translate3d(0,-10px,0) rotate(2deg)}
+}
 @keyframes cardSpawn{
-  0%{transform:scale(1.2) rotate(2deg);opacity:.2}
-  100%{transform:scale(1) rotate(-1.5deg);opacity:1}
+  0%{transform:translate3d(0,-6px,0) scale(1.18) rotate(2deg);opacity:.2}
+  100%{transform:translate3d(0,0,0) scale(1) rotate(-2deg);opacity:1}
 }
 @keyframes cardShatter{
-  0%{transform:scale(1) rotate(-1.5deg);opacity:1}
-  100%{transform:scale(.45) rotate(-14deg);opacity:0}
+  0%{transform:translate3d(0,0,0) scale(1) rotate(-2deg);opacity:1}
+  100%{transform:translate3d(0,-14px,0) scale(.45) rotate(-14deg);opacity:0}
 }
 
 .battle-message{
@@ -681,6 +691,7 @@ function battleSubmit(){
   battle.locked=true;
   battle.streak++;
   battleSetKeysEnabled(false);
+  $('battle-card').classList.remove('spawn');
   $('battle-card').classList.add('shatter');
   triggerShockwave();
   triggerArenaFlash('hit');
