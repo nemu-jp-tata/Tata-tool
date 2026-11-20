@@ -2385,7 +2385,67 @@ const drawerMenu =
   document.getElementById(
     'drawerMenu'
   );
+// ========================================
+// テーマ切り替え
+// ========================================
 
+const themeDarkBtn =
+  document.getElementById('themeDarkBtn');
+
+const themeLightBtn =
+  document.getElementById('themeLightBtn');
+
+function applyAppTheme(theme) {
+
+  const isLight = theme === 'light';
+
+  document.body.classList.toggle(
+    'theme-light',
+    isLight
+  );
+
+  themeDarkBtn?.classList.toggle(
+    'active',
+    !isLight
+  );
+
+  themeLightBtn?.classList.toggle(
+    'active',
+    isLight
+  );
+
+  themeDarkBtn?.setAttribute(
+    'aria-pressed',
+    String(!isLight)
+  );
+
+  themeLightBtn?.setAttribute(
+    'aria-pressed',
+    String(isLight)
+  );
+
+  localStorage.setItem(
+    'monsterBoard_theme',
+    isLight ? 'light' : 'dark'
+  );
+}
+
+// ボタン操作
+themeDarkBtn?.addEventListener('click', () => {
+  applyAppTheme('dark');
+});
+
+themeLightBtn?.addEventListener('click', () => {
+  applyAppTheme('light');
+});
+
+// 保存済みテーマの復元
+const savedTheme =
+  localStorage.getItem('monsterBoard_theme');
+
+applyAppTheme(
+  savedTheme === 'light' ? 'light' : 'dark'
+);
 menuOpenBtn?.addEventListener(
   'click',
   (e) => {
