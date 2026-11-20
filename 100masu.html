@@ -154,7 +154,7 @@ body.keypad-open{padding-bottom:300px}
 .battle-key{min-height:48px;border:1px solid #526087;border-radius:12px;background:linear-gradient(180deg,#f7f8ff,#cbd5f4);color:#17203e;font-size:21px;font-weight:1000;box-shadow:0 3px 0 #8995b8}
 .battle-key.erase{background:linear-gradient(180deg,#ffc4d0,#ff829d);color:#521b2a}
 .battle-key.submit{grid-column:span 2;background:linear-gradient(135deg,var(--green),#a0f6b5);color:#103b35;box-shadow:0 4px 0 #269c76}
-.battle-key:disabled{opacity:.4;cursor:not-allowed}
+.battle-key:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 .battle-end{display:none;padding:18px;text-align:center;margin-bottom:12px}
 .battle-end.show{display:block}
 .battle-end h2{margin:0 0 8px;font-size:24px;color:var(--yellow)}
@@ -162,7 +162,7 @@ body.keypad-open{padding-bottom:300px}
 @media(max-width:420px){
  .battle-arena{min-height:290px;padding:13px 10px 16px}
  .battle-card{width:76%;min-height:155px}
- .battle-stage{min-height:165px}
+ .battle-card-stage{min-height:165px}
  .battle-key{min-height:45px}
  .battle-setup{padding:10px;gap:7px}
 }
@@ -229,18 +229,18 @@ body.keypad-open{padding-bottom:300px}
    <div class="battle-answer-label">YOUR ANSWER</div>
    <div class="battle-answer-display" id="battle-answer">?</div>
    <div class="battle-keys" id="battle-keys">
-    <button class="battle-key" data-battle-num="1" type="button">1</button>
-    <button class="battle-key" data-battle-num="2" type="button">2</button>
-    <button class="battle-key" data-battle-num="3" type="button">3</button>
-    <button class="battle-key" data-battle-num="4" type="button">4</button>
-    <button class="battle-key" data-battle-num="5" type="button">5</button>
-    <button class="battle-key" data-battle-num="6" type="button">6</button>
-    <button class="battle-key" data-battle-num="7" type="button">7</button>
-    <button class="battle-key" data-battle-num="8" type="button">8</button>
-    <button class="battle-key" data-battle-num="9" type="button">9</button>
-    <button class="battle-key erase" id="battle-delete" type="button">⌫</button>
-    <button class="battle-key" data-battle-num="0" type="button">0</button>
-    <button class="battle-key submit" id="battle-submit" type="button">カードを攻撃！</button>
+    <button class="battle-key" data-battle-num="1" type="button" disabled>1</button>
+    <button class="battle-key" data-battle-num="2" type="button" disabled>2</button>
+    <button class="battle-key" data-battle-num="3" type="button" disabled>3</button>
+    <button class="battle-key" data-battle-num="4" type="button" disabled>4</button>
+    <button class="battle-key" data-battle-num="5" type="button" disabled>5</button>
+    <button class="battle-key" data-battle-num="6" type="button" disabled>6</button>
+    <button class="battle-key" data-battle-num="7" type="button" disabled>7</button>
+    <button class="battle-key" data-battle-num="8" type="button" disabled>8</button>
+    <button class="battle-key" data-battle-num="9" type="button" disabled>9</button>
+    <button class="battle-key erase" id="battle-delete" type="button" disabled>⌫</button>
+    <button class="battle-key" data-battle-num="0" type="button" disabled>0</button>
+    <button class="battle-key submit" id="battle-submit" type="button" disabled>カードを攻撃！</button>
    </div>
   </div>
   <div class="panel battle-end" id="battle-end">
@@ -274,7 +274,33 @@ const $=id=>document.getElementById(id);
 const state={size:9,mode:'add',rows:[],cols:[],answers:[],selected:null,inputStarted:false,checked:false,started:false,elapsed:0,timer:null,tab:'train',refSelected:null};
 const op={add:'＋',sub:'－',mul:'×'};
 const bestKey=(size,mode)=>`arcade_best_${size}_${mode}`;
-let toastTimer=null;
+let toastTimer=null,autoNextTimer=null;
+function cancelAutoNext(){if(autoNextTimer!==null){clearTimeout(autoNextTimer);autoNextTimer=null}}
+function scheduleAutoNext(delay,r,c){
+ cancelAutoNext();
+ autoNextTimer=setTimeout(()=>{
+  autoNextTimer=null;
+  if(state.tab==='train'&&!state.checked&&state.selected&&state.selected.r===r&&state.selected.c===c)moveNext();
+ },delay);
+}
+function safeStorageGet(key){
+ try{return window.localStorage.getItem(key)}catch(e){return null}
+}
+function safeStorageSet(key,value){
+ try{window.localStorage.setItem(key,String(value));return true}catch(e){return false}
+}
+function safeStorageClearBest(){
+ try{
+  const storage=window.localStorage;
+  const keys=[];
+  for(let i=0;i<storage.length;i++){
+   const key=storage.key(i);
+   if(key&&key.startsWith('arcade_best_'))keys.push(key);
+  }
+  keys.forEach(key=>storage.removeItem(key));
+  return true;
+ }catch(e){return false}
+}
 
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1500)}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -283,9 +309,9 @@ function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60)
 function startTimer(){if(state.started||state.checked)return;state.started=true;state.timer=setInterval(()=>{state.elapsed++;$('timer').textContent=fmt(state.elapsed)},1000)}
 function stopTimer(){clearInterval(state.timer);state.timer=null}
 function answeredCount(){return state.answers.flat().filter(v=>v!=='').length}
-function updateStats(){$('progress').textContent=`${answeredCount()} / ${state.size*state.size}`;$('timer').textContent=fmt(state.elapsed);const b=localStorage.getItem(bestKey(state.size,state.mode));$('best').textContent=b?fmt(Number(b)):'--:--'}
+function updateStats(){$('progress').textContent=`${answeredCount()} / ${state.size*state.size}`;$('timer').textContent=fmt(state.elapsed);const b=safeStorageGet(bestKey(state.size,state.mode));$('best').textContent=b?fmt(Number(b)):'--:--'}
 function init(){
- stopTimer();state.size=Number($('grid-size').value);state.mode=$('calc-mode').value;state.rows=shuffle(Array.from({length:state.size},(_,i)=>i+1));if(state.mode==='sub')state.rows=state.rows.map(n=>n+state.size);state.cols=shuffle(Array.from({length:state.size},(_,i)=>i+1));state.answers=Array.from({length:state.size},()=>Array(state.size).fill(''));state.selected=null;state.checked=false;state.started=false;state.elapsed=0;
+ cancelAutoNext();stopTimer();state.size=Number($('grid-size').value);state.mode=$('calc-mode').value;state.rows=shuffle(Array.from({length:state.size},(_,i)=>i+1));if(state.mode==='sub')state.rows=state.rows.map(n=>n+state.size);state.cols=shuffle(Array.from({length:state.size},(_,i)=>i+1));state.answers=Array.from({length:state.size},()=>Array(state.size).fill(''));state.selected=null;state.checked=false;state.started=false;state.elapsed=0;
  $('result').classList.remove('show');$('grid-scroll').scrollTo(0,0);$('calc-grid').className=state.size===9?'mode9':'mode19';$('grid-hint').textContent=state.size===9?'81マスにチャレンジ！':'361マスにチャレンジ！';renderGrid();hidePad();updateStats();$('equation').textContent='マスを選択してください';
 }
 function renderGrid(){
@@ -297,6 +323,7 @@ function renderGrid(){
 function cell(r,c){return $('calc-grid').querySelector(`td[data-r="${r}"][data-c="${c}"]`)}
 function select(r,c){
  if(state.checked)return;
+ cancelAutoNext();
  startTimer();if(state.selected){const old=cell(state.selected.r,state.selected.c);if(old)old.classList.remove('selected')}
  state.selected={r,c};state.inputStarted=false;const td=cell(r,c);td.classList.add('selected');$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`;showPad();ensureVisible(td);
 }
@@ -306,9 +333,10 @@ function ensureVisible(td){
  if(r.top<b.top+head)box.scrollBy({top:r.top-(b.top+head)-4,behavior:'smooth'});else if(r.bottom>b.bottom-5)box.scrollBy({top:r.bottom-b.bottom+5,behavior:'smooth'});
 }
 function showPad(){$('keypad-wrap').classList.remove('hidden');document.body.classList.add('keypad-open');if(innerWidth>=760)$('keypad-wrap').classList.add('desktop-visible')}
-function hidePad(){$('keypad-wrap').classList.add('hidden');$('keypad-wrap').classList.remove('desktop-visible');document.body.classList.remove('keypad-open');if(state.selected){const td=cell(state.selected.r,state.selected.c);if(td)td.classList.remove('selected')}state.selected=null}
+function hidePad(){cancelAutoNext();$('keypad-wrap').classList.add('hidden');$('keypad-wrap').classList.remove('desktop-visible');document.body.classList.remove('keypad-open');if(state.selected){const td=cell(state.selected.r,state.selected.c);if(td)td.classList.remove('selected')}state.selected=null}
 function updateEquation(){if(!state.selected)return;const {r,c}=state.selected;$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`}
 function moveNext(){
+ cancelAutoNext();
  if(!state.selected){select(0,0);return}let {r,c}=state.selected;c++;if(c>=state.size){c=0;r++}if(r>=state.size){hidePad();toast('最後のマスです。答え合わせをしよう！');return}select(r,c)
 }
 function enterDigit(d){
@@ -325,16 +353,17 @@ function enterDigit(d){
  updateStats();
  const target=String(expected(state.rows[r],state.cols[c]));
  if($('instant-check').checked){
-  if(Number(v)===Number(target)){td.classList.add('correct');if($('auto-next').checked)setTimeout(moveNext,120)}
+  if(Number(v)===Number(target)){td.classList.add('correct');if($('auto-next').checked)scheduleAutoNext(120,r,c)}
   else if(v.length>=target.length){td.classList.add('wrong');}
- }else if($('auto-next').checked&&v.length>=target.length){setTimeout(moveNext,100)}
+ }else if($('auto-next').checked&&v.length>=target.length){scheduleAutoNext(100,r,c)}
 }
-function clearAnswer(){if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]='';state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent='';td.classList.remove('correct','wrong');updateEquation();updateStats()}
+function clearAnswer(){if(!state.selected)return;cancelAutoNext();const {r,c}=state.selected;state.answers[r][c]='';state.inputStarted=false;const td=cell(r,c);td.querySelector('.cell').textContent='';td.classList.remove('correct','wrong');updateEquation();updateStats()}
 function check(){
- if(state.checked)return;stopTimer();state.checked=true;hidePad();let good=0,total=state.size*state.size,empty=0;
+ if(state.checked)return;
+ cancelAutoNext();stopTimer();state.checked=true;hidePad();let good=0,total=state.size*state.size,empty=0;
  state.answers.forEach((row,r)=>row.forEach((v,c)=>{const td=cell(r,c);td.classList.remove('selected','correct','wrong');if(v!==''&&Number(v)===expected(state.rows[r],state.cols[c])){good++;td.classList.add('correct')}else{if(v==='')empty++;td.classList.add('wrong')}}));
  const pct=Math.round(good/total*100);$('result').classList.add('show');$('result-title').textContent=good===total?'PERFECT!! 全問正解！':pct>=80?'すごい！よくできました！':pct>=50?'ナイスチャレンジ！':'もう一度チャレンジ！';$('result-sub').textContent=`${total}問中 ${good}問正解${empty?` ・ 未回答 ${empty}問`:''} ／ タイム ${fmt(state.elapsed)}`;$('result-score').textContent=`${pct}%`;
- if(good===total){const key=bestKey(state.size,state.mode),old=Number(localStorage.getItem(key)||0);if(!old||state.elapsed<old){localStorage.setItem(key,String(state.elapsed));toast('自己ベスト更新！')}}
+ if(good===total){const key=bestKey(state.size,state.mode),old=Number(safeStorageGet(key)||0);if(!old||state.elapsed<old){safeStorageSet(key,state.elapsed);toast('自己ベスト更新！')}}
  else updateStats();window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchTab(tab){
@@ -361,7 +390,7 @@ function highlightRef(r,c,v,mode){
 }
 
 /* Card battle: multiplication questions in row-major order */
-const battle={size:9,index:0,lives:3,answer:'',active:false,locked:false,ended:false,elapsed:0,timer:null};
+const battle={size:9,index:0,lives:3,answer:'',active:false,locked:false,ended:false,elapsed:0,timer:null,transitionTimer:null};
 function battleFmt(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
 function battleUpdate(){
  const total=battle.size*battle.size;
@@ -396,6 +425,7 @@ function battleShowCard(){
 }
 function battleStart(){
  battleStopTimer();
+ if(battle.transitionTimer!==null){clearTimeout(battle.transitionTimer);battle.transitionTimer=null;}
  battle.size=Number($('battle-size').value);
  battle.index=0;battle.lives=3;battle.answer='';
  battle.active=true;battle.locked=false;battle.ended=false;battle.elapsed=0;
@@ -424,20 +454,22 @@ function battleSubmit(){
  const col=battle.index%battle.size+1;
  const correct=row*col;
  if(Number(battle.answer)===correct){
-  battle.locked=true;battle.index++;
+  battle.locked=true;
   battleSetKeysEnabled(false);
   $('battle-card').classList.add('shatter');
   battleSetMessage('撃破成功！ 次のカードが出現！');
-  battleUpdate();
-  if(battle.index>=battle.size*battle.size){
-   setTimeout(()=>battleFinish(true),520);
-  }else{
-   setTimeout(()=>{
+  battle.transitionTimer=setTimeout(()=>{
+   battle.transitionTimer=null;
+   battle.index++;
+   battleUpdate();
+   if(battle.index>=battle.size*battle.size){
+    battleFinish(true);
+   }else{
     battle.locked=false;
     battleShowCard();
     battleSetMessage('次のカードだ！');
-   },520);
-  }
+   }
+  },520);
  }else{
   battle.lives--;
   battleSetInput('');
@@ -480,9 +512,9 @@ document.addEventListener('keydown',e=>{
 
 $('tab-ref').addEventListener('click',()=>switchTab('ref'));$('ref-mode').addEventListener('change',renderRef);
 document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',()=>enterDigit(b.dataset.num)));
-$('delete-key').addEventListener('click',()=>{if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
+$('delete-key').addEventListener('click',()=>{if(!state.selected)return;cancelAutoNext();const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
 $('clear-key').addEventListener('click',clearAnswer);$('next-key').addEventListener('click',moveNext);$('close-keypad').addEventListener('click',hidePad);
-$('reset-record').addEventListener('click',()=>{if(confirm('この端末に保存された自己ベスト記録をすべて削除しますか？')){for(const k of Object.keys(localStorage))if(k.startsWith('arcade_best_'))localStorage.removeItem(k);updateStats();toast('記録をリセットしました')}});
+$('reset-record').addEventListener('click',()=>{if(confirm('この端末に保存された自己ベスト記録をすべて削除しますか？')){const ok=safeStorageClearBest();updateStats();toast(ok?'記録をリセットしました':'記録を削除できませんでした')}});
 document.addEventListener('keydown',e=>{
  if(state.tab!=='train'||!state.selected||state.checked)return;
  if(/^[0-9]$/.test(e.key)){e.preventDefault();enterDigit(e.key)}
@@ -493,6 +525,7 @@ document.addEventListener('keydown',e=>{
  else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();let {r,c}=state.selected;if(e.key==='ArrowUp')r=Math.max(0,r-1);if(e.key==='ArrowDown')r=Math.min(state.size-1,r+1);if(e.key==='ArrowLeft')c=Math.max(0,c-1);if(e.key==='ArrowRight')c=Math.min(state.size-1,c+1);select(r,c)}
 });
 window.addEventListener('resize',()=>{if(innerWidth>=760&&state.selected)$('keypad-wrap').classList.add('desktop-visible')});
+battleSetKeysEnabled(false);
 init();
 })();
 </script>
