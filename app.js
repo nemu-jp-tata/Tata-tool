@@ -2118,7 +2118,7 @@ const captureText =
       `${boardFrame.offsetWidth}px`;
 
     captureContainer.style.backgroundColor =
-      '#181a29';
+  captureBackground;
 
     captureContainer.style.zIndex =
       '-1';
@@ -2139,10 +2139,10 @@ const captureText =
       '100%';
 
     captureTitle.style.backgroundColor =
-      '#181a29';
+  captureBackground;
 
-    captureTitle.style.color =
-      '#f8fafc';
+captureTitle.style.color =
+  captureText;
 
     captureTitle.style.fontSize =
       '18px';
@@ -2264,7 +2264,7 @@ const captureText =
           captureContainer,
           {
             backgroundColor:
-              '#181a29',
+  captureBackground,
 
             scale: 3,
 
