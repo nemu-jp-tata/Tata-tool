@@ -174,7 +174,7 @@ body.keypad-open{padding-bottom:300px}
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const state={size:9,mode:'add',rows:[],cols:[],answers:[],selected:null,checked:false,started:false,elapsed:0,timer:null,tab:'train',refSelected:null};
+const state={size:9,mode:'add',rows:[],cols:[],answers:[],selected:null,inputStarted:false,checked:false,started:false,elapsed:0,timer:null,tab:'train',refSelected:null};
 const op={add:'＋',sub:'－',mul:'×'};
 const bestKey=(size,mode)=>`arcade_best_${size}_${mode}`;
 let toastTimer=null;
@@ -201,7 +201,7 @@ function cell(r,c){return $('calc-grid').querySelector(`td[data-r="${r}"][data-c
 function select(r,c){
  if(state.checked)return;
  startTimer();if(state.selected){const old=cell(state.selected.r,state.selected.c);if(old)old.classList.remove('selected')}
- state.selected={r,c};const td=cell(r,c);td.classList.add('selected');$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`;showPad();ensureVisible(td);
+ state.selected={r,c};state.inputStarted=false;const td=cell(r,c);td.classList.add('selected');$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`;showPad();ensureVisible(td);
 }
 function ensureVisible(td){
  const box=$('grid-scroll'),b=box.getBoundingClientRect(),r=td.getBoundingClientRect(),head=state.size===19?42:30;
@@ -215,14 +215,24 @@ function moveNext(){
  if(!state.selected){select(0,0);return}let {r,c}=state.selected;c++;if(c>=state.size){c=0;r++}if(r>=state.size){hidePad();toast('最後のマスです。答え合わせをしよう！');return}select(r,c)
 }
 function enterDigit(d){
- if(!state.selected||state.checked)return;const {r,c}=state.selected;let v=state.answers[r][c];v=(v+d).slice(-3);state.answers[r][c]=v;const td=cell(r,c);td.querySelector('.cell').textContent=v;td.classList.remove('correct','wrong');updateEquation();updateStats();
+ if(!state.selected||state.checked)return;
+ const {r,c}=state.selected;
+ let v=state.inputStarted?state.answers[r][c]:'';
+ v=(v+d).slice(-3);
+ state.inputStarted=true;
+ state.answers[r][c]=v;
+ const td=cell(r,c);
+ td.querySelector('.cell').textContent=v;
+ td.classList.remove('correct','wrong');
+ updateEquation();
+ updateStats();
  const target=String(expected(state.rows[r],state.cols[c]));
  if($('instant-check').checked){
   if(Number(v)===Number(target)){td.classList.add('correct');if($('auto-next').checked)setTimeout(moveNext,120)}
   else if(v.length>=target.length){td.classList.add('wrong');}
  }else if($('auto-next').checked&&v.length>=target.length){setTimeout(moveNext,100)}
 }
-function clearAnswer(){if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]='';const td=cell(r,c);td.querySelector('.cell').textContent='';td.classList.remove('correct','wrong');updateEquation();updateStats()}
+function clearAnswer(){if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]='';state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent='';td.classList.remove('correct','wrong');updateEquation();updateStats()}
 function check(){
  if(state.checked)return;stopTimer();state.checked=true;hidePad();let good=0,total=state.size*state.size,empty=0;
  state.answers.forEach((row,r)=>row.forEach((v,c)=>{const td=cell(r,c);td.classList.remove('selected','correct','wrong');if(v!==''&&Number(v)===expected(state.rows[r],state.cols[c])){good++;td.classList.add('correct')}else{if(v==='')empty++;td.classList.add('wrong')}}));
@@ -231,7 +241,11 @@ function check(){
  else updateStats();window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchTab(tab){
- state.tab=tab;const train=tab==='train';$('view-train').style.display=train?'':'none';$('view-ref').style.display=train?'none':'';$('tab-train').classList.toggle('active',train);$('tab-ref').classList.toggle('active',!train);
+ state.tab=tab;const train=tab==='train';
+ $('view-train').style.display=train?'block':'none';
+ $('view-ref').style.display=train?'none':'block';
+ $('tab-train').classList.toggle('active',train);
+ $('tab-ref').classList.toggle('active',!train);
  if(!train){hidePad();renderRef()}
 }
 function renderRef(){
@@ -248,7 +262,7 @@ $('btn-generate').addEventListener('click',()=>{init();toast('新しい問題を
 $('grid-size').addEventListener('change',init);$('calc-mode').addEventListener('change',init);$('btn-check').addEventListener('click',check);
 $('tab-train').addEventListener('click',()=>switchTab('train'));$('tab-ref').addEventListener('click',()=>switchTab('ref'));$('ref-mode').addEventListener('change',renderRef);
 document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',()=>enterDigit(b.dataset.num)));
-$('delete-key').addEventListener('click',()=>{if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
+$('delete-key').addEventListener('click',()=>{if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);state.inputStarted=true;const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
 $('clear-key').addEventListener('click',clearAnswer);$('next-key').addEventListener('click',moveNext);$('close-keypad').addEventListener('click',hidePad);
 $('reset-record').addEventListener('click',()=>{if(confirm('この端末に保存された自己ベスト記録をすべて削除しますか？')){for(const k of Object.keys(localStorage))if(k.startsWith('arcade_best_'))localStorage.removeItem(k);updateStats();toast('記録をリセットしました')}});
 document.addEventListener('keydown',e=>{
