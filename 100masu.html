@@ -1,893 +1,268 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>マス計算トレーニング & 19×19一覧表</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Noto Sans JP -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* スクロールコンテナ：縦横スクロールでヘッダーを固定 */
-        .grid-scroll-wrapper {
-            max-height: 68vh;
-            overflow: auto;
-            position: relative;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.75rem;
-        }
-        .calc-grid-table {
-            border-collapse: separate;
-            border-spacing: 0;
-            width: max-content;
-            min-width: 100%;
-        }
-        /* 9x9モード時は画面幅にフィットさせつつ正方形を維持 */
-        .calc-grid-table.mode-9 {
-            width: 100%;
-            table-layout: fixed;
-        }
-        .calc-grid-table.mode-9 .cell-box {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-        }
-        /* 19x19モード時はタップしやすい最小正方形サイズを確保 */
-        .calc-grid-table.mode-19 .cell-box {
-            width: 42px;
-            height: 42px;
-        }
-        @media (min-width: 640px) {
-            .calc-grid-table.mode-19 .cell-box {
-                width: 46px;
-                height: 46px;
-            }
-        }
-        .cell-box {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* 1行目（上端ヘッダー）の固定 */
-        .sticky-top {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-        /* 1列目（左端ヘッダー）の固定 */
-        .sticky-left {
-            position: sticky;
-            left: 0;
-            z-index: 20;
-        }
-        /* 左上の演算子セル（最前面に固定） */
-        .sticky-corner {
-            position: sticky;
-            top: 0;
-            left: 0;
-            z-index: 30;
-        }
-
-        .calc-cell {
-            transition: background-color 0.12s ease;
-            border-right: 1px solid #cbd5e1;
-            border-bottom: 1px solid #cbd5e1;
-        }
-        .calc-header-top {
-            border-right: 1px solid #c7d2fe;
-            border-bottom: 2px solid #818cf8;
-        }
-        .calc-header-left {
-            border-right: 2px solid #818cf8;
-            border-bottom: 1px solid #c7d2fe;
-        }
-        .calc-corner {
-            border-right: 2px solid #4338ca;
-            border-bottom: 2px solid #4338ca;
-        }
-
-        .cell-selected {
-            background-color: #fef08a !important; /* yellow-200 */
-            box-shadow: inset 0 0 0 3px #eab308; /* yellow-500 */
-            z-index: 10;
-            position: relative;
-        }
-        .cell-correct {
-            background-color: #dcfce7 !important; /* green-100 */
-            color: #166534 !important; /* green-800 */
-        }
-        .cell-incorrect {
-            background-color: #fee2e2 !important; /* red-100 */
-            color: #991b1b !important; /* red-800 */
-        }
-
-        /* 一覧表のハイライト用スタイル */
-        .ref-highlight-cross {
-            background-color: #eef2ff !important; /* indigo-50 */
-        }
-        .ref-highlight-header {
-            background-color: #6366f1 !important; /* indigo-500 */
-            color: #ffffff !important;
-        }
-        .ref-highlight-target {
-            background-color: #fde047 !important; /* yellow-300 */
-            color: #1e1b4b !important;
-            font-weight: 800;
-            box-shadow: inset 0 0 0 2px #ca8a04;
-        }
-        .ref-diagonal {
-            background-color: #f8fafc;
-            color: #4338ca;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .numpad-enter {
-            animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11152b">
+<title>マス計算アーケード</title>
+<style>
+:root{
+  --bg:#101426;--panel:#1b2140;--panel2:#242c50;--line:#39436c;
+  --text:#f5f7ff;--muted:#aab4d6;--cyan:#55e7ff;--pink:#ff65b8;
+  --yellow:#ffe36e;--green:#55e6a5;--red:#ff7185;--purple:#9c83ff;
+  --shadow:0 12px 32px #05081780;
+}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","M PLUS 2",sans-serif;background:radial-gradient(ellipse at 50% -15%,#303b70 0%,transparent 48%),linear-gradient(160deg,#11162d,#0c1020 75%);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:1100px;margin:auto;padding:12px 12px 30px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#101426;font-size:23px;font-weight:1000;box-shadow:0 0 22px #55e7ff55}
+.brand h1{font-size:clamp(18px,4vw,25px);margin:0;letter-spacing:.03em;font-weight:950}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.18em;font-weight:800}
+.top-actions{display:flex;gap:7px}
+.icon-btn{border:1px solid var(--line);background:#202746;color:var(--text);border-radius:12px;min-height:40px;padding:0 11px;font-weight:800}
+.icon-btn:active,.btn:active,.key:active{transform:translateY(1px) scale(.98)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:5px;background:#0b1022;border:1px solid #303a60;border-radius:15px;margin-bottom:12px}
+.tab{border:0;border-radius:11px;background:transparent;color:var(--muted);padding:11px 8px;font-weight:900}
+.tab.active{color:#101426;background:linear-gradient(100deg,var(--cyan),#9df4ff);box-shadow:0 4px 15px #55e7ff44}
+.panel{background:linear-gradient(145deg,#202747,#171d37);border:1px solid #35416a;border-radius:20px;box-shadow:var(--shadow)}
+.controls{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.field label{display:block;font-size:11px;color:var(--muted);font-weight:800;margin:0 0 5px 3px}
+select{width:100%;min-height:43px;border-radius:12px;border:1px solid #46527c;background:#111831;color:white;padding:0 10px;font-weight:800}
+.btn{border:0;border-radius:13px;min-height:44px;padding:10px 14px;font-weight:950;letter-spacing:.02em;color:#11152b;background:linear-gradient(135deg,var(--yellow),#ffb84d);box-shadow:0 4px 0 #bd7931,0 8px 18px #0003}
+.btn.primary{background:linear-gradient(135deg,var(--cyan),#8cafff);box-shadow:0 4px 0 #3978b9,0 8px 18px #0003}
+.btn.success{background:linear-gradient(135deg,var(--green),#a0f6b5);box-shadow:0 4px 0 #269c76,0 8px 18px #0003}
+.btn.subtle{background:#303b61;color:#eef2ff;box-shadow:0 4px 0 #1b2341}
+.control-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.stat{padding:10px 7px;text-align:center;background:#1a2140;border:1px solid #35416a;border-radius:14px}
+.stat b{display:block;font-size:clamp(18px,4vw,24px);line-height:1.15;color:var(--yellow);font-variant-numeric:tabular-nums}
+.stat span{font-size:10px;color:var(--muted);font-weight:800}
+.grid-panel{padding:9px;margin-bottom:12px}
+.grid-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:1px 2px 9px}
+.section-title{font-weight:950;font-size:14px}
+.hint{font-size:10px;color:var(--muted)}
+.grid-scroll{max-height:min(58vh,650px);overflow:auto;border-radius:12px;border:1px solid #46527c;background:#111831;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#596893 #151c35}
+table{border-collapse:separate;border-spacing:0;table-layout:fixed;user-select:none}
+#calc-grid{width:100%}
+#calc-grid.mode19{width:max-content;min-width:100%}
+th,td{padding:0;text-align:center;border-right:1px solid #364166;border-bottom:1px solid #364166}
+th{background:#29345b;color:#dffaff;font-weight:950}
+th.corner{position:sticky;top:0;left:0;z-index:5;background:#5264a4;color:white}
+th.top{position:sticky;top:0;z-index:3}
+th.left{position:sticky;left:0;z-index:2}
+.cell{display:grid;place-items:center;aspect-ratio:1/1;min-width:0;font-weight:850;font-size:clamp(10px,2.8vw,16px)}
+.mode9 .cell{width:100%}
+.mode19 .cell{width:39px;height:39px;font-size:12px}
+td{background:#18203c;color:#f5f7ff}
+td:nth-child(even){background:#1c2544}
+td.selected{background:#fff0a6!important;color:#25203a!important;box-shadow:inset 0 0 0 3px #ffc83d;position:relative;z-index:1}
+td.correct{background:#174f48!important;color:#9dffd5!important}
+td.wrong{background:#5a263b!important;color:#ffd0d8!important}
+td.revealed{outline:2px solid var(--green);outline-offset:-3px}
+.grid-foot{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;padding:8px 3px 1px}
+.result{display:none;padding:13px;margin-bottom:12px;border:1px solid #4d6e91;background:linear-gradient(120deg,#1b3551,#28264e);border-radius:16px}
+.result.show{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.result strong{font-size:16px}.result small{display:block;color:var(--muted);margin-top:3px}
+.result-score{font-size:24px;font-weight:1000;color:var(--yellow);white-space:nowrap}
+.keypad-wrap{position:fixed;z-index:20;bottom:0;left:0;right:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#11142600,#0d1224 16%);pointer-events:none}
+.keypad{pointer-events:auto;max-width:520px;margin:auto;padding:11px;background:#202747f5;backdrop-filter:blur(16px);border:1px solid #56638c;border-radius:20px 20px 15px 15px;box-shadow:0 -10px 35px #05081799}
+.key-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.equation{font-size:clamp(15px,4vw,20px);font-weight:1000;color:var(--cyan);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.key-top-actions{display:flex;gap:6px}
+.mini{border:1px solid #536087;background:#303b61;color:#fff;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:900}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.key{min-height:48px;border:1px solid #526087;border-radius:12px;background:linear-gradient(180deg,#f7f8ff,#cbd5f4);color:#17203e;font-size:22px;font-weight:1000;box-shadow:0 3px 0 #8995b8}
+.key.delete{background:linear-gradient(180deg,#ffc4d0,#ff829d);color:#521b2a}
+.key.next{background:linear-gradient(180deg,#a9f7db,#51dba9);color:#103b35}
+.key.clear{background:#39466e;color:#fff;font-size:14px;box-shadow:0 3px 0 #202a4d}
+.hidden{display:none!important}
+#view-ref{display:none}
+.ref-info{padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ref-equation{color:var(--yellow);font-weight:1000;font-size:18px}
+#ref-grid{width:max-content;min-width:100%}
+#ref-grid .cell{width:39px;height:39px;font-size:12px}
+#ref-grid td{cursor:pointer}
+#ref-grid td.cross{background:#344a73!important}
+#ref-grid td.target{background:#ffe36e!important;color:#241e39!important;box-shadow:inset 0 0 0 2px #ffae35;font-weight:1000}
+#ref-grid th.hot{background:#0e9cb8!important;color:#fff}
+.note{font-size:11px;color:var(--muted);line-height:1.6;margin:10px 3px}
+.toggle-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:800}
+.toggle input{accent-color:var(--cyan);width:16px;height:16px}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-20px);opacity:0;z-index:50;background:#f7f8ff;color:#17203e;padding:10px 17px;border-radius:99px;font-weight:950;box-shadow:var(--shadow);transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+body.keypad-open{padding-bottom:300px}
+@media(min-width:760px){
+ .app{padding:20px 22px 35px}
+ .controls{grid-template-columns:repeat(4,1fr);align-items:end}
+ .control-actions{grid-column:auto;grid-column:span 2}
+ .grid-panel{padding:15px}
+ .mode19 .cell{width:46px;height:46px;font-size:14px}
+ #ref-grid .cell{width:46px;height:46px;font-size:14px}
+ .keypad-wrap{position:static;padding:0;background:none;display:none}
+ .keypad-wrap.desktop-visible{display:block;pointer-events:auto;margin:12px auto 0}
+ body.keypad-open{padding-bottom:0}
+}
+@media(max-width:420px){
+ .app{padding:9px 8px 18px}
+ .brand-mark{width:36px;height:36px}
+ .icon-btn{padding:0 8px;min-height:36px;font-size:11px}
+ .controls{padding:9px;gap:7px}
+ .btn{font-size:12px;padding:9px 8px}
+ .stats{gap:5px}
+ .stat{padding:8px 4px}
+ .grid-scroll{max-height:53vh}
+ .keypad{padding:9px}
+ .key{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
-
-    <!-- 上部ヘッダー & コントロールパネル -->
-    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-3 py-3 sm:px-6">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <!-- タイトルと画面切替タブ -->
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-lg sm:text-xl font-bold text-indigo-600 flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span id="app-title">81マス計算 (9×9)</span>
-                    </h1>
-
-                    <!-- モード切替スイッチ（トレーニング / 一覧表） -->
-                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200" role="group">
-                        <button type="button" id="tab-train" class="px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer">
-                            トレーニング
-                        </button>
-                        <button type="button" id="tab-ref" class="px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
-                            19×19一覧表
-                        </button>
-                    </div>
-
-                    <!-- タイマー表示（トレーニング時のみ表示） -->
-                    <div id="timer-badge" class="bg-slate-100 px-3 py-1 rounded-full text-sm font-semibold text-slate-700 flex items-center gap-1.5 border border-slate-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span id="timer-display">00:00</span>
-                    </div>
-                </div>
-
-                <!-- アクションボタン群（トレーニング用） -->
-                <div id="train-controls" class="flex items-center gap-2 flex-wrap">
-                    <select id="grid-size" aria-label="マスのサイズ" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
-                        <option value="9" selected>9×9 (81マス)</option>
-                        <option value="19">19×19 (361マス)</option>
-                    </select>
-
-                    <select id="calc-mode" aria-label="計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-2.5 py-2 font-bold cursor-pointer">
-                        <option value="add" selected>＋ たし算</option>
-                        <option value="sub">－ ひき算</option>
-                        <option value="mul">× かけ算</option>
-                    </select>
-
-                    <button id="btn-generate" class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-2 px-3.5 sm:px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>ランダム生成</span>
-                    </button>
-
-                    <button id="btn-check" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-2 px-3.5 sm:px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>チェック</span>
-                    </button>
-                </div>
-
-                <!-- アクションボタン群（一覧表用） -->
-                <div id="ref-controls" class="hidden flex items-center gap-2 flex-wrap">
-                    <select id="ref-calc-mode" aria-label="一覧表の計算の種類" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-3 py-2 font-bold cursor-pointer">
-                        <option value="mul" selected>× かけ算 (19×19九九)</option>
-                        <option value="add">＋ たし算 (19×19)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- 結果通知バナー（トレーニング用） -->
-            <div id="result-banner" class="hidden mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base">
-                <div class="flex items-center gap-2 font-bold text-indigo-900">
-                    <span id="result-icon" class="text-xl">🎉</span>
-                    <span id="result-text">81問中 0問正解！</span>
-                </div>
-                <span id="result-time" class="text-xs sm:text-sm font-semibold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-100"></span>
-            </div>
-        </div>
-    </header>
-
-    <!-- メインコンテンツ：トレーニングビュー -->
-    <main id="view-train" class="flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-72 sm:pb-80">
-        <div id="grid-card" class="w-full max-w-lg bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200 transition-all">
-            <div id="grid-scroll-container" class="grid-scroll-wrapper">
-                <table id="calc-grid" class="calc-grid-table mode-9 select-none">
-                    <!-- JavaScriptでテーブルを生成 -->
-                </table>
-            </div>
-            <p class="text-xs text-slate-400 text-center mt-3">
-                マスをタップして下のテンキー（またはキーボード）で数字を入力してください
-            </p>
-        </div>
-    </main>
-
-    <!-- メインコンテンツ：19×19一覧表ビュー -->
-    <main id="view-ref" class="hidden flex-1 flex flex-col items-center justify-start p-2 sm:p-6 pb-16">
-        <div class="w-full max-w-4xl bg-white p-2 sm:p-4 rounded-2xl shadow-md border border-slate-200">
-            <!-- 選択中の式の確認バー -->
-            <div class="flex items-center justify-between mb-3 px-1">
-                <span class="text-xs sm:text-sm font-bold text-slate-500">1〜19の計算一覧表（タップで縦横ハイライト）</span>
-                <div id="ref-formula-display" class="text-sm sm:text-lg font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100">
-                    マスをタップして式を確認
-                </div>
-            </div>
-
-            <div class="grid-scroll-wrapper">
-                <table id="ref-grid" class="calc-grid-table mode-19 select-none">
-                    <!-- JavaScriptで19×19の一覧表を生成 -->
-                </table>
-            </div>
-            <p class="text-xs text-slate-400 text-center mt-3">
-                縦横にスクロールしても1行目と1列目は固定表示されます（薄い背景は同じ数同士の計算です）
-            </p>
-        </div>
-    </main>
-
-    <!-- フローティングテンキー -->
-    <div id="numpad-container" class="hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none p-2 sm:p-4">
-        <div class="numpad-enter pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.15)] border border-slate-200 p-3 sm:p-4">
-            
-            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">選択中</span>
-                    <span id="current-equation" class="text-base sm:text-lg font-bold text-indigo-600 bg-indigo-50 px-3 py-0.5 rounded-lg">
-                        - ＋ - = ?
-                    </span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <button id="btn-next-cell" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
-                        <span>次へ</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-                    <button id="btn-close-numpad" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition cursor-pointer">
-                        閉じる
-                    </button>
-                </div>
-            </div>
-
-            <!-- 0〜9 数字ボタン -->
-            <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
-                <button type="button" data-num="1" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">1</button>
-                <button type="button" data-num="2" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">2</button>
-                <button type="button" data-num="3" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">3</button>
-                <button type="button" data-num="4" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">4</button>
-                <button type="button" data-num="5" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">5</button>
-                
-                <button type="button" data-num="6" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">6</button>
-                <button type="button" data-num="7" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">7</button>
-                <button type="button" data-num="8" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">8</button>
-                <button type="button" data-num="9" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">9</button>
-                <button type="button" data-num="0" class="num-btn bg-slate-50 hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-800 font-bold text-xl sm:text-2xl py-3 sm:py-3.5 rounded-xl border border-slate-200 shadow-sm transition cursor-pointer">0</button>
-            </div>
-
-            <div class="mt-2">
-                <button type="button" id="btn-clear" class="w-full bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 font-bold text-sm sm:text-base py-2.5 rounded-xl border border-rose-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
-                    </svg>
-                    <span>消去（クリア）</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- 共通・状態管理 ---
-            let activeTab = 'train'; // 'train' | 'ref'
-            let gridSize = 9;
-            let colNumbers = [];
-            let rowNumbers = [];
-            let userAnswers = [];
-            let selectedCell = null;
-            let calcMode = 'add';
-            let isChecked = false;
-
-            let timerInterval = null;
-            let elapsedSeconds = 0;
-            let isTimerRunning = false;
-
-            // --- DOM要素 ---
-            const appTitle = document.getElementById('app-title');
-            const tabTrain = document.getElementById('tab-train');
-            const tabRef = document.getElementById('tab-ref');
-            const timerBadge = document.getElementById('timer-badge');
-            const trainControls = document.getElementById('train-controls');
-            const refControls = document.getElementById('ref-controls');
-            const viewTrain = document.getElementById('view-train');
-            const viewRef = document.getElementById('view-ref');
-
-            const gridCard = document.getElementById('grid-card');
-            const gridScrollContainer = document.getElementById('grid-scroll-container');
-            const gridTable = document.getElementById('calc-grid');
-            const sizeSelect = document.getElementById('grid-size');
-            const modeSelect = document.getElementById('calc-mode');
-            const btnGenerate = document.getElementById('btn-generate');
-            const btnCheck = document.getElementById('btn-check');
-            const timerDisplay = document.getElementById('timer-display');
-            const resultBanner = document.getElementById('result-banner');
-            const resultIcon = document.getElementById('result-icon');
-            const resultText = document.getElementById('result-text');
-            const resultTime = document.getElementById('result-time');
-
-            // 一覧表用DOM
-            const refGridTable = document.getElementById('ref-grid');
-            const refCalcModeSelect = document.getElementById('ref-calc-mode');
-            const refFormulaDisplay = document.getElementById('ref-formula-display');
-
-            // テンキー用DOM
-            const numpadContainer = document.getElementById('numpad-container');
-            const currentEquation = document.getElementById('current-equation');
-            const btnNextCell = document.getElementById('btn-next-cell');
-            const btnCloseNumpad = document.getElementById('btn-close-numpad');
-            const btnClear = document.getElementById('btn-clear');
-            const numButtons = document.querySelectorAll('.num-btn');
-
-            // --- タブ切り替え処理 ---
-            function switchTab(tab) {
-                activeTab = tab;
-                if (tab === 'train') {
-                    tabTrain.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer';
-                    tabRef.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
-                    
-                    timerBadge.classList.remove('hidden');
-                    trainControls.classList.remove('hidden');
-                    refControls.classList.add('hidden');
-                    viewTrain.classList.remove('hidden');
-                    viewRef.classList.add('hidden');
-
-                    const totalQuestions = gridSize * gridSize;
-                    appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
-                } else {
-                    // 一覧表を開く際はタイマーを一時停止しテンキーを隠す
-                    stopTimer();
-                    hideNumpad();
-
-                    tabRef.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition cursor-pointer';
-                    tabTrain.className = 'px-3 py-1 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
-
-                    timerBadge.classList.add('hidden');
-                    trainControls.classList.add('hidden');
-                    refControls.classList.remove('hidden');
-                    viewTrain.classList.add('hidden');
-                    viewRef.classList.remove('hidden');
-                    resultBanner.classList.add('hidden');
-
-                    appTitle.textContent = '19×19 計算一覧表';
-                    renderReferenceTable();
-                }
-            }
-
-            tabTrain.addEventListener('click', () => switchTab('train'));
-            tabRef.addEventListener('click', () => switchTab('ref'));
-
-            // --- 19×19 一覧表の描画ロジック ---
-            function renderReferenceTable() {
-                const mode = refCalcModeSelect.value; // 'mul' | 'add'
-                const opSymbol = getOperatorSymbol(mode);
-                refGridTable.innerHTML = '';
-                refFormulaDisplay.textContent = 'マスをタップして式を確認';
-
-                // 1. ヘッダー行 (1〜19)
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-
-                const cornerTh = document.createElement('th');
-                cornerTh.className = 'sticky-corner calc-corner bg-indigo-600 text-white font-bold text-sm sm:text-lg p-0 select-none';
-                cornerTh.innerHTML = `<div class="cell-box">${opSymbol}</div>`;
-                headerRow.appendChild(cornerTh);
-
-                for (let c = 1; c <= 19; c++) {
-                    const th = document.createElement('th');
-                    th.dataset.refColHeader = c;
-                    th.className = 'sticky-top calc-header-top bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0 transition-colors';
-                    th.innerHTML = `<div class="cell-box">${c}</div>`;
-                    headerRow.appendChild(th);
-                }
-                thead.appendChild(headerRow);
-                refGridTable.appendChild(thead);
-
-                // 2. データ行 (1〜19)
-                const tbody = document.createElement('tbody');
-                for (let r = 1; r <= 19; r++) {
-                    const tr = document.createElement('tr');
-
-                    const rowTh = document.createElement('th');
-                    rowTh.dataset.refRowHeader = r;
-                    rowTh.className = 'sticky-left calc-header-left bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0 transition-colors';
-                    rowTh.innerHTML = `<div class="cell-box">${r}</div>`;
-                    tr.appendChild(rowTh);
-
-                    for (let c = 1; c <= 19; c++) {
-                        const val = mode === 'mul' ? r * c : r + c;
-                        const td = document.createElement('td');
-                        td.dataset.r = r;
-                        td.dataset.c = c;
-                        const isDiag = r === c ? 'ref-diagonal font-bold' : 'bg-white font-semibold text-slate-700';
-                        td.className = `calc-cell text-center text-xs sm:text-base cursor-pointer p-0 ${isDiag}`;
-                        td.innerHTML = `<div class="cell-box">${val}</div>`;
-
-                        td.addEventListener('click', () => {
-                            highlightReferenceCell(r, c, val, opSymbol);
-                        });
-
-                        tr.appendChild(td);
-                    }
-                    tbody.appendChild(tr);
-                }
-                refGridTable.appendChild(tbody);
-            }
-
-            function highlightReferenceCell(targetR, targetC, val, opSymbol) {
-                // 既存のハイライトをクリア
-                refGridTable.querySelectorAll('.ref-highlight-cross, .ref-highlight-target').forEach(el => {
-                    el.classList.remove('ref-highlight-cross', 'ref-highlight-target');
-                });
-                refGridTable.querySelectorAll('.ref-highlight-header').forEach(el => {
-                    el.classList.remove('ref-highlight-header');
-                });
-
-                // 行・列ヘッダーのハイライト
-                const colTh = refGridTable.querySelector(`th[data-ref-col-header="${targetC}"]`);
-                const rowTh = refGridTable.querySelector(`th[data-ref-row-header="${targetR}"]`);
-                if (colTh) colTh.classList.add('ref-highlight-header');
-                if (rowTh) rowTh.classList.add('ref-highlight-header');
-
-                // 十字ハイライトと対象セルの強調
-                refGridTable.querySelectorAll('td').forEach(td => {
-                    const r = parseInt(td.dataset.r, 10);
-                    const c = parseInt(td.dataset.c, 10);
-                    if (r === targetR && c === targetC) {
-                        td.classList.add('ref-highlight-target');
-                    } else if (r === targetR || c === targetC) {
-                        td.classList.add('ref-highlight-cross');
-                    }
-                });
-
-                // 上部の式表示を更新
-                refFormulaDisplay.textContent = `${targetR} ${opSymbol} ${targetC} = ${val}`;
-            }
-
-            refCalcModeSelect.addEventListener('change', renderReferenceTable);
-
-            // --- トレーニング用ロジック ---
-            function generateShuffledDigits(size) {
-                const digits = Array.from({ length: size }, (_, i) => i + 1);
-                for (let i = digits.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [digits[i], digits[j]] = [digits[j], digits[i]];
-                }
-                return digits;
-            }
-
-            function generateRowDigits(size, mode) {
-                const base = generateShuffledDigits(size);
-                if (mode === 'sub') {
-                    return base.map(n => n + size);
-                }
-                return base;
-            }
-
-            function getOperatorSymbol(mode) {
-                switch (mode) {
-                    case 'add': return '＋';
-                    case 'sub': return '－';
-                    case 'mul': return '×';
-                    default: return '＋';
-                }
-            }
-
-            function calculateExpected(rowVal, colVal, mode) {
-                switch (mode) {
-                    case 'add': return rowVal + colVal;
-                    case 'sub': return rowVal - colVal;
-                    case 'mul': return rowVal * colVal;
-                    default: return rowVal + colVal;
-                }
-            }
-
-            function startTimer() {
-                if (isTimerRunning) return;
-                isTimerRunning = true;
-                timerInterval = setInterval(() => {
-                    elapsedSeconds++;
-                    updateTimerDisplay();
-                }, 1000);
-            }
-
-            function stopTimer() {
-                isTimerRunning = false;
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-            }
-
-            function resetTimer() {
-                stopTimer();
-                elapsedSeconds = 0;
-                updateTimerDisplay();
-            }
-
-            function formatTime(sec) {
-                const m = Math.floor(sec / 60).toString().padStart(2, '0');
-                const s = (sec % 60).toString().padStart(2, '0');
-                return `${m}:${s}`;
-            }
-
-            function updateTimerDisplay() {
-                timerDisplay.textContent = formatTime(elapsedSeconds);
-            }
-
-            function initGame() {
-                gridSize = parseInt(sizeSelect.value, 10);
-                calcMode = modeSelect.value;
-
-                const totalQuestions = gridSize * gridSize;
-                if (activeTab === 'train') {
-                    appTitle.textContent = `${totalQuestions}マス計算 (${gridSize}×${gridSize})`;
-                }
-
-                if (gridSize === 19) {
-                    gridCard.classList.remove('max-w-lg');
-                    gridCard.classList.add('max-w-4xl');
-                    gridTable.classList.remove('mode-9');
-                    gridTable.classList.add('mode-19');
-                } else {
-                    gridCard.classList.remove('max-w-4xl');
-                    gridCard.classList.add('max-w-lg');
-                    gridTable.classList.remove('mode-19');
-                    gridTable.classList.add('mode-9');
-                }
-
-                colNumbers = generateShuffledDigits(gridSize);
-                rowNumbers = generateRowDigits(gridSize, calcMode);
-                userAnswers = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
-                selectedCell = null;
-                isChecked = false;
-
-                resultBanner.classList.add('hidden');
-                hideNumpad();
-                resetTimer();
-                gridScrollContainer.scrollTo(0, 0);
-
-                renderGrid();
-            }
-
-            function renderGrid() {
-                gridTable.innerHTML = '';
-                const opSymbol = getOperatorSymbol(calcMode);
-
-                // 1. ヘッダー行
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-
-                const cornerTh = document.createElement('th');
-                cornerTh.className = 'sticky-corner calc-corner bg-indigo-600 text-white font-bold text-sm sm:text-lg p-0 select-none';
-                cornerTh.innerHTML = `<div class="cell-box">${opSymbol}</div>`;
-                headerRow.appendChild(cornerTh);
-
-                colNumbers.forEach((num) => {
-                    const th = document.createElement('th');
-                    th.className = 'sticky-top calc-header-top bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
-                    th.innerHTML = `<div class="cell-box">${num}</div>`;
-                    headerRow.appendChild(th);
-                });
-                thead.appendChild(headerRow);
-                gridTable.appendChild(thead);
-
-                // 2. データ行
-                const tbody = document.createElement('tbody');
-                rowNumbers.forEach((rowNum, rIdx) => {
-                    const tr = document.createElement('tr');
-
-                    const rowTh = document.createElement('th');
-                    rowTh.className = 'sticky-left calc-header-left bg-indigo-100 text-indigo-900 font-bold text-xs sm:text-base p-0';
-                    rowTh.innerHTML = `<div class="cell-box">${rowNum}</div>`;
-                    tr.appendChild(rowTh);
-
-                    for (let cIdx = 0; cIdx < gridSize; cIdx++) {
-                        const td = document.createElement('td');
-                        td.dataset.row = rIdx;
-                        td.dataset.col = cIdx;
-                        td.className = 'calc-cell text-center font-bold text-xs sm:text-base bg-white cursor-pointer hover:bg-slate-50 p-0';
-                        
-                        const div = document.createElement('div');
-                        div.className = 'cell-box';
-                        div.textContent = userAnswers[rIdx][cIdx];
-                        td.appendChild(div);
-
-                        td.addEventListener('click', () => {
-                            selectCell(rIdx, cIdx);
-                        });
-
-                        tr.appendChild(td);
-                    }
-                    tbody.appendChild(tr);
-                });
-                gridTable.appendChild(tbody);
-            }
-
-            function selectCell(row, col) {
-                if (!isChecked && !isTimerRunning) {
-                    startTimer();
-                }
-
-                if (selectedCell) {
-                    const prevTd = getCellElement(selectedCell.row, selectedCell.col);
-                    if (prevTd) prevTd.classList.remove('cell-selected');
-                }
-
-                selectedCell = { row, col };
-                const currentTd = getCellElement(row, col);
-                if (currentTd) {
-                    currentTd.classList.add('cell-selected');
-                    ensureCellVisible(currentTd);
-                }
-
-                updateEquationDisplay();
-                showNumpad();
-            }
-
-            function ensureCellVisible(cellEl) {
-                const containerRect = gridScrollContainer.getBoundingClientRect();
-                const cellRect = cellEl.getBoundingClientRect();
-                const headerOffset = cellEl.offsetWidth + 8;
-
-                if (cellRect.left < containerRect.left + headerOffset) {
-                    gridScrollContainer.scrollBy({
-                        left: cellRect.left - (containerRect.left + headerOffset),
-                        behavior: 'smooth'
-                    });
-                } else if (cellRect.right > containerRect.right - 8) {
-                    gridScrollContainer.scrollBy({
-                        left: cellRect.right - containerRect.right + 8,
-                        behavior: 'smooth'
-                    });
-                }
-
-                if (cellRect.top < containerRect.top + headerOffset) {
-                    gridScrollContainer.scrollBy({
-                        top: cellRect.top - (containerRect.top + headerOffset),
-                        behavior: 'smooth'
-                    });
-                } else if (cellRect.bottom > containerRect.bottom - 8) {
-                    gridScrollContainer.scrollBy({
-                        top: cellRect.bottom - containerRect.bottom + 8,
-                        behavior: 'smooth'
-                    });
-                }
-
-                const updatedRect = cellEl.getBoundingClientRect();
-                const numpadHeight = 270;
-                const viewportHeight = window.innerHeight;
-                if (updatedRect.bottom > viewportHeight - numpadHeight) {
-                    window.scrollBy({
-                        top: updatedRect.bottom - (viewportHeight - numpadHeight) + 20,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-
-            function getCellElement(row, col) {
-                return gridTable.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
-            }
-
-            function showNumpad() {
-                numpadContainer.classList.remove('hidden');
-            }
-
-            function hideNumpad() {
-                numpadContainer.classList.add('hidden');
-                if (selectedCell) {
-                    const prevTd = getCellElement(selectedCell.row, selectedCell.col);
-                    if (prevTd) prevTd.classList.remove('cell-selected');
-                    selectedCell = null;
-                }
-            }
-
-            function updateEquationDisplay() {
-                if (!selectedCell) return;
-                const { row, col } = selectedCell;
-                const rVal = rowNumbers[row];
-                const cVal = colNumbers[col];
-                const op = getOperatorSymbol(calcMode);
-                const ans = userAnswers[row][col] === '' ? '?' : userAnswers[row][col];
-                currentEquation.textContent = `${rVal} ${op} ${cVal} = ${ans}`;
-            }
-
-            function inputDigit(digitStr) {
-                if (!selectedCell) return;
-                const { row, col } = selectedCell;
-
-                const td = getCellElement(row, col);
-                if (td) {
-                    td.classList.remove('cell-correct', 'cell-incorrect');
-                }
-
-                let currentVal = userAnswers[row][col];
-                if (currentVal === '0') {
-                    currentVal = digitStr;
-                } else if (currentVal.length < 3) {
-                    currentVal += digitStr;
-                } else {
-                    currentVal = digitStr;
-                }
-
-                userAnswers[row][col] = currentVal;
-                const div = td.querySelector('.cell-box');
-                if (div) div.textContent = currentVal;
-                updateEquationDisplay();
-            }
-
-            function clearCurrentCell() {
-                if (!selectedCell) return;
-                const { row, col } = selectedCell;
-                userAnswers[row][col] = '';
-                const td = getCellElement(row, col);
-                if (td) {
-                    const div = td.querySelector('.cell-box');
-                    if (div) div.textContent = '';
-                    td.classList.remove('cell-correct', 'cell-incorrect');
-                }
-                updateEquationDisplay();
-            }
-
-            function moveToNextCell() {
-                if (!selectedCell) {
-                    selectCell(0, 0);
-                    return;
-                }
-                let { row, col } = selectedCell;
-                col++;
-                if (col >= gridSize) {
-                    col = 0;
-                    row++;
-                }
-                if (row >= gridSize) {
-                    hideNumpad();
-                    return;
-                }
-                selectCell(row, col);
-            }
-
-            function checkAnswers() {
-                stopTimer();
-                hideNumpad();
-                isChecked = true;
-
-                let correctCount = 0;
-                const totalCells = gridSize * gridSize;
-
-                for (let r = 0; r < gridSize; r++) {
-                    for (let c = 0; c < gridSize; c++) {
-                        const td = getCellElement(r, c);
-                        if (!td) continue;
-
-                        td.classList.remove('cell-correct', 'cell-incorrect', 'cell-selected');
-
-                        const expected = calculateExpected(rowNumbers[r], colNumbers[c], calcMode);
-                        const rawInput = userAnswers[r][c];
-                        const parsedInput = rawInput === '' ? NaN : parseInt(rawInput, 10);
-
-                        if (!isNaN(parsedInput) && parsedInput === expected) {
-                            correctCount++;
-                            td.classList.add('cell-correct');
-                        } else {
-                            td.classList.add('cell-incorrect');
-                        }
-                    }
-                }
-
-                resultBanner.classList.remove('hidden');
-                resultTime.textContent = `タイム: ${formatTime(elapsedSeconds)}`;
-
-                if (correctCount === totalCells) {
-                    resultIcon.textContent = '🏆';
-                    resultText.textContent = `パーフェクト！ ${totalCells}問中 ${totalCells}問正解！`;
-                    resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-sm sm:text-base';
-                    resultText.className = 'font-bold text-emerald-900';
-                } else {
-                    const ratio = correctCount / totalCells;
-                    resultIcon.textContent = ratio >= 0.85 ? '👏' : '📝';
-                    resultText.textContent = `${totalCells}問中 ${correctCount}問正解！`;
-                    resultBanner.className = 'mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-sm sm:text-base';
-                    resultText.className = 'font-bold text-indigo-900';
-                }
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
-            btnGenerate.addEventListener('click', initGame);
-            sizeSelect.addEventListener('change', initGame);
-            modeSelect.addEventListener('change', initGame);
-            btnCheck.addEventListener('click', checkAnswers);
-
-            numButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const num = btn.dataset.num;
-                    inputDigit(num);
-                });
-            });
-
-            btnClear.addEventListener('click', (e) => {
-                e.stopPropagation();
-                clearCurrentCell();
-            });
-
-            btnNextCell.addEventListener('click', (e) => {
-                e.stopPropagation();
-                moveToNextCell();
-            });
-
-            btnCloseNumpad.addEventListener('click', (e) => {
-                e.stopPropagation();
-                hideNumpad();
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (activeTab !== 'train' || !selectedCell) return;
-
-                if (e.key >= '0' && e.key <= '9') {
-                    e.preventDefault();
-                    inputDigit(e.key);
-                } else if (e.key === 'Backspace' || e.key === 'Delete') {
-                    e.preventDefault();
-                    clearCurrentCell();
-                } else if (e.key === 'Enter' || e.key === 'Tab') {
-                    e.preventDefault();
-                    moveToNextCell();
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    hideNumpad();
-                } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                    e.preventDefault();
-                    let { row, col } = selectedCell;
-                    if (e.key === 'ArrowUp' && row > 0) row--;
-                    if (e.key === 'ArrowDown' && row < gridSize - 1) row++;
-                    if (e.key === 'ArrowLeft' && col > 0) col--;
-                    if (e.key === 'ArrowRight' && col < gridSize - 1) col++;
-                    selectCell(row, col);
-                }
-            });
-
-            initGame();
-        });
-    </script>
+<body>
+<div class="app">
+ <header class="topbar">
+  <div class="brand"><div class="brand-mark">＋</div><div><small>ARCADE LEARNING</small><h1>マス計算アーケード</h1></div></div>
+  <div class="top-actions"><button class="icon-btn" id="reset-record" type="button">記録リセット</button></div>
+ </header>
+ <nav class="tabs"><button class="tab active" id="tab-train" type="button">🎮 トレーニング</button><button class="tab" id="tab-ref" type="button">📚 計算一覧表</button></nav>
+ <section id="view-train">
+  <div class="panel controls">
+   <div class="field"><label for="grid-size">マスの数</label><select id="grid-size"><option value="9">9×9 ・ 81マス</option><option value="19">19×19 ・ 361マス</option></select></div>
+   <div class="field"><label for="calc-mode">計算の種類</label><select id="calc-mode"><option value="add">＋ たし算</option><option value="sub">－ ひき算</option><option value="mul">× かけ算</option></select></div>
+   <div class="control-actions"><button class="btn primary" id="btn-generate" type="button">⟳ 新しい問題</button><button class="btn success" id="btn-check" type="button">✓ 答え合わせ</button></div>
+   <div class="toggle-row" style="grid-column:1/-1">
+    <label class="toggle"><input id="auto-next" type="checkbox" checked>入力後に次へ</label>
+    <label class="toggle"><input id="instant-check" type="checkbox">正解をすぐ判定</label>
+   </div>
+  </div>
+  <div class="stats">
+   <div class="stat"><b id="timer">00:00</b><span>TIME</span></div>
+   <div class="stat"><b id="progress">0 / 81</b><span>ANSWERED</span></div>
+   <div class="stat"><b id="best">--:--</b><span>BEST TIME</span></div>
+  </div>
+  <div class="result" id="result">
+   <div><strong id="result-title">チャレンジ結果</strong><small id="result-sub">もう一度挑戦してみよう！</small></div><div class="result-score" id="result-score">0%</div>
+  </div>
+  <section class="panel grid-panel">
+   <div class="grid-head"><span class="section-title">⚡ 計算フィールド</span><span class="hint" id="grid-hint">マスをタップして回答</span></div>
+   <div class="grid-scroll" id="grid-scroll"><table id="calc-grid" class="mode9"></table></div>
+   <div class="grid-foot"><span>マスを選択 → 数字を入力</span><span>キーボードにも対応</span></div>
+  </section>
+ </section>
+ <section id="view-ref">
+  <div class="panel ref-info"><div><div class="section-title">📚 1〜19 計算一覧表</div><div class="hint">マスをタップすると式を確認できます</div></div><div><select id="ref-mode"><option value="mul">× かけ算</option><option value="add">＋ たし算</option></select><div class="ref-equation" id="ref-equation">式を選択</div></div></div>
+  <section class="panel grid-panel"><div class="grid-scroll" id="ref-scroll"><table id="ref-grid"></table></div><p class="note">縦横にスクロールできます。上端と左端の数字はスクロール中も固定されます。同じ数字同士の計算は斜めのマスです。</p></section>
+ </section>
+</div>
+<div class="keypad-wrap" id="keypad-wrap">
+ <div class="keypad">
+  <div class="key-top"><div><div class="hint">SELECTED QUESTION</div><div class="equation" id="equation">マスを選択してください</div></div><div class="key-top-actions"><button class="mini" id="close-keypad" type="button">閉じる</button></div></div>
+  <div class="keys">
+   <button class="key" data-num="1">1</button><button class="key" data-num="2">2</button><button class="key" data-num="3">3</button><button class="key" data-num="4">4</button><button class="key" data-num="5">5</button>
+   <button class="key" data-num="6">6</button><button class="key" data-num="7">7</button><button class="key" data-num="8">8</button><button class="key" data-num="9">9</button><button class="key" data-num="0">0</button>
+   <button class="key delete" id="delete-key">⌫</button><button class="key clear" id="clear-key" style="grid-column:span 2">消去</button><button class="key next" id="next-key" style="grid-column:span 2">次へ ➜</button>
+  </div>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const state={size:9,mode:'add',rows:[],cols:[],answers:[],selected:null,checked:false,started:false,elapsed:0,timer:null,tab:'train',refSelected:null};
+const op={add:'＋',sub:'－',mul:'×'};
+const bestKey=(size,mode)=>`arcade_best_${size}_${mode}`;
+let toastTimer=null;
+
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1500)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function expected(r,c){return state.mode==='add'?r+c:state.mode==='sub'?r-c:r*c}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function startTimer(){if(state.started||state.checked)return;state.started=true;state.timer=setInterval(()=>{state.elapsed++;$('timer').textContent=fmt(state.elapsed)},1000)}
+function stopTimer(){clearInterval(state.timer);state.timer=null}
+function answeredCount(){return state.answers.flat().filter(v=>v!=='').length}
+function updateStats(){$('progress').textContent=`${answeredCount()} / ${state.size*state.size}`;$('timer').textContent=fmt(state.elapsed);const b=localStorage.getItem(bestKey(state.size,state.mode));$('best').textContent=b?fmt(Number(b)):'--:--'}
+function init(){
+ stopTimer();state.size=Number($('grid-size').value);state.mode=$('calc-mode').value;state.rows=shuffle(Array.from({length:state.size},(_,i)=>i+1));if(state.mode==='sub')state.rows=state.rows.map(n=>n+state.size);state.cols=shuffle(Array.from({length:state.size},(_,i)=>i+1));state.answers=Array.from({length:state.size},()=>Array(state.size).fill(''));state.selected=null;state.checked=false;state.started=false;state.elapsed=0;
+ $('result').classList.remove('show');$('grid-scroll').scrollTo(0,0);$('calc-grid').className=state.size===9?'mode9':'mode19';$('grid-hint').textContent=state.size===9?'81マスにチャレンジ！':'361マスにチャレンジ！';renderGrid();hidePad();updateStats();$('equation').textContent='マスを選択してください';
+}
+function renderGrid(){
+ const t=$('calc-grid');t.innerHTML='';const thead=document.createElement('thead'),hr=document.createElement('tr');const corner=document.createElement('th');corner.className='corner';corner.innerHTML=`<div class="cell">${op[state.mode]}</div>`;hr.append(corner);
+ state.cols.forEach(n=>{const th=document.createElement('th');th.className='top';th.innerHTML=`<div class="cell">${n}</div>`;hr.append(th)});thead.append(hr);t.append(thead);
+ const body=document.createElement('tbody');state.rows.forEach((n,r)=>{const tr=document.createElement('tr'),th=document.createElement('th');th.className='left';th.innerHTML=`<div class="cell">${n}</div>`;tr.append(th);
+ state.cols.forEach((m,c)=>{const td=document.createElement('td');td.dataset.r=r;td.dataset.c=c;const d=document.createElement('div');d.className='cell';d.textContent=state.answers[r][c];td.append(d);td.addEventListener('click',()=>select(r,c));tr.append(td)});body.append(tr)});t.append(body);
+}
+function cell(r,c){return $('calc-grid').querySelector(`td[data-r="${r}"][data-c="${c}"]`)}
+function select(r,c){
+ if(state.checked)return;
+ startTimer();if(state.selected){const old=cell(state.selected.r,state.selected.c);if(old)old.classList.remove('selected')}
+ state.selected={r,c};const td=cell(r,c);td.classList.add('selected');$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`;showPad();ensureVisible(td);
+}
+function ensureVisible(td){
+ const box=$('grid-scroll'),b=box.getBoundingClientRect(),r=td.getBoundingClientRect(),head=state.size===19?42:30;
+ if(r.left<b.left+head)box.scrollBy({left:r.left-(b.left+head)-4,behavior:'smooth'});else if(r.right>b.right-5)box.scrollBy({left:r.right-b.right+5,behavior:'smooth'});
+ if(r.top<b.top+head)box.scrollBy({top:r.top-(b.top+head)-4,behavior:'smooth'});else if(r.bottom>b.bottom-5)box.scrollBy({top:r.bottom-b.bottom+5,behavior:'smooth'});
+}
+function showPad(){$('keypad-wrap').classList.remove('hidden');document.body.classList.add('keypad-open');if(innerWidth>=760)$('keypad-wrap').classList.add('desktop-visible')}
+function hidePad(){$('keypad-wrap').classList.add('hidden');$('keypad-wrap').classList.remove('desktop-visible');document.body.classList.remove('keypad-open');if(state.selected){const td=cell(state.selected.r,state.selected.c);if(td)td.classList.remove('selected')}state.selected=null}
+function updateEquation(){if(!state.selected)return;const {r,c}=state.selected;$('equation').textContent=`${state.rows[r]} ${op[state.mode]} ${state.cols[c]} = ${state.answers[r][c]===''?'?':state.answers[r][c]}`}
+function moveNext(){
+ if(!state.selected){select(0,0);return}let {r,c}=state.selected;c++;if(c>=state.size){c=0;r++}if(r>=state.size){hidePad();toast('最後のマスです。答え合わせをしよう！');return}select(r,c)
+}
+function enterDigit(d){
+ if(!state.selected||state.checked)return;const {r,c}=state.selected;let v=state.answers[r][c];v=(v+d).slice(-3);state.answers[r][c]=v;const td=cell(r,c);td.querySelector('.cell').textContent=v;td.classList.remove('correct','wrong');updateEquation();updateStats();
+ const target=String(expected(state.rows[r],state.cols[c]));
+ if($('instant-check').checked){
+  if(Number(v)===Number(target)){td.classList.add('correct');if($('auto-next').checked)setTimeout(moveNext,120)}
+  else if(v.length>=target.length){td.classList.add('wrong');}
+ }else if($('auto-next').checked&&v.length>=target.length){setTimeout(moveNext,100)}
+}
+function clearAnswer(){if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]='';const td=cell(r,c);td.querySelector('.cell').textContent='';td.classList.remove('correct','wrong');updateEquation();updateStats()}
+function check(){
+ if(state.checked)return;stopTimer();state.checked=true;hidePad();let good=0,total=state.size*state.size,empty=0;
+ state.answers.forEach((row,r)=>row.forEach((v,c)=>{const td=cell(r,c);td.classList.remove('selected','correct','wrong');if(v!==''&&Number(v)===expected(state.rows[r],state.cols[c])){good++;td.classList.add('correct')}else{if(v==='')empty++;td.classList.add('wrong')}}));
+ const pct=Math.round(good/total*100);$('result').classList.add('show');$('result-title').textContent=good===total?'PERFECT!! 全問正解！':pct>=80?'すごい！よくできました！':pct>=50?'ナイスチャレンジ！':'もう一度チャレンジ！';$('result-sub').textContent=`${total}問中 ${good}問正解${empty?` ・ 未回答 ${empty}問`:''} ／ タイム ${fmt(state.elapsed)}`;$('result-score').textContent=`${pct}%`;
+ if(good===total){const key=bestKey(state.size,state.mode),old=Number(localStorage.getItem(key)||0);if(!old||state.elapsed<old){localStorage.setItem(key,String(state.elapsed));toast('自己ベスト更新！')}}
+ else updateStats();window.scrollTo({top:0,behavior:'smooth'});
+}
+function switchTab(tab){
+ state.tab=tab;const train=tab==='train';$('view-train').style.display=train?'':'none';$('view-ref').style.display=train?'none':'';$('tab-train').classList.toggle('active',train);$('tab-ref').classList.toggle('active',!train);
+ if(!train){hidePad();renderRef()}
+}
+function renderRef(){
+ const mode=$('ref-mode').value,t=$('ref-grid');t.innerHTML='';$('ref-equation').textContent='式を選択';state.refSelected=null;
+ const thead=document.createElement('thead'),hr=document.createElement('tr'),corner=document.createElement('th');corner.className='corner';corner.innerHTML=`<div class="cell">${mode==='mul'?'×':'＋'}</div>`;hr.append(corner);
+ for(let c=1;c<=19;c++){const th=document.createElement('th');th.className='top';th.dataset.ch=c;th.innerHTML=`<div class="cell">${c}</div>`;hr.append(th)}thead.append(hr);t.append(thead);
+ const body=document.createElement('tbody');for(let r=1;r<=19;r++){const tr=document.createElement('tr'),th=document.createElement('th');th.className='left';th.dataset.rh=r;th.innerHTML=`<div class="cell">${r}</div>`;tr.append(th);for(let c=1;c<=19;c++){const td=document.createElement('td');td.dataset.r=r;td.dataset.c=c;td.innerHTML=`<div class="cell">${mode==='mul'?r*c:r+c}</div>`;td.addEventListener('click',()=>highlightRef(r,c,mode==='mul'?r*c:r+c,mode));tr.append(td)}body.append(tr)}t.append(body);
+}
+function highlightRef(r,c,v,mode){
+ const t=$('ref-grid');t.querySelectorAll('td').forEach(td=>{td.classList.remove('cross','target');if(Number(td.dataset.r)===r&&Number(td.dataset.c)===c)td.classList.add('target');else if(Number(td.dataset.r)===r||Number(td.dataset.c)===c)td.classList.add('cross')});
+ t.querySelectorAll('th').forEach(th=>th.classList.remove('hot'));const rh=t.querySelector(`th[data-rh="${r}"]`),ch=t.querySelector(`th[data-ch="${c}"]`);if(rh)rh.classList.add('hot');if(ch)ch.classList.add('hot');$('ref-equation').textContent=`${r} ${mode==='mul'?'×':'＋'} ${c} = ${v}`;
+}
+$('btn-generate').addEventListener('click',()=>{init();toast('新しい問題を作成しました')});
+$('grid-size').addEventListener('change',init);$('calc-mode').addEventListener('change',init);$('btn-check').addEventListener('click',check);
+$('tab-train').addEventListener('click',()=>switchTab('train'));$('tab-ref').addEventListener('click',()=>switchTab('ref'));$('ref-mode').addEventListener('change',renderRef);
+document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',()=>enterDigit(b.dataset.num)));
+$('delete-key').addEventListener('click',()=>{if(!state.selected)return;const {r,c}=state.selected;state.answers[r][c]=state.answers[r][c].slice(0,-1);const td=cell(r,c);td.querySelector('.cell').textContent=state.answers[r][c];td.classList.remove('correct','wrong');updateEquation();updateStats()});
+$('clear-key').addEventListener('click',clearAnswer);$('next-key').addEventListener('click',moveNext);$('close-keypad').addEventListener('click',hidePad);
+$('reset-record').addEventListener('click',()=>{if(confirm('この端末に保存された自己ベスト記録をすべて削除しますか？')){for(const k of Object.keys(localStorage))if(k.startsWith('arcade_best_'))localStorage.removeItem(k);updateStats();toast('記録をリセットしました')}});
+document.addEventListener('keydown',e=>{
+ if(state.tab!=='train'||!state.selected||state.checked)return;
+ if(/^[0-9]$/.test(e.key)){e.preventDefault();enterDigit(e.key)}
+ else if(e.key==='Backspace'){e.preventDefault();$('delete-key').click()}
+ else if(e.key==='Delete'){e.preventDefault();clearAnswer()}
+ else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();moveNext()}
+ else if(e.key==='Escape')hidePad();
+ else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();let {r,c}=state.selected;if(e.key==='ArrowUp')r=Math.max(0,r-1);if(e.key==='ArrowDown')r=Math.min(state.size-1,r+1);if(e.key==='ArrowLeft')c=Math.max(0,c-1);if(e.key==='ArrowRight')c=Math.min(state.size-1,c+1);select(r,c)}
+});
+window.addEventListener('resize',()=>{if(innerWidth>=760&&state.selected)$('keypad-wrap').classList.add('desktop-visible')});
+init();
+})();
+</script>
 </body>
 </html>
