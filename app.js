@@ -1298,16 +1298,6 @@ function buildBoard(gridType) {
 
       if (!isReplacingSelf) {
         if (
-          gridType === '5' &&
-          totalCount >= 15
-        ) {
-          alert(
-            'ノーマルステージでは最大15体までしか配置できません。'
-          );
-          return;
-        }
-
-        if (
           gridType === '3x4' &&
           totalCount >= 12
         ) {
@@ -1818,18 +1808,6 @@ function renderMonsters() {
 
           if (!isReplacingSelf) {
             if (
-              currentGridType === '5' &&
-              totalCount >= 15
-            ) {
-              alert(
-                'ノーマルステージでは最大15体までしか配置できません。'
-              );
-
-              draggingItem = null;
-              return;
-            }
-
-            if (
               currentGridType === '3x4' &&
               totalCount >= 12
             ) {
@@ -2109,6 +2087,21 @@ document
         '盤面が見つかりません。'
       );
       return;
+    }
+
+    // ノーマルステージは画像化時のみ15体制限を確認
+    if (currentGridType === '5') {
+      const normalStageCount =
+        Array.from(
+          document.querySelectorAll('#mainGrid .cell')
+        ).filter(cell => getCellMonsterElement(cell)).length;
+
+      if (normalStageCount > 15) {
+        alert(
+          `ノーマルステージは最大15体までです。\n現在 ${normalStageCount}体配置されています。\n${normalStageCount - 15}体減らしてから画像化してください。`
+        );
+        return;
+      }
     }
 
     const titleText =
